@@ -1,0 +1,232 @@
+/* General Reset */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+}
+
+/* Layout Containers */
+body {
+  background-color: #f2f2f2;
+  color: #333;
+  padding: 20px;
+}
+
+section, aside {
+  margin-bottom: 25px;
+}
+
+/* Labels and Inputs */
+label {
+  margin-right: 10px;
+  font-weight: bold;
+}
+
+input, select, button {
+  padding: 8px;
+  margin: 5px 0 10px 0;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+input:focus {
+  outline: 2px solid goldenrod;
+  background-color: #fffef0;
+}
+
+/* Suggestion Box */
+.suggestion-box {
+  background: #fff;
+  border: 1px solid #ccc;
+  max-height: 150px;
+  overflow-y: auto;
+  position: absolute;
+  z-index: 1000;
+  width: 300px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.suggestion-box div {
+  padding: 8px;
+  cursor: pointer;
+}
+
+.suggestion-box div:hover {
+  background-color: goldenrod;
+  color: #fff;
+}
+
+/* Cart Table */
+#cart-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+#cart-table th, #cart-table td {
+  border: 1px solid #bbb;
+  padding: 10px;
+  text-align: center;
+}
+
+#cart-table thead {
+  background-color: #333;
+  color: gold;
+}
+
+/* Totals */
+#cart-total-section {
+  margin-top: 15px;
+  font-size: 1.2em;
+}
+
+.total-bold {
+  font-size: 1.5em;
+  font-weight: bold;
+  color: goldenrod;
+  margin-left: 15px;
+}
+
+/* Payment Section */
+#payment-section {
+  background-color: #e8e8e8;
+  padding: 15px;
+  border-left: 6px solid goldenrod;
+  border-radius: 6px;
+}
+
+/* Action Buttons */
+#action-buttons {
+  margin-top: 20px;
+}
+
+#action-buttons .btn {
+  padding: 12px 20px;
+  font-size: 1em;
+  font-weight: bold;
+  border: none;
+  margin-right: 15px;
+  cursor: pointer;
+  color: white;
+  border-radius: 4px;
+}
+
+.btn.green {
+  background-color: #28a745;
+}
+
+.btn.blue {
+  background-color: #007bff;
+}
+
+.btn.yellow {
+  background-color: goldenrod;
+}
+
+.btn.red {
+  background-color: #dc3545;
+}
+
+/* Frequent Bills */
+#frequent-bills {
+  background-color: #f7f7f7;
+  padding: 15px;
+  border: 1px solid #ccc;
+  border-left: 6px solid goldenrod;
+}
+
+#frequent-bill-list button {
+  margin: 5px 5px 5px 0;
+  background-color: #555;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  position: relative;
+}
+
+#frequent-bill-list button .remove {
+  color: red;
+  font-weight: bold;
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: white;
+  border-radius: 50%;
+  padding: 2px 6px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+/* Medicine Info Section */
+#medicine-info {
+  background-color: #fdf6e3;
+  padding: 15px;
+  border-left: 6px solid goldenrod;
+  border-radius: 6px;
+}
+
+#medicine-info h3 {
+  color: #333;
+  margin-bottom: 10px;
+}
+
+#info-display {
+  line-height: 1.6;
+}
+
+#info-display .highlight {
+  font-weight: bold;
+  color: #c0392b;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  #cart-table th, #cart-table td {
+    font-size: 0.9em;
+    padding: 6px;
+  }
+
+  input, select, button {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+
+  .suggestion-box {
+    width: 100%;
+  }
+
+  #frequent-bill-list button {
+    width: 100%;
+  }
+}
+
+#patient-name {
+  width: 50%;
+}
+#medicine-input {
+  width: 90%;
+}
+.suggestion-box {
+  width: 90%;
+ 
+}
+#search-results {
+  overflow: visible;
+  max-height: 3000px;
+}
+button:hover {
+  opacity: 0.8;
+}
+.input-highlight {
+  outline: 2px solid #FFD700 !important;  /* Gold color */
+  background: #fffbe7 !important;
+  transition: outline 0.2s;
+}
+#export-cart-excel img {
+  vertical-align: middle;
+  height: 1em;
+  margin-right: 6px;
+}

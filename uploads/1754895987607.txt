@@ -1,0 +1,10 @@
+SRR No: 7
+From Branch: Sub1
+To Branch: Main Branch
+Requested By: Mohamed Hamid Mohamed Hamid
+Request Date: Mon Aug 11 2025 11:06:01 GMT+0400 (Gulf Standard Time)
+
+Item Name	Quantity
+MIXTARD 30 HM INJECTION  10 U/ML   10 ML	1
+NOPAIN DS TABLETS 500MG  10 S	3
+ELOCOM OINTMENT 0.1% (L)  30 GM	2

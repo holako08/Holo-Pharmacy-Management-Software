@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>User Profile</title>
+  <link rel="stylesheet" href="profile.css" />
+  <link rel="shortcut icon" href="images/logo.png" type="image/x-icon">
+</head>
+<body>
+
+  <!-- NAV BAR -->
+  <nav class="nav-bar-unique">
+  <div class="logo-unique">
+    <img src="images/logo.png" alt="Logo">
+  </div>
+  <ul class="nav-links-unique">
+    <li><a href="dashboard.html">Home</a></li>
+    <li><a href="pos.html">POS</a></li>
+    <li><a href="PDC.html">Pediatric Dose Calculator</a></li>
+    <li><a href="cross selling.html">Cross-selling Help</a></li>
+    <li>
+      <a href="#">Reports</a>
+      <ul class="dropdown-unique">
+        <li><a href="sales report.html">Sales Report</a></li>
+        <li><a href="item-wise sale report.html">Item-wise Sales Report</a></li>
+
+<li><a href="near-expiry-report.html">Near Expiry Report</a></li>
+<li><a href="stock-report.html">Stock Report</a></li>
+
+      </ul>
+    </li>
+    <li>
+      <a href="#">Pharmacists’ Tools</a>
+      <ul class="dropdown-unique">
+        <li><a href="requirements.html">Stock Requirements</a></li>
+        <li><a href="variations.html">Stock Variations</a></li>
+        <li><a href="testing.html">Blood Pressure and Sugar Check</a></li>
+        <li><a href="request-center-usrZ3v.html">Requests Center</a></li>
+      </ul>
+    </li>
+    <li>
+      <a href="#">Admin Tools</a>
+      <ul class="dropdown-unique">
+        <li><a href="edit medicines.html">Edit Medicines List</a></li>
+        <li><a href="edit bills.html">Edit Bills</a></li>
+        <li><a href="user management.html">Edit Users</a></li>
+        <li><a href="admin-approvals.html">Admin Approvals</a></li>
+      </ul>
+    </li>
+  </ul>
+  <div class="search-unique">
+    <input type="text" placeholder="Search...">
+    <button>Search</button>
+  </div>
+</nav>
+  <!-- MAIN CONTENT -->
+  <div class="main-content-unique">
+    <div class="profile-container-unique">
+      <h2>User Profile</h2>
+
+      <div class="profile-photo-section-unique">
+        <img id="profilePhotoPreview" src="default.png" alt="Profile Photo" />
+        <input type="file" id="profilePhotoInput" />
+      </div>
+
+      <form id="profileFormUnique">
+        <input type="hidden" id="userIdUnique" />
+
+        <label>Username</label>
+        <input type="text" id="usernameUnique" readonly />
+
+        <label>Full Name</label>
+        <input type="text" id="fullNameUnique" />
+
+        <label>Email</label>
+        <input type="email" id="emailUnique" />
+
+        <label>Job Title</label>
+        <input type="text" id="jobTitleUnique" />
+
+        <label>Gender</label>
+        <select id="genderUnique">
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+          <option value="Other">Other</option>
+        </select>
+
+        <label>Birthdate</label>
+        <input type="date" id="birthdateUnique" />
+
+        <label>Password</label>
+        <div class="password-field-wrapper">
+          <input type="password" id="passwordUpdateUnique" />
+          <span id="togglePassword" class="eye-icon">👁️</span>
+        </div>
+        <small style="color:gray">Leave blank to keep current password</small>
+
+        <div class="button-bar-unique">
+          <button type="button" id="editBtnUnique">Edit</button>
+          <button type="submit" id="saveBtnUnique" style="display:none">Save</button>
+          <button type="button" id="cancelBtnUnique" style="display:none">Cancel</button>
+        </div>
+      </form>
+
+      <p id="updateStatusUnique"></p>
+    </div>
+  </div>
+
+  <footer class="footer-unique">
+    © 2025 Pharmacy Management System | Designed by Pharmacist: MOHAMED HAMID |
+    <a href="mailto:mhm.hamid@gmail.com">mhm.hamid@gmail.com</a> | All Rights Reserved
+  </footer>
+  
+
+  <script src="profile.js"></script>
+</body>
+</html>

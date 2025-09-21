@@ -1,0 +1,8 @@
+SRR No: 8
+From Branch: Main Branch
+To Branch: Sub1
+Requested By: Mohamed Hamid Mohamed Hamid
+Request Date: Mon Aug 11 2025 11:26:42 GMT+0400 (Gulf Standard Time)
+
+Item Name	Quantity
+ALERID 10 MG TABLETS 10 S	6

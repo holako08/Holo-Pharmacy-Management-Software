@@ -1,0 +1,115 @@
+.nav-bar-unique {
+    background-color: black;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 20px;
+    font-size: larger;
+}
+
+.logo-unique img {
+    height: 50px;
+}
+
+.nav-links-unique {
+    display: flex;
+    list-style: none;
+    gap: 15px;
+}
+
+.nav-links-unique > li {
+    position: relative;
+}
+
+.nav-links-unique a {
+    text-decoration: none;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+.nav-links-unique a:hover {
+    background-color: gold;
+    color: black;
+}
+
+.dropdown-unique {
+    position: absolute;
+    width: 300px;
+    top: 100%;
+    left: 0;
+    font-size: larger;
+    background-color: gray;
+    display: none;
+    flex-direction: column;
+    list-style: none;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.dropdown-unique li a {
+    color: white;
+}
+
+.nav-links-unique > li:hover .dropdown-unique {
+    display: flex;
+}
+
+.search-unique {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: large;
+}
+
+.search-unique input {
+    padding: 5px;
+    border: 1px solid gray;
+    border-radius: 5px;
+    font-size: large;
+}
+
+.search-unique button {
+    padding: 5px 10px;
+    background-color: gold;
+    border: none;
+    border-radius: 5px;
+    color: black;
+    cursor: pointer;
+    font-size: large;
+}
+
+.search-unique button:hover {
+    background-color: darkgoldenrod;
+}
+
+.dashboard-footer {
+    margin-top: 20px;
+    text-align: center;
+    color: #777;
+    font-size: 12px;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    float: right;
+  }
+  
+  .profile-pic {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: #ccc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  
+  .user-details {
+    text-align: right;
+  }

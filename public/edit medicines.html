@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Edit Medicines List</title>
+  <link rel="stylesheet" href="edit medicines.css" />
+  <link rel="stylesheet" href="nav-bar.css" />
+  <link rel="shortcut icon" href="images/logo.png" type="image/x-icon" />
+  <link rel="stylesheet" href="responsive.css" />
+    <link rel="shortcut icon" href="images/logo.png" type="image/x-icon">
+</head>
+<body>
+  <nav class="nav-bar-unique">
+  <div class="logo-unique">
+    <img src="images/logo.png" alt="Logo">
+  </div>
+  <ul class="nav-links-unique">
+    <li><a href="dashboard.html">Home</a></li>
+    <li><a href="pos.html">POS</a></li>
+    <li><a href="PDC.html">Pediatric Dose Calculator</a></li>
+    <li><a href="cross selling.html">Cross-selling Help</a></li>
+    <li>
+      <a href="#">Reports</a>
+      <ul class="dropdown-unique">
+        <li><a href="sales report.html">Sales Report</a></li>
+        <li><a href="item-wise sale report.html">Item-wise Sales Report</a></li>
+
+<li><a href="near-expiry-report.html">Near Expiry Report</a></li>
+<li><a href="stock-report.html">Stock Report</a></li>
+
+      </ul>
+    </li>
+    <li>
+      <a href="#">Pharmacists’ Tools</a>
+      <ul class="dropdown-unique">
+        <li><a href="requirements.html">Stock Requirements</a></li>
+        <li><a href="variations.html">Stock Variations</a></li>
+        <li><a href="testing.html">Blood Pressure and Sugar Check</a></li>
+        <li><a href="request-center-usrZ3v.html">Requests Center</a></li>
+      </ul>
+    </li>
+    <li>
+      <a href="#">Admin Tools</a>
+      <ul class="dropdown-unique">
+        <li><a href="edit medicines.html">Edit Medicines List</a></li>
+        <li><a href="edit bills.html">Edit Bills</a></li>
+        <li><a href="user management.html">Edit Users</a></li>
+        <li><a href="admin-approvals.html">Admin Approvals</a></li>
+      </ul>
+    </li>
+  </ul>
+  <div class="search-unique">
+    <input type="text" placeholder="Search...">
+    <button>Search</button>
+  </div>
+</nav>
+  <header>
+    <h1>Edit Medicines List</h1>
+    <div class="user-info">
+      <div class="user-details">
+        <span id="job-title">Pharmacist</span>
+        <span id="pharmacist-name">MOHAMED</span> is logged-in
+      </div>
+      <div class="profile-pic">
+        <img
+          id="user-photo"
+          src="images/default-profile.png"
+          alt="Profile"
+          style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; object-position: center;"
+        />
+      </div>
+      <button id="logout-btn" class="logout-btn" onclick="logout()">Log-out</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="medicine-section">
+      <div class="medicine-form">
+        <h2>Add a New Medicine</h2>
+        <form id="add-medicine-form" enctype="multipart/form-data">
+          <label for="new-medicine-name">Medicine Name:</label>
+          <input type="text" id="new-medicine-name" required />
+
+          <label for="new-medicine-price">Price:</label>
+          <input type="text" id="new-medicine-price" required />
+
+          <label for="new-medicine-barcode">Barcode:</label>
+          <input type="text" id="new-medicine-barcode" />
+
+          <label for="new-medicine-expiry">Expiry Date:</label>
+          <input type="date" id="new-medicine-expiry" />
+
+          <label for="new-medicine-stock">Stock Quantity:</label>
+          <input type="number" id="new-medicine-stock" step="any" />
+
+          <label for="new-medicine-packet">Packet Size:</label>
+          <input type="number" id="new-medicine-packet" step="any"/>
+
+          <label for="new-active-name-1">Active Name 1:</label>
+          <input type="text" id="new-active-name-1" />
+
+          <label for="new-active-name-2">Active Name 2:</label>
+          <input type="text" id="new-active-name-2" />
+
+          <label for="new-cross-selling">Cross Selling Info:</label>
+          <textarea id="new-cross-selling" rows="3"></textarea>
+
+          <label for="new-side-effects">Significant Side Effects:</label>
+          <textarea id="new-side-effects" rows="3"></textarea>
+
+          <label for="new-interactions">Significant Interactions:</label>
+          <textarea id="new-interactions" rows="3"></textarea>
+
+          <label for="new-uses">Uses:</label>
+          <textarea id="new-uses" rows="3"></textarea>
+
+          <label for="new-dosage">Dosage:</label>
+          <textarea id="new-dosage" rows="3"></textarea>
+
+          <label for="new-location">Location in Pharmacy:</label>
+          <input type="text" id="new-location" />
+
+          <label for="new-image">Upload Image:</label>
+          <input type="file" id="new-image" accept="image/*" />
+
+          <div class="form-buttons">
+            <button type="submit" id="add-medicine-btn">Add New Medicine</button>
+            <button type="reset" id="clear-fields-btn">Clear Fields</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="medicine-form">
+        <h2>Search and Edit Existing Medicine</h2>
+        <input type="text" id="search-bar" placeholder="Search by name or barcode" />
+
+        <form id="edit-medicine-form" enctype="multipart/form-data">
+          <input type="hidden" id="edit-medicine-id" />
+
+          <label for="edit-medicine-name">Medicine Name:</label>
+          <input type="text" id="edit-medicine-name" />
+
+          <label for="edit-medicine-price">Price:</label>
+          <input type="text" id="edit-medicine-price" />
+
+          <label for="edit-medicine-barcode">Barcode:</label>
+          <input type="text" id="edit-medicine-barcode" />
+
+          <label for="edit-medicine-expiry">Expiry Date:</label>
+          <input type="date" id="edit-medicine-expiry" />
+
+          <label for="edit-medicine-stock">Stock Quantity:</label>
+          <input type="number" id="edit-medicine-stock" step="any"/>
+
+          <label for="edit-medicine-packet">Packet Size:</label>
+          <input type="number" id="edit-medicine-packet" step="any" />
+
+          <label for="edit-active-name-1">Active Name 1:</label>
+          <input type="text" id="edit-active-name-1" />
+
+          <label for="edit-active-name-2">Active Name 2:</label>
+          <input type="text" id="edit-active-name-2" />
+
+          <label for="edit-cross-selling">Cross Selling Info:</label>
+          <textarea id="edit-cross-selling" rows="3"></textarea>
+
+          <label for="edit-side-effects">Significant Side Effects:</label>
+          <textarea id="edit-side-effects" rows="3"></textarea>
+
+          <label for="edit-interactions">Significant Interactions:</label>
+          <textarea id="edit-interactions" rows="3"></textarea>
+
+          <label for="edit-uses">Uses:</label>
+          <textarea id="edit-uses" rows="3"></textarea>
+
+          <label for="edit-dosage">Dosage:</label>
+          <textarea id="edit-dosage" rows="3"></textarea>
+
+          <label for="edit-location">Location in Pharmacy:</label>
+          <input type="text" id="edit-location" />
+
+          <label for="edit-image">Upload Image:</label>
+          <input type="file" id="edit-image" accept="image/*" />
+
+          <div class="form-buttons">
+            <button type="submit" id="save-edits-btn">Save Edits</button>
+            <button type="reset" id="reset-fields-btn">Reset Fields</button>
+            <button type="button" id="delete-medicine-btn">Delete Medicine</button>
+            <button type="button" id="manage-batches-btn">Manage Batches</button>
+          </div>
+        </form>
+      </div>
+    </section>
+    <!-- Batch Management Modal -->
+<div id="batch-modal" class="modal" style="display:none;">
+  <div class="modal-content">
+    <span class="close" id="close-batch-modal">&times;</span>
+    <h3>Manage Batches</h3>
+    <table id="batch-table">
+      <thead>
+        <tr>
+          <th>Batch #</th>
+          <th>Expiry</th>
+          <th>Quantity</th>
+          <th>Received</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <hr/>
+    <h4>Add/Edit Batch</h4>
+    <form id="batch-form">
+      <input type="hidden" id="batch-id" />
+      <input type="text" id="batch-number" placeholder="Batch Number" />
+      <input type="date" id="batch-expiry" placeholder="Expiry" />
+      <input type="number" id="batch-qty" step="any" placeholder="Quantity" />
+      <input type="date" id="batch-received" placeholder="Received Date" />
+      <button type="submit" id="save-batch-btn">Save Batch</button>
+      <button type="button" id="reset-batch-form">Clear</button>
+    </form>
+  </div>
+</div>
+
+  </main>
+
+  <div class="dashboard-footer">
+    © 2025 Pharmacy Management System | Designed by Pharmacist: MOHAMED HAMID |
+    <a href="mailto:mhm.hamid@gmail.com.com">mhm.hamid@gmail.com</a> | All Rights Reserved
+  </div>
+
+  <script src="edit medicines.js"></script>
+  <script>
+    function logout() {
+      window.location.href = 'index.html';
+    }
+  </script>
+</body>
+</html>

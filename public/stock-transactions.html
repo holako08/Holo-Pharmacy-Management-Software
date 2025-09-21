@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Stock Transactions | Pharmacy Management System</title>
+    <link rel="stylesheet" href="stock-common.css">
+    <link rel="stylesheet" href="stock-transactions.css">
+    <link rel="stylesheet" href="nav-bar.css">
+    <script defer src="stock-transactions.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" href="images/logo.png" type="image/x-icon">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="nav-bar-unique">
+        <div class="logo-unique">
+            <img src="images/logo.png" alt="Logo">
+        </div>
+        <ul class="nav-links-unique">
+            <li><a href="dashboard.html">Home</a></li>
+            <li><a href="pos.html">POS</a></li>
+            <li><a href="PDC.html">Pediatric Dose Calculator</a></li>
+            <li><a href="cross selling.html">Cross-selling Help</a></li>
+            <li>
+                <a href="#">Reports</a>
+                <ul class="dropdown-unique">
+                    <li><a href="sales report.html">Sales Report</a></li>
+                    <li><a href="item-wise sale report.html">Item-wise Sales Report</a></li>
+                    <li><a href="near-expiry-report.html">Near Expiry Report</a></li>
+                    <li><a href="stock-report.html">Stock Report</a></li>
+                </ul>
+            </li>
+            <li>
+                <a href="#">Pharmacists’ Tools</a>
+                <ul class="dropdown-unique">
+                    <li><a href="requirements.html">Stock Requirements</a></li>
+                    <li><a href="variations.html">Stock Variations</a></li>
+                    <li><a href="testing.html">Blood Pressure and Sugar Check</a></li>
+                    <li><a href="request-center-usrZ3v.html">Requests to Admin</a></li>
+                </ul>
+            </li>
+            <li>
+                <a href="#">Admin Tools</a>
+                <ul class="dropdown-unique">
+                    <li><a href="edit medicines.html">Edit Medicines List</a></li>
+                    <li><a href="edit bills.html">Edit Bills</a></li>
+                    <li><a href="user management.html">Edit Users</a></li>
+                    <li><a href="admin-approvals.html">Review Requests</a></li>
+                </ul>
+            </li>
+        </ul>
+        <div class="search-unique">
+            <input type="text" placeholder="Search...">
+            <button>Search</button>
+        </div>
+    </nav>
+    <!-- User Info -->
+   <div class="user-info-panel">
+  <img id="user-photo" src="images/default-profile.png" alt="User Photo">
+  <div>
+    <span id="user-name"></span> <br>
+    <span id="user-job-title"></span>
+  </div>
+  <button id="logout-btn">Logout</button>
+</div>
+
+    <div class="main-dashboard">
+        <h2>Stock Transactions</h2>
+        <!-- Quick Navigation for Stock Transactions -->
+<div class="stock-nav">
+    <a href="stock-transfer.html" class="stock-nav-link">Stock Transfer</a>
+    <a href="stock-receipt.html" class="stock-nav-link">Stock Receipt</a>
+    <a href="stock-requests.html" class="stock-nav-link">Stock Request</a>
+</div>
+        <div class="dashboard-controls">
+            <input type="text" id="filter-item" placeholder="Filter by Item Name...">
+<input type="text" id="filter-id" placeholder="Filter by STN/SRN No...">
+<input type="text" id="filter-user" placeholder="Filter by User...">
+<input type="date" id="filter-date-from">
+<input type="date" id="filter-date-to">
+<select id="filter-type">
+    <option value="">All Types</option>
+    <option value="transfer">Transfer</option>
+    <option value="receipt">Receipt</option>
+    <option value="cancelled">Cancelled</option>
+</select>
+<button id="filter-btn">Apply Filter</button>
+<button id="reset-btn">Reset</button>
+<button id="export-btn">Export to Excel</button>
+
+        </div>
+        <div id="transactions-table-section">
+            <table id="transactions-table">
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>ID</th>
+                        <th>Items</th>
+                        <th>Quantities</th>
+                        <th>Batches</th>
+                        <th>From Branch</th>
+                        <th>To Branch</th>
+                        <th>User</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+            <div id="pagination" class="dashboard-pagination"></div>
+            <div id="no-data-msg" style="display:none;text-align:center;color:#999;padding:20px;">
+                No transactions found for selected criteria.
+            </div>
+        </div>
+    </div>
+    <!-- Transaction View Modal -->
+<div id="txn-modal">
+  <div class="modal-box">
+    <h3 id="txn-modal-title">Transaction Details</h3>
+    <div id="txn-modal-content"></div>
+    <button class="close-btn" onclick="closeTxnModal()">Close</button>
+  </div>
+</div>
+    <!-- Footer -->
+
+    <div class="dashboard-footer">
+        © 2025 Pharmacy Management System | Designed by Pharmacist: MOHAMED HAMID |
+        <a href="mailto:mhm.hamid@gmail.com">mhm.hamid@gmail.com</a> | All Rights Reserved
+    </div>
+</body>
+</html>

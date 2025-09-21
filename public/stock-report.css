@@ -1,0 +1,204 @@
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: #f4f4f4;
+  color: #222;
+}
+
+/* Navigation bar and dropdowns: Use your system's classes as is */
+
+.filter-container-bills-report {
+  padding: 1.2em 2em 1em 2em;
+  background: #f7f7f7;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 1.5em;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.filter-container-bills-report input[type="text"],
+.filter-container-bills-report input[type="number"] {
+  padding: 7px 13px;
+  border: 1px solid #bbb;
+  border-radius: 4px;
+  font-size: 1em;
+  margin-right: 0.7em;
+}
+
+.filter-container-bills-report label {
+  font-weight: 500;
+  margin-right: 0.4em;
+}
+
+.btn-gold-bills-report {
+  background: #FFD700;
+  color: #222;
+  border: none;
+  padding: 7px 18px;
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-left: 0.3em;
+  transition: background 0.2s, color 0.2s;
+}
+
+.btn-gold-bills-report:hover {
+  background: #bfa104;
+  color: #fff;
+}
+
+.data-table-bills-report {
+  width: 96%;
+  margin: 2em auto 1em auto;
+  border-collapse: collapse;
+  font-size: 1.03em;
+  background: #fff;
+  border-radius: 10px 10px 0 0;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+}
+
+.data-table-bills-report th, .data-table-bills-report td {
+  padding: 12px 18px;
+  text-align: left;
+}
+
+.data-table-bills-report th {
+  background: #FFD700;
+  color: #222;
+  font-weight: bold;
+  border-bottom: 2px solid #e1e1e1;
+}
+
+.data-table-bills-report tr {
+  border-bottom: 1px solid #ececec;
+}
+
+.data-table-bills-report tbody tr:nth-child(even) {
+  background: #f8f7f3;
+}
+
+/* Highlight low stock */
+.data-table-bills-report tr.low-stock-row {
+  background: #fffbe0 !important;
+  color: #c17c00;
+  font-weight: bold;
+  border-left: 6px solid #FFD700;
+}
+
+.loading-bills-report {
+  font-size: 1.1em;
+  text-align: center;
+  color: #444;
+}
+
+.summary-bills-report {
+  margin: 1.5em auto 0 auto;
+  padding: 0.7em 2em;
+  background: #fafafa;
+  border-top: 1px solid #ececec;
+  font-size: 1.11em;
+  color: #555;
+  font-weight: 500;
+  width: 96%;
+  border-radius: 0 0 10px 10px;
+}
+
+.dashboard-footer {
+  background: #2c2c2c;
+  color: #FFD700;
+  padding: 1rem 0;
+  text-align: center;
+  font-size: 1em;
+  margin-top: 40px;
+}
+
+.dashboard-footer a {
+  color: #FFD700;
+  text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .data-table-bills-report, .summary-bills-report {
+    width: 99%;
+    font-size: 0.97em;
+    padding: 0.5em 0.6em;
+  }
+  .filter-container-bills-report {
+    padding: 0.7em 0.5em;
+    flex-wrap: wrap;
+    gap: 0.7em;
+    font-size: 0.99em;
+  }
+  .dashboard-footer {
+    font-size: 0.95em;
+  }
+}
+.title {
+  font-size: 1.5em;
+  font-weight: bold;
+  margin: 0.5em 0;
+  text-align: center;
+  color: #333;
+  float: left;
+}
+.user-info-bills-report {
+  font-size: 0.95em;
+  color: #666;
+  margin-left: 1em;
+  float: right;
+}
+.report-header-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.2em 2em 0.6em 2em;
+  background: #fff;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.title {
+  font-size: 1.7em;
+  font-weight: bold;
+  margin: 0;
+  text-align: left;
+  color: #333;
+}
+
+.user-info-bills-report {
+  font-size: 0.97em;
+  color: #555;
+  margin-left: 1em;
+  display: flex;
+  align-items: center;
+  gap: 0.7em;
+  float: none !important;
+  background: transparent;
+}
+
+.user-info-bills-report .avatar-container {
+  display: flex;
+  align-items: center;
+  gap: 0.3em;
+}
+
+@media (max-width: 900px) {
+  .report-header-flex {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.7em;
+    padding: 0.8em 0.6em 0.3em 0.6em;
+  }
+  .title {
+    font-size: 1.22em;
+    text-align: left;
+    margin-bottom: 0.3em;
+  }
+  .user-info-bills-report {
+    justify-content: flex-end;
+    margin-left: 0;
+    font-size: 0.94em;
+  }
+}

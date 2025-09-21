@@ -1,0 +1,109 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+}
+
+header {
+    background: #333;
+    color: white;
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+}
+
+button {
+    background: #ff5733;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #c0392b;
+}
+
+main {
+    padding: 20px;
+}
+
+.medicine-section {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.medicine-form {
+    background: lightgray;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 48%;
+}
+
+.medicine-form h2 {
+    margin-bottom: 10px;
+}
+
+label {
+    display: block;
+    margin: 5px 0;
+    font-weight: bold;
+}
+
+input, textarea {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+textarea {
+    resize: vertical;
+}
+
+.form-buttons {
+    display: flex;
+    justify-content: space-between;
+}
+
+#delete-medicine-btn {
+    background: red;
+}
+
+#add-medicine-btn {
+    background: lightgreen;
+}
+
+#save-edits-btn {
+    background: lightgreen;
+}
+
+button:hover {
+    opacity: 0.8;
+}
+
+/* Batch Modal Styles */
+.modal {
+  display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%;
+  overflow: auto; background-color: rgba(0,0,0,0.4);
+}
+.modal-content {
+  background: #fff; margin: 5% auto; padding: 20px; border-radius: 8px; width: 90%; max-width: 600px; position: relative;
+}
+.close {
+  color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer;
+}
+.close:hover, .close:focus { color: black; text-decoration: none; cursor: pointer; }
+#batch-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+#batch-table th, #batch-table td { border: 1px solid #ccc; padding: 6px; text-align: center; }
+#batch-form input, #batch-form button { margin: 3px 2px; }

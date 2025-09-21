@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pharmacy Dashboard</title>
+           
+    <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="nav-bar.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <link rel="shortcut icon" href="images/logo.png" type="image/x-icon">
+    <link rel="stylesheet" href="responsive.css">
+    <style>
+     
+        .user-photo img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+    </style>
+    
+</head>
+<body>
+    <nav class="nav-bar-unique">
+        <div class="logo-unique">
+            <img src="images/logo.png" alt="Logo">
+        </div>
+        <ul class="nav-links-unique">
+            <li><a href="dashboard.html">Home</a></li>
+            <li><a href="pos.html">POS</a></li>
+            <li><a href="PDC.html">Pediatric Dose Calculator</a></li>
+            <li><a href="cross selling.html">Cross-selling Help</a></li>
+            <li>
+                <a href="#">Reports</a>
+                <ul class="dropdown-unique">
+                    <li><a href="sales report.html">Sales Report</a></li>
+                    <li><a href="item-wise sale report.html">Item-wise Sales Report</a></li>
+                    <li><a href="near-expiry-report.html">Near Expiry Report</a></li>
+                    <li><a href="stock-report.html">Stock Report</a></li>
+                </ul>
+            </li>
+            <li>
+                <a href="#">Pharmacists' Tools</a>
+                <ul class="dropdown-unique">
+                    <li><a href="requirements.html">Stock Requirements</a></li>
+                    <li><a href="variations.html">Stock Variations</a></li>
+                    <li><a href="testing.html">Blood Pressure and Sugar Check</a></li>
+                    <li><a href="request-center-usrZ3v.html">Requests to Admin</a></li>
+                </ul>
+            </li>
+            <li>
+                <a href="#">Admin Tools</a>
+                <ul class="dropdown-unique">
+                    <li><a href="edit medicines.html">Edit Medicines List</a></li>
+                    <li><a href="edit bills.html">Edit Bills</a></li>
+                    <li><a href="user management.html">Edit Users</a></li>
+                    <li><a href="admin-approvals.html">Review Requests</a></li>
+                </ul>
+            </li>
+        </ul>
+        <div class="search-unique">
+            <input type="text" placeholder="Search...">
+            <button>Search</button>
+        </div>
+    </nav>
+<br>
+<br>
+  
+<div class="container">
+        <div class="top-banner">
+            <div class="banner-text">Pharmacy Management System</div>
+            <div class="user-profile">
+                <div class="user-dropdown">
+                    <div class="user-info">
+                        <span class="job-title">Head Pharmacist</span>
+                        <span class="username">Dr. Sarah Johnson</span>
+                        <div class="profile-pic">
+                            <img id="user-photo" src="images/default-profile.png" alt="Profile">
+                          </div>
+                    </div>
+                    <div class="dropdown-menu">
+                        <ul>
+                            <li><a href="profile.html">My Profile</a></li>
+                            <li><a href="#">Account Settings</a></li>
+                            <li><a href="#">Help & Support</a></li>
+                            <li id="logout-btn" class="logout-btn"><a href="#" onclick="logout()">Sign Out</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="dashboard-header">
+            <div class="greeting">
+                Welcome, Dr. Johnson
+            </div>
+            <div class="date-time" id="current-date-time">
+                Today's Date
+            </div>
+        </div>
+        
+        <div class="quick-stats">
+            <div class="stat-card" id="total_sales">
+                <a href="sales report.html" style="text-decoration: none;"><div class="stat-number" id="totalSalesCard">145</div>
+                <div class="stat-label">Sales Today</div></a>
+            </div>
+
+             <div class="stat-card" id="low_stock">
+                <a href="stock-report.html" style="text-decoration: none;"><div class="stat-number" id="lowStockCard">145</div>
+                <div class="stat-label">Low Stock Items</div></a>
+            </div>
+            
+            <div class="stat-card"id="near_expiry">
+                <a href="near-expiry-report.html" style="text-decoration: none;"><div class="stat-number" id="nearExpiryCard">145</div>
+                <div class="stat-label">Near Expiry Items</div></a>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-number">5</div>
+                <div class="stat-label">Active Users</div>
+            </div>
+        </div>
+        
+        <div class="dashboard-grid">
+            <div class="dashboard-card highlight">
+                <div class="card-header">Daily Work</div>
+                <div class="card-content">
+                    <ul>
+                        <li>
+                            <a href="pos.html">
+                                <div class="card-icon">💊</div>
+                                POS
+                            </a>
+                        </li>
+                        <li>
+                            <a href="requirements.html">
+                                <div class="card-icon">📋</div>
+                                Stock Requirements
+                            </a>
+                        </li>
+                        <li>
+                            <a href="variations.html">
+                                <div class="card-icon">📉</div>
+                                Stock Variations
+                            </a>
+                        </li>
+                        <li>
+                            <a href="testing.html">
+                                <div class="card-icon">🩸</div>
+                                Blood Pressure and Sugar Check
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="dashboard-card">
+                <div class="card-header">Patient Help</div>
+                <div class="card-content">
+                    <ul>
+                        <li>
+                            <a href="PDC.html">
+                                <div class="card-icon">👶</div>
+                                Pediatric Dose Calculator
+                            </a>
+                        </li>
+                        <li>
+                            <a href="cross selling.html">
+                                <div class="card-icon">🛒</div>
+                                Cross-selling Helper
+                            </a>
+                        </li>
+                        <li>
+                            <a href="customer-requests.html">
+                                <div class="card-icon">✍️</div>
+                                Customer Requests
+                            </a>
+                        </li>
+                        <li>
+                            <a href="tasks.html">
+                                <div class="card-icon">✅</div>
+                                Tasks
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="dashboard-card">
+                <div class="card-header">Stock Management</div>
+                <div class="card-content">
+                    <ul>
+                        <li>
+                            <a href="item-master.html">
+                                <div class="card-icon">📑</div>
+                                Item Master
+                            </a>
+                        </li>
+                        <li>
+                            <a href="stock-transactions.html">
+                                <div class="card-icon">↔️</div>
+                                Stock Transactions
+                            </a>
+                        </li>
+                        <li>
+                            <a href="stock-report.html">
+                                <div class="card-icon">📦</div>
+                                Stock Report
+                            </a>
+                        </li>
+                        <li>
+                            <a href="near-expiry-report.html">
+                                <div class="card-icon">⌛</div>
+                                Near Expiry Report
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="dashboard-card">
+                <div class="card-header">Sales & Reports</div>
+                <div class="card-content">
+                    <ul>
+                        <li>
+                            <a href="sales report.html">
+                                <div class="card-icon">📊</div>
+                                Sales Report
+                            </a>
+                        </li>
+                        <li>
+                            <a href="item-wise sale report.html">
+                                <div class="card-icon">📈</div>
+                                Item-wise Sales Report
+                            </a>
+                        </li>
+                        <li>
+                            <a href="bill-return.html">
+                                <div class="card-icon">↩️</div>
+                                Bill Return/Reprint
+                            </a>
+                        </li>
+                        <li>
+                            <a href="request-center-usrZ3v.html">
+                                <div class="card-icon">💸</div>
+                                Requests Center
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="dashboard-card">
+                <div class="card-header">Admin Tools</div>
+                <div class="card-content">
+                    <ul>
+                        <li>
+                            <a href="edit medicines.html">
+                                <div class="card-icon">💊</div>
+                                Edit Medicines List
+                            </a>
+                        </li>
+                        <li>
+                            <a href="edit bills.html">
+                                <div class="card-icon">📝</div>
+                                Edit Bills
+                            </a>
+                        </li>
+                        <li>
+                            <a href="user%20management.html">
+                                <div class="card-icon">👥</div>
+                                Edit Users
+                            </a>
+                        </li>
+                        <li>
+                            <a href="admin-approvals.html">
+                                <div class="card-icon">📊</div>
+                                Review Requests
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="dashboard-card">
+                <div class="card-header">Purchase Goods Management</div>
+                <div class="card-content">
+                    <ul>
+                        <li>
+                            <a href="local-purchase-order.html">
+                                <div class="card-icon">🛍️</div>
+                                Local Purchase Orders
+                            </a>
+                        </li>
+                        <li>
+                            <a href="purchase-history.html">
+                                <div class="card-icon">🕒</div>
+                                Purchase Records
+                            </a>
+                        </li>
+                        <li>
+                            <a href="goods-receipt-notes.html">
+                                <div class="card-icon">⬇️</div>
+                                Goods Receipts
+                            </a>
+                        </li>
+                        <li>
+                            <a href="agency-management.html">
+                                <div class="card-icon">💼</div>
+                                Agenecy Management
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="dashboard-footer">
+            © 2025 Pharmacy Management System | Designed by Pharmacist: MOHAMED HAMID| <a href="mailto:mhm.hamid@gmail.com.com">mhm.hamid@gmail.com</a> | All Rights Reserved
+        </div>
+    </div>
+    
+    <script src="dashboard.js"></script>
+    <script>
+        function logout() {
+            // Redirect to the login page or perform any other log-out action
+            window.location.href = 'index.html'; // Assuming you have a login page named login.html
+        }
+    </script>
+</body>
+</html>

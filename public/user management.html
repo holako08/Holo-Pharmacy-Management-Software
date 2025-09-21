@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>User Management</title>
+<link href="user management.css" rel="stylesheet"/>
+<link href="nav-bar.css" rel="stylesheet"/>
+<link href="images/logo.png" rel="shortcut icon" type="image/x-icon"/>
+<link rel="stylesheet" href="responsive.css">
+    <link rel="shortcut icon" href="images/logo.png" type="image/x-icon">
+</head>
+<body>
+<nav class="nav-bar-unique">
+  <div class="logo-unique">
+    <img src="images/logo.png" alt="Logo">
+  </div>
+  <ul class="nav-links-unique">
+    <li><a href="dashboard.html">Home</a></li>
+    <li><a href="pos.html">POS</a></li>
+    <li><a href="PDC.html">Pediatric Dose Calculator</a></li>
+    <li><a href="cross selling.html">Cross-selling Help</a></li>
+    <li>
+      <a href="#">Reports</a>
+      <ul class="dropdown-unique">
+        <li><a href="sales report.html">Sales Report</a></li>
+        <li><a href="item-wise sale report.html">Item-wise Sales Report</a></li>
+
+<li><a href="near-expiry-report.html">Near Expiry Report</a></li>
+<li><a href="stock-report.html">Stock Report</a></li>
+
+      </ul>
+    </li>
+    <li>
+      <a href="#">Pharmacists’ Tools</a>
+      <ul class="dropdown-unique">
+        <li><a href="requirements.html">Stock Requirements</a></li>
+        <li><a href="variations.html">Stock Variations</a></li>
+        <li><a href="testing.html">Blood Pressure and Sugar Check</a></li>
+        <li><a href="request-center-usrZ3v.html">Requests Center</a></li>
+      </ul>
+    </li>
+    <li>
+      <a href="#">Admin Tools</a>
+      <ul class="dropdown-unique">
+        <li><a href="edit medicines.html">Edit Medicines List</a></li>
+        <li><a href="edit bills.html">Edit Bills</a></li>
+        <li><a href="user management.html">Edit Users</a></li>
+        <li><a href="admin-approvals.html">Admin Approvals</a></li>
+      </ul>
+    </li>
+  </ul>
+  <div class="search-unique">
+    <input type="text" placeholder="Search...">
+    <button>Search</button>
+  </div>
+</nav>
+<div class="header">
+<h1>User Management</h1>
+<div class="user-info">
+<span id="userDisplayInfo">Admin: <span id="loggedInUser"></span></span>
+<button class="logout-btn" id="logoutBtn">Log-out</button>
+<div class="avatar"><div class="avatar">
+    <img id="user-photo" src="images/default-profile.png" alt="Profile" style="width:60px; height:60px; border-radius:50%; object-fit:cover; object-position:center;">
+</div>
+</div>
+</div>
+</div>
+<div class="container">
+<!-- Add User Button -->
+<button class="btn" id="showAddUserFormBtn">Add new user</button>
+<!-- Add User Form -->
+<div class="form-container" id="addUserForm">
+<h2>Add New User</h2>
+<form id="addUserFormElement">
+<div class="form-group">
+<label for="username">User name (required)</label>
+<input class="form-control" id="username" name="username" type="text"/>
+</div>
+<div class="form-group">
+<label for="password">Password (required)</label>
+<input class="form-control" id="password" name="password" type="password"/>
+</div>
+<div class="form-group">
+<label>Is admin</label>
+<div>
+<label><input name="isAdmin" type="radio" value="1"/> Yes</label>
+<label><input checked="" name="isAdmin" type="radio" value="0"/> No</label>
+</div>
+</div>
+<div class="form-group">
+<label for="fullName">Full name</label>
+<input class="form-control" id="fullName" name="fullName" type="text"/>
+</div>
+<div class="form-group">
+<label for="jobTitle">Job title</label>
+<input class="form-control" id="jobTitle" name="jobTitle" type="text"/>
+</div>
+<div class="form-group">
+<label>Gender</label>
+<div>
+<label><input name="gender" type="radio" value="male"/> Male</label>
+<label><input name="gender" type="radio" value="female"/> Female</label>
+<label><input checked="" name="gender" type="radio" value="other"/> Other</label>
+</div>
+</div>
+<div class="form-group">
+<label for="birthdate">Birthdate</label>
+<input class="form-control" id="birthdate" name="birthdate" type="date"/>
+</div>
+<div class="form-group">
+<label for="email">E-mail</label>
+<input class="form-control" id="email" name="email" type="email"/>
+</div>
+<div class="form-group">
+<label for="phoneNumber">Phone Number</label>
+<input class="form-control" id="phoneNumber" name="phoneNumber" type="text"/>
+</div>
+<div class="form-group">
+<label for="idNumber">ID Number</label>
+<input class="form-control" id="idNumber" name="idNumber" type="text"/>
+</div>
+<div class="form-group">
+<label for="licenseNumber">License Number</label>
+<input class="form-control" id="licenseNumber" name="licenseNumber" type="text"/>
+</div>
+<div class="form-group">
+<label for="photo">Picture</label>
+<input class="form-control" id="photo" name="photo" type="file"/>
+</div>
+<div class="form-actions">
+<button class="btn" type="submit">Add new user</button>
+<button class="btn btn-warning" id="clearAddForm" type="button">Clear Fields</button>
+</div></form>
+</div>
+<!-- Users Table -->
+<h2 class="section-title">Existing Users</h2>
+<table id="usersTable">
+<thead>
+<tr>
+<th>Username</th>
+<th>Is admin</th>
+<th>Full name</th>
+<th>Job title</th>
+<th>Gender</th>
+<th>Birthdate</th>
+<th>Phone Number</th>
+<th>ID Number</th>
+<th>License Number</th>
+<th>Photo</th>
+<th>Actions</th>
+</tr>
+</thead>
+<tbody id="usersTableBody">
+<!-- User rows will be added dynamically -->
+</tbody>
+</table>
+<!-- Edit User Form -->
+<div class="form-container" id="editUserForm">
+<h2>Edit User</h2>
+<form id="editUserFormElement"><input id="editUserId" name="userId" type="hidden"/>
+<div class="form-group">
+<label for="editUsername">User name</label>
+<input class="form-control" id="editUsername" name="username" type="text"/>
+</div>
+<div class="form-group">
+<label for="editPassword">Password (leave blank to keep current)</label>
+<input class="form-control" id="editPassword" name="password" type="password"/>
+</div>
+<div class="form-group">
+<label>Is admin</label>
+<div>
+<label><input id="editIsAdminYes" name="isAdmin" type="radio" value="1"/> Yes</label>
+<label><input id="editIsAdminNo" name="isAdmin" type="radio" value="0"/> No</label>
+</div>
+</div>
+<div class="form-group">
+<label for="editFullName">Full name</label>
+<input class="form-control" id="editFullName" name="fullName" type="text"/>
+</div>
+<div class="form-group">
+<label for="editJobTitle">Job title</label>
+<input class="form-control" id="editJobTitle" name="jobTitle" type="text"/>
+</div>
+<div class="form-group">
+<label>Gender</label>
+<div>
+<label><input id="editGenderMale" name="gender" type="radio" value="male"/> Male</label>
+<label><input id="editGenderFemale" name="gender" type="radio" value="female"/> Female</label>
+<label><input id="editGenderOther" name="gender" type="radio" value="other"/> Other</label>
+</div>
+</div>
+<div class="form-group">
+<label for="editBirthdate">Birthdate</label>
+<input class="form-control" id="editBirthdate" name="birthdate" type="date"/>
+</div>
+<div class="form-group">
+<label for="editEmail">E-mail</label>
+<input class="form-control" id="editEmail" name="email" type="email"/>
+</div>
+<div class="form-group">
+<label for="editPhoneNumber">Phone Number</label>
+<input class="form-control" id="editPhoneNumber" name="phoneNumber" type="text"/>
+</div>
+<div class="form-group">
+<label for="editIDNumber">ID Number</label>
+<input class="form-control" id="editIDNumber" name="idNumber" type="text"/>
+</div>
+<div class="form-group">
+<label for="editLicenseNumber">License Number</label>
+<input class="form-control" id="editLicenseNumber" name="licenseNumber" type="text"/>
+</div>
+<div class="form-group">
+<label for="editPhoto">Picture (leave blank to keep current)</label>
+<input class="form-control" id="editPhoto" name="photo" type="file"/>
+</div>
+<div class="form-actions">
+<button class="btn" type="submit">Save Updates</button>
+<button class="btn btn-warning" id="cancelEdit" type="button">Cancel</button>
+</div></form>
+</div>
+</div>
+<div class="dashboard-footer">
+        © 2025 Pharmacy Management System | Designed by Pharmacist: MOHAMED HAMID| <a href="mailto:mhm.hamid@gmail.com.com">mhm.hamid@gmail.com</a> | All Rights Reserved
+    </div>
+<script src="user management.js"></script>
+</body>
+</html>

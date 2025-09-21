@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blood Pressure & Glucose Screening | Pharmacy</title>
+    <link rel="stylesheet" href="testing.css">
+    <link rel="stylesheet" href="nav-bar.css">
+    <link rel="shortcut icon" href="images/logo.png" type="image/x-icon">
+    <link rel="stylesheet" href="responsive.css">
+</head>
+<body>
+<nav class="nav-bar-unique">
+  <div class="logo-unique"><img src="images/logo.png" alt="Logo"></div>
+  <ul class="nav-links-unique">
+    <li><a href="dashboard.html">Home</a></li>
+    <li><a href="pos.html">POS</a></li>
+    <li><a href="PDC.html">Pediatric Dose Calculator</a></li>
+    <li><a href="cross selling.html">Cross-selling Help</a></li>
+    <li>
+      <a href="#">Reports</a>
+      <ul class="dropdown-unique">
+        <li><a href="sales report.html">Sales Report</a></li>
+        <li><a href="item-wise sale report.html">Item-wise Sales Report</a></li>
+        <li><a href="near-expiry-report.html">Near Expiry Report</a></li>
+        <li><a href="stock-report.html">Stock Report</a></li>
+      </ul>
+    </li>
+    <li>
+      <a href="#">Pharmacists’ Tools</a>
+      <ul class="dropdown-unique">
+        <li><a href="requirements.html">Stock Requirements</a></li>
+        <li><a href="variations.html">Stock Variations</a></li>
+        <li><a href="testing.html">Blood Pressure and Sugar Check</a></li>
+        <li><a href="request-center-usrZ3v.html">Requests Center</a></li>
+      </ul>
+    </li>
+    <li>
+      <a href="#">Admin Tools</a>
+      <ul class="dropdown-unique">
+        <li><a href="edit medicines.html">Edit Medicines List</a></li>
+        <li><a href="edit bills.html">Edit Bills</a></li>
+        <li><a href="user management.html">Edit Users</a></li>
+        <li><a href="admin-approvals.html">Admin Approvals</a></li>
+      </ul>
+    </li>
+  </ul>
+  <div class="search-unique">
+    <input type="text" placeholder="Search...">
+    <button>Search</button>
+  </div>
+</nav>
+
+<div class="header">
+    <h1>Clinical Screening: Blood Pressure & Blood Sugar</h1>
+    <div class="user-info">
+    <div class="user-details">
+      <span id="user-job-title">Pharmacist</span>
+      <span id="user-name">MOHAMED</span> is logged-in
+    </div>
+    <div class="profile-pic">
+        <img id="user-photo" src="images/default-profile.png" alt="Profile" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;">
+    </div>
+    <button id="logout-btn" class="logout-btn">Log-out</button>
+</div>
+</div>
+
+<div class="main-testing-container">
+    <!-- Guidelines Section -->
+    <div class="clinical-guidelines">
+        <button id="showBpGuide" class="guideline-btn">BP Measurement Guide</button>
+        <button id="showBgGuide" class="guideline-btn">Blood Sugar Guide</button>
+    </div>
+    <!-- Patient Info -->
+    <div class="card patient-info-card">
+        <h2>Patient Information</h2>
+        <div class="form-row">
+            <div style="position:relative;">
+  <input type="text" id="patientName" placeholder="Enter patient name" autocomplete="off">
+  <div id="patientNameDropdown" class="gold-gray-dropdown" style="display:none;"></div>
+</div>
+        </div>
+        <div class="form-row">
+            <div class="form-field">
+                <label for="patientAge">Age:</label>
+                <input type="number" id="patientAge" placeholder="Enter age">
+            </div>
+            <div class="form-field">
+                <label for="patientWeight">Weight (kg):</label>
+                <input type="number" id="patientWeight" placeholder="Enter weight">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-field">
+                <label>Smoking history:</label>
+                <input type="radio" id="smokerYes" name="smoking" value="Smoker">
+                <label for="smokerYes">Smoker</label>
+                <input type="radio" id="smokerNo" name="smoking" value="Non-smoker" checked>
+                <label for="smokerNo">Non-smoker</label>
+            </div>
+        </div>
+    </div>
+    <!-- Measurement Section -->
+    <div class="flex-row">
+        <div class="card bp-card">
+            <h2>Blood Pressure</h2>
+            <div class="bp-fields">
+                <label>Systolic BP:</label>
+                <input type="number" id="systolicBP" placeholder="Systolic (mmHg)">
+                <label>Diastolic BP:</label>
+                <input type="number" id="diastolicBP" placeholder="Diastolic (mmHg)">
+                <button id="diagnoseBPBtn" class="diagnose-btn">Analyze BP</button>
+                <div id="bpWarning" class="alert alert-warning" style="display:none"></div>
+            </div>
+        </div>
+        <div class="card bg-card">
+            <h2>Blood Glucose</h2>
+            <label>Fasting BG:</label>
+            <input type="number" id="fastingBG" placeholder="Fasting">
+            <label>Unit:</label>
+            <input type="radio" name="fastingUnit" value="mg/dL" checked> mg/dL
+            <input type="radio" name="fastingUnit" value="mmol/L"> mmol/L <hr>
+            <label>Non-Fasting BG:</label>
+            <input type="number" id="nonFastingBG" placeholder="Non-fasting">
+            <label>Unit:</label>
+            <input type="radio" name="nonFastingUnit" value="mg/dL" checked> mg/dL
+            <input type="radio" name="nonFastingUnit" value="mmol/L"> mmol/L
+            <button id="diagnoseDiabetesBtn" class="diagnose-btn">Analyze Sugar</button>
+            <div id="bgWarning" class="alert alert-warning" style="display:none"></div>
+        </div>
+    </div>
+    <div class="card result-card">
+        <h2>Results & Recommendations</h2>
+        <div id="diagnosis">No diagnosis yet.</div>
+        <div id="recommendations">No recommendations yet.</div>
+        <div id="doctorReferral" class="alert alert-danger" style="display:none"></div>
+    </div>
+    <div class="action-buttons">
+        <button id="saveReportBtn" class="action-btn">Save Report</button>
+        <button id="printReportBtn" class="action-btn">Print Report</button>
+        <a href="testing-report.html"><button class="action-btn">Testing Report</button></a>
+    </div>
+    <div class="dashboard-footer">
+        <span>© 2025 Pharmacy Management System | Designed by Pharmacist: MOHAMED HAMID</span>
+        | <a href="mailto:mhm.hamid@gmail.com">mhm.hamid@gmail.com</a> | All Rights Reserved
+    </div>
+</div>
+
+<!-- BP Guide Modal -->
+<div id="bpModal" class="modal" style="display:none">
+    <div class="modal-content">
+        <span class="close" id="closeBpModal">&times;</span>
+        <h3>Blood Pressure Measurement Guidelines</h3>
+        <ul>
+            <li>Ensure the patient is seated and relaxed for at least 5 minutes.</li>
+            <li>Back supported, feet flat, arm at heart level, no talking during measurement.</li>
+            <li>No caffeine/smoking/exercise 30 minutes before.</li>
+            <li>Use correct cuff size, wrap on bare arm.</li>
+            <li>Take two readings 1-2 minutes apart, record the average.</li>
+        </ul>
+    </div>
+</div>
+<!-- BG Guide Modal -->
+<div id="bgModal" class="modal" style="display:none">
+    <div class="modal-content">
+        <span class="close" id="closeBgModal">&times;</span>
+        <h3>Blood Glucose Measurement Guidelines</h3>
+        <ul>
+            <li>Wash and dry hands before pricking.</li>
+            <li>Use a new lancet for each test.</li>
+            <li>Record whether fasting (8+ hours) or random (any time).</li>
+            <li>Apply drop of blood to strip, wait for result.</li>
+            <li>Clean meter regularly, calibrate if required.</li>
+        </ul>
+    </div>
+</div>
+<script src="testing.js"></script>
+</body>
+</html>

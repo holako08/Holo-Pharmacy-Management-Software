@@ -1,0 +1,283 @@
+
+document.addEventListener("DOMContentLoaded", () => {
+  const searchInput = document.getElementById("searchInput");
+  const dropdown = document.getElementById("searchDropdown");
+  const tableBody = document.getElementById("selectedMedicinesBody");
+  const footer = document.getElementById("variationTotalsFooter");
+
+  const loadUser = () => {
+    const user = JSON.parse(sessionStorage.getItem("userInfo") || "{}");
+    if (!user.username) return (window.location.href = "index.html");
+    document.getElementById("pharmacist-name").textContent = user.fullName || user.username;
+    document.getElementById("job-title").textContent = user.jobTitle || "Staff";
+    const userInfo = JSON.parse(sessionStorage.getItem("userInfo") || "{}");
+const userPhoto = document.getElementById('user-photo');
+if (userPhoto && userInfo.userId) {
+    userPhoto.onerror = () => userPhoto.src = 'images/default-profile.png';
+    userPhoto.src = `/api/user-photo/${userInfo.userId}`;
+}
+
+  };
+
+  document.getElementById("logout-btn").onclick = () => {
+    sessionStorage.clear();
+    window.location.href = "index.html";
+  };
+
+  searchInput.addEventListener("input", async () => {
+    const term = searchInput.value.trim();
+    dropdown.innerHTML = "";
+    if (term.length < 2) return;
+
+   const res = await fetch(`/api/pos/medicines/search?q=${encodeURIComponent(term)}`);
+
+    const data = await res.json();
+    data.forEach(item => {
+      const div = document.createElement("div");
+      div.textContent = `${item.item_name} - ${item.price} OMR`;
+      div.onclick = () => {
+        addItem(item);
+        dropdown.innerHTML = "";
+        searchInput.value = "";
+      };
+      dropdown.appendChild(div);
+    });
+  });
+
+  const addItem = (item) => {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${item.item_name}</td>
+      <td>${item.price}</td>
+      <td><input type="number" class="phyQty" value="0"></td>
+      <td><input type="number" class="sysQty" value="0"></td>
+      <td class="variationResult">no variation</td>
+      <td><button class="delBtn">Delete</button></td>
+    `;
+    row.dataset.barcode = item.barcode;
+    row.dataset.price = item.price;
+    row.dataset.variation = 0;
+    tableBody.appendChild(row);
+    updateVariationEvents(row);
+  };
+
+  const updateVariationEvents = (row) => {
+    const phy = row.querySelector(".phyQty");
+    const sys = row.querySelector(".sysQty");
+    const result = row.querySelector(".variationResult");
+
+    const calc = () => {
+      const diff = parseInt(phy.value || 0) - parseInt(sys.value || 0);
+      row.dataset.variation = diff;
+      if (diff > 0) {
+        result.textContent = `${diff} more physically`;
+      } else if (diff < 0) {
+        result.textContent = `${Math.abs(diff)} less physically`;
+      } else {
+        result.textContent = "no variation";
+      }
+      updateFooter();
+    };
+
+    phy.oninput = calc;
+    sys.oninput = calc;
+
+    row.querySelector(".delBtn").onclick = async () => {
+      const id = row.dataset.id;
+      if (id) {
+        const confirmed = confirm("Delete this saved variation?");
+        if (!confirmed) return;
+        const res = await fetch(`/api/delete-variation-rw52x/${id}`, { method: "DELETE" });
+        const result = await res.json();
+        if (result.affectedRows) row.remove();
+      } else {
+        row.remove();
+      }
+      updateFooter();
+    };
+  };
+
+  const updateFooter = () => {
+    let moreCount = 0;
+    let lessCount = 0;
+    let moreValue = 0;
+    let lessValue = 0;
+
+    document.querySelectorAll("#selectedMedicinesBody tr").forEach(row => {
+      const variation = parseInt(row.dataset.variation || 0);
+      const price = parseFloat(row.dataset.price || 0);
+
+      if (variation > 0) {
+        moreCount += variation;
+        moreValue += variation * price;
+      } else if (variation < 0) {
+        lessCount += Math.abs(variation);
+        lessValue += Math.abs(variation * price);
+      }
+    });
+
+    footer.innerHTML = `
+      <tr>
+        <td colspan="6">
+          <strong>Total:</strong> 
+          ${moreCount > 0 ? `${moreCount} total more physically (+${moreValue.toFixed(2)} OMR)` : ""}
+          ${lessCount > 0 ? ` | ${lessCount} total less physically (-${lessValue.toFixed(2)} OMR)` : ""}
+          ${moreCount + lessCount === 0 ? "No variations" : ""}
+        </td>
+      </tr>
+    `;
+  };
+
+  document.getElementById("ignoreButton").onclick = () => {
+    tableBody.innerHTML = "";
+    footer.innerHTML = "";
+  };
+
+  document.getElementById("saveAllButton").onclick = async () => {
+    const user = JSON.parse(sessionStorage.getItem("userInfo") || "{}");
+    const data = [...tableBody.rows].map(row => ({
+      item_name: row.cells[0].textContent,
+      price: parseFloat(row.dataset.price),
+      physical_qty: parseInt(row.querySelector(".phyQty").value),
+      system_qty: parseInt(row.querySelector(".sysQty").value),
+      variation: parseInt(row.dataset.variation || 0),
+      barcode: row.dataset.barcode,
+      recorded_by: user.username
+    }));
+
+    await fetch("/api/save-variations-ky12z", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
+    });
+
+    alert("Saved successfully!");
+  };
+
+  document.getElementById("downloadButton").onclick = () => {
+    const wb = XLSX.utils.book_new();
+    const rows = [["Item Name", "Price", "Physical Qty", "System Qty", "Variation"]];
+  
+    // Add each row from the table body
+    document.querySelectorAll("#selectedMedicinesBody tr").forEach(row => {
+      rows.push([
+        row.cells[0].textContent,
+        row.cells[1].textContent,
+        row.querySelector(".phyQty").value,
+        row.querySelector(".sysQty").value,
+        row.querySelector(".variationResult").textContent
+      ]);
+    });
+  
+    // Add total row from footer if it exists
+    const footerRow = document.querySelector("#variationTotalsFooter tr");
+    if (footerRow) {
+      const totalText = footerRow.innerText.trim();
+      rows.push([]);
+      rows.push(["", "", "", "", "", totalText]);
+    }
+  
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    XLSX.utils.book_append_sheet(wb, ws, "Variations");
+    XLSX.writeFile(wb, "Stock_Variations.xlsx");
+  };
+  
+
+  document.getElementById("fetchVariationsButton").onclick = async () => {
+  const start = document.getElementById("startDate").value;
+  const end = document.getElementById("endDate").value;
+  if (!start || !end) return alert("Select a date range");
+
+  const res = await fetch("/api/fetch-variations-dt98q", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ startDate: start, endDate: end })
+  });
+
+  const data = await res.json();
+  console.log("Fetched variations:", data); // debug
+
+  tableBody.innerHTML = "";
+  if (data.length === 0) {
+    tableBody.innerHTML = "<tr><td colspan='6'>No variations found for this range.</td></tr>";
+    footer.innerHTML = "";
+    return;
+  }
+
+  data.forEach(item => {
+    const itemName = item.item_name || "Unknown";
+    const price = item.price || 0;
+    const phy = item.physical_qty || 0;
+    const sys = item.system_qty || 0;
+    const variation = item.variation || 0;
+    const id = item.id || null;
+    const barcode = item.barcode || "";
+
+    let variationText = "no variation";
+    if (variation > 0) variationText = `${variation} more physically`;
+    else if (variation < 0) variationText = `${Math.abs(variation)} less physically`;
+
+    const row = document.createElement("tr");
+    row.dataset.id = id;
+    row.dataset.price = price;
+    row.dataset.barcode = barcode;
+    row.dataset.variation = variation;
+
+    row.innerHTML = `
+      <td>${itemName}</td>
+      <td>${price}</td>
+      <td><input type="number" class="phyQty" value="${phy}"></td>
+      <td><input type="number" class="sysQty" value="${sys}"></td>
+      <td class="variationResult">${variationText}</td>
+      <td>
+        <button class="delBtn">Delete</button>
+        ${id ? `<button class="saveBtn">Save</button>` : ''}
+      </td>
+    `;
+
+    tableBody.appendChild(row);
+    updateVariationEvents(row);
+
+    // Save button handler for existing (id) variations
+    if (id) {
+      row.querySelector('.saveBtn').onclick = async () => {
+        const phyQty = row.querySelector('.phyQty').value;
+        const sysQty = row.querySelector('.sysQty').value;
+        const newVariation = parseInt(phyQty) - parseInt(sysQty);
+
+        // Update the dataset and UI
+        row.dataset.variation = newVariation;
+        row.querySelector('.variationResult').textContent =
+          newVariation > 0
+            ? `${newVariation} more physically`
+            : (newVariation < 0
+              ? `${Math.abs(newVariation)} less physically`
+              : "no variation");
+
+        updateFooter();
+
+        // Send PATCH to update this row
+        const res = await fetch(`/api/update-variation-rw52x/${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            physical_qty: parseInt(phyQty),
+            system_qty: parseInt(sysQty),
+            variation: newVariation
+          })
+        });
+        const result = await res.json();
+        if (result.success) {
+          alert("Variation updated successfully!");
+        } else {
+          alert("Failed to update variation");
+        }
+      };
+    }
+  });
+  updateFooter();
+};
+
+
+  loadUser();
+});

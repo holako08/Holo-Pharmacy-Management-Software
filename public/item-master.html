@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Item Master | Pharmacy Management System</title>
+  <link rel="stylesheet" href="item-wise sale report.css">
+  <link rel="stylesheet" href="item-master.css">
+  <link rel="shortcut icon" href="images/logo.png" type="image/x-icon">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+  <!-- NAVBAR (matching your reports) -->
+  <nav class="nav-bar-unique">
+    <div class="logo-unique">
+      <img src="images/logo.png" alt="Logo">
+    </div>
+    <ul class="nav-links-unique">
+      <li><a href="dashboard.html">Home</a></li>
+      <li><a href="pos.html">POS</a></li>
+      <li><a href="PDC.html">Pediatric Dose Calculator</a></li>
+      <li><a href="cross selling.html">Cross-selling Help</a></li>
+      <li>
+        <a href="#">Reports</a>
+        <ul class="dropdown-unique">
+          <li><a href="sales report.html">Sales Report</a></li>
+          <li><a href="item-wise sale report.html">Item-wise Sales Report</a></li>
+
+<li><a href="near-expiry-report.html">Near Expiry Report</a></li>
+<li><a href="stock-report.html">Stock Report</a></li>
+
+          <li><a href="stock-report.html">Stock Report</a></li>
+        </ul>
+      </li>
+      <li>
+        <a href="#">Pharmacists' Tools</a>
+        <ul class="dropdown-unique">
+          <li><a href="requirements.html">Stock Requirements</a></li>
+          <li><a href="variations.html">Stock Variations</a></li>
+          <li><a href="testing.html">Blood Pressure and Sugar Check</a></li>
+          <li><a href="request-center-usrZ3v.html">Requests Center</a></li>
+        </ul>
+      </li>
+      <li>
+        <a href="#">Admin Tools</a>
+        <ul class="dropdown-unique">
+          <li><a href="edit medicines.html">Edit Medicines List</a></li>
+          <li><a href="edit bills.html">Edit Bills</a></li>
+          <li><a href="user management.html">Edit Users</a></li>
+          <li><a href="admin-approvals.html">Admin Approvals</a></li>
+        </ul>
+      </li>
+    </ul>
+    <div class="search-unique">
+      <input type="text" placeholder="Search...">
+      <button>Search</button>
+    </div>
+  </nav>
+
+  <!-- Header: title & user info -->
+  <div class="report-header-flex">
+    <div class="title">
+      <h1>Item Master</h1>
+    </div>
+    <div class="user-info-bills-report">
+      <span id="user-job-title">jobTitle</span>
+      <span id="user-name">full name is logged-in</span>
+      <div class="avatar-container">
+        <div class="profile-pic">
+          <img id="user-photo" src="images/default-profile.png" alt="Profile" style="width:60px; height:60px; border-radius:50%; object-fit:cover; object-position:center;">
+        </div>
+        <button id="logout-btn" class="logout-btn">Log-out</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dynamic Search Bar -->
+  <section class="item-master-search">
+    <input type="text" id="item-search-input" placeholder="Search by name, barcode, or active ingredient...">
+    <div id="item-search-suggestions" class="item-search-suggestions"></div>
+  </section>
+
+  <!-- Item Display Card -->
+  <main>
+    <section class="item-master-main">
+      <div class="item-card">
+        <div class="item-main">
+          <div class="item-photo-box">
+            <img id="item-photo" src="uploads/default-medicine.png" alt="Medicine Photo">
+          </div>
+          <div class="item-main-details">
+            <h2 id="item-name">Search and select an item</h2>
+<div id="item-id-label" style="font-size:1.1em; color:#B99619; margin-bottom:4px;"></div>
+            <div class="item-badge" id="active-ingredient"></div>
+            <div class="item-meta">
+              <span id="barcode"></span> • <span id="price"></span> • <span id="stock"></span>
+            </div>
+          </div>
+        </div>
+        <div class="item-details-table">
+          <table>
+            <tr><th>Expiry Date</th><td id="expiry"></td></tr>
+            <tr><th>Packet Size</th><td id="packet-size"></td></tr>
+            <tr><th>Location</th><td id="location"></td></tr>
+            <tr><th>Cross-Selling</th><td id="cross-selling"></td></tr>
+            <tr><th>Significant Side Effects</th><td id="side-effects"></td></tr>
+            <tr><th>Significant Interactions</th><td id="interactions"></td></tr>
+            <tr><th>Uses</th><td id="uses"></td></tr>
+            <tr><th>Dosage</th><td id="dosage"></td></tr>
+          </table>
+          <div id="item-batch-table"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <div class="dashboard-footer">
+    © 2025 Pharmacy Management System | Designed by Pharmacist: MOHAMED HAMID | <a href="mailto:mhm.hamid@gmail.com">mhm.hamid@gmail.com</a> | All Rights Reserved
+  </div>
+  <script src="item-master.js"></script>
+</body>
+</html>

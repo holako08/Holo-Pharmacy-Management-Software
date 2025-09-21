@@ -1,0 +1,117 @@
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #f2f2f2;
+  color: #333;
+  padding: 20px;
+}
+
+h1 {
+  color: #bfa046;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.bill-manager-filter {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.bill-manager-filter label {
+  font-weight: bold;
+  color: #444;
+}
+
+.bill-manager-filter input[type="date"] {
+  padding: 5px;
+  border: 1px solid #aaa;
+  border-radius: 4px;
+  background-color: #fff;
+  color: #333;
+}
+
+#billFetchBtn {
+  background-color: #bfa046;
+  color: white;
+  border: none;
+  padding: 7px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
+}
+
+#billFetchBtn:hover {
+  background-color: #a7892b;
+}
+
+#billManagerTable {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #fff;
+  box-shadow: 0 0 10px rgba(0,0,0,0.05);
+}
+
+#billManagerTable th {
+  background-color: #444;
+  color: #fff;
+  padding: 10px;
+  text-align: left;
+}
+
+#billManagerTable td {
+  border: 1px solid #ccc;
+  padding: 8px;
+}
+
+#billManagerTable tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+#billManagerTable tr:hover {
+  background-color: #f1f1f1;
+}
+
+input.bm-editable {
+  width: 100%;
+  padding: 4px;
+  border: 1px solid #aaa;
+  border-radius: 3px;
+  background-color: #fafafa;
+  transition: background-color 0.3s ease;
+}
+
+input.bm-editable:disabled {
+  background-color: #e0e0e0;
+  color: #666;
+  cursor: not-allowed;
+}
+
+.bill-manager-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+button {
+  background-color: #bfa046;
+  color: white;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+button:hover {
+  background-color: #a7892b;
+  transform: scale(1.03);
+}
+
+button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}

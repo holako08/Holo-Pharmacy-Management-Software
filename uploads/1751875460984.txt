@@ -1,0 +1,9 @@
+SRR No: 4
+From Branch: Main Branch
+To Branch: Sub1
+Requested By: Mohamed Hamid Mohamed Hamid
+Request Date: Mon Jul 07 2025 12:04:05 GMT+0400 (Gulf Standard Time)
+
+Item Name	Quantity
+BEROCCA EFFERVESCENT TABLETS	10.5
+FEROGLOBIN CAPSULES 30`S	11.1

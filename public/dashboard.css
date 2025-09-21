@@ -1,0 +1,284 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.greeting {
+    font-size: 24px;
+    color: black;
+}
+
+.date-time {
+    font-size: 14px;
+    color: black;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.dashboard-card {
+    background-color: lightgray;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    transition: transform 0.3s ease;
+    color: black;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+}
+
+.card-header {
+    font-size: 18px;
+    color: black;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 10px;
+}
+
+.card-content ul {
+    list-style-type: none;
+}
+
+.card-content ul li {
+    margin-bottom: 10px;
+}
+
+.card-content ul li a {
+    color: #555;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    padding: 5px 0;
+}
+
+.card-content ul li a:hover {
+    color: #d4af37; /* Gold color */
+    text-decoration: underline;
+}
+
+.card-icon {
+    width: 40px;
+    height: 40px;
+    background-color: #f0f0f0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 10px;
+    color: #d4af37; /* Gold color */
+    font-size: 20px;
+}
+
+.quick-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.stat-card {
+    background-color: lightgray;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 15px;
+    text-align: center;
+}
+
+.stat-number {
+    font-size: 24px;
+    font-weight: bold;
+    color: #d4af37; /* Gold color */
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    font-size: 14px;
+    color: black;
+}
+
+.highlight {
+    border-left: 4px solid #d4af37; /* Gold color */
+}
+
+/* Additional gray and gold styling */
+button {
+    background-color: #d4af37;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #c4a030;
+}
+
+a.gold-btn {
+    background-color: #d4af37;
+    color: white;
+    padding: 8px 15px;
+    border-radius: 4px;
+    text-decoration: none;
+    display: inline-block;
+    margin-top: 10px;
+}
+
+.dashboard-footer {
+    margin-top: 20px;
+    text-align: center;
+    color: #777;
+    font-size: 12px;
+}
+
+.top-banner {
+    background: linear-gradient(to right, #444, #666);
+    color: #d4af37;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.banner-text {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+/* User profile styling */
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+}
+
+.job-title {
+    color: white;
+    font-size: 14px;
+    margin-right: 8px;
+}
+
+.username {
+    color: white;
+    font-weight: bold;
+}
+
+.profile-pic {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #d4af37;
+    border: 2px solid white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    margin-left: 8px;
+}
+
+.profile-pic img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Dropdown menu */
+.user-dropdown {
+    position: relative;
+    cursor: pointer;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: white;
+    border-radius: 4px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    min-width: 150px;
+    display: none;
+    z-index: 100;
+}
+
+.user-dropdown:hover .dropdown-menu {
+    display: block;
+}
+
+.dropdown-menu ul {
+    list-style-type: none;
+}
+
+.dropdown-menu ul li {
+    padding: 10px 15px;
+}
+
+.dropdown-menu ul li:hover {
+    background-color: #f5f5f5;
+}
+
+.dropdown-menu ul li a {
+    color: #444;
+    text-decoration: none;
+    display: block;
+}
+
+.dropdown-menu ul li a:hover {
+    color: #d4af37;
+}
+
+#recent-activities-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: 15px;
+}
+#recent-activities-list li {
+    border-bottom: 1px solid #eee;
+    padding: 7px 2px 7px 5px;
+    color: #333;
+}
+#low_stock {
+    background-color: rgb(255, 0, 170);
+    color: black;
+    
+}#total_sales {
+    background-color: green;
+    color: black;
+    
+}#near_expiry {
+    background-color: rgb(255, 0, 170);
+    color: black;
+    
+}

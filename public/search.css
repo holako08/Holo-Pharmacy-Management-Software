@@ -1,0 +1,70 @@
+.search-results {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    max-height: 150px;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    background-color: white;
+    position: absolute;
+    width: 100%;
+    z-index: 1000;
+  }
+  
+  .search-results li {
+    padding: 5px;
+    cursor: pointer;
+  }
+  
+  .search-results li:hover {
+    background-color: #f2f2f2;
+  }
+  
+  .search-results li.active {
+    background-color: #4CAF50;
+    color: white;
+  }
+
+  /* Style for the search results dropdown */
+#search-results {
+  position: absolute;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  z-index: 1000;
+  width: 1100px;
+  font-size: large;
+ max-height: 1200px;
+  overflow-y: visible;
+  display: none; /* Initially hidden */
+}
+
+#search-results .search-result-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+}
+
+#search-results .search-result-item:last-child {
+  border-bottom: none;
+}
+
+/* Hover effect */
+#search-results .search-result-item:hover {
+  background-color: #f0f0f0;
+}
+
+/* Show the dropdown when the search input is focused */
+#search-input:focus + #search-results {
+  display: block;
+}
+
+/* Hide the dropdown when the search input is not focused */
+#search-input:not(:focus) + #search-results {
+  display: none;
+}
+
+.search-result-item.active {
+  background-color: #f0f0f0; /* Light gray background for active item */
+  font-weight: bold; /* Bold text for active item */
+}

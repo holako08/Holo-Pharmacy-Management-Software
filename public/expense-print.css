@@ -1,0 +1,81 @@
+/* expense-print.css */
+
+/* Hide everything by default */
+body * {
+  visibility: hidden !important;
+}
+
+/* Show only the print area */
+.print-area, .print-area * {
+  visibility: visible !important;
+}
+
+.print-area {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  min-height: 100vh;
+  background: white;
+  color: #222;
+  z-index: 9999;
+  padding: 40px 50px 40px 50px;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+/* Letterhead & logo */
+.print-letterhead {
+  display: flex;
+  align-items: center;
+  margin-bottom: 30px;
+  border-bottom: 3px solid #D4AF37;
+  padding-bottom: 16px;
+}
+.print-letterhead img {
+  height: 70px;
+  margin-right: 25px;
+}
+.print-company-details {
+  font-size: 1.35em;
+  color: #34495E;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+.print-title {
+  font-size: 1.5em;
+  font-weight: 700;
+  margin: 30px 0 12px 0;
+  color: #1A2636;
+  text-align: left;
+}
+
+.print-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 24px;
+}
+.print-table th, .print-table td {
+  border: 1px solid #888;
+  padding: 8px 12px;
+  text-align: left;
+  font-size: 1.07em;
+}
+.print-table th {
+  background: #EEE8AA;
+  color: #111;
+  font-weight: 600;
+}
+
+.print-footer {
+  margin-top: 36px;
+  text-align: right;
+  color: #888;
+  font-size: 1em;
+  border-top: 2px solid #D4AF37;
+  padding-top: 12px;
+}
+
+/* Hide navigation and buttons on print */
+nav, .user-info, .dashboard-footer, .search-unique, #u_exp9x_form, #u_exp9x_fetch_button, #u_exp9x_export_excel, #u_exp9x_print, #u_exp9x_summary_chart {
+  display: none !important;
+}

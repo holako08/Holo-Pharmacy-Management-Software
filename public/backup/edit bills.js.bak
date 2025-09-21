@@ -1,0 +1,152 @@
+function formatDate(dateString) {
+  // Handles MySQL date/timestamp or ISO
+  const d = new Date(dateString);
+  if (isNaN(d)) return dateString;
+  return d.toLocaleDateString('en-GB'); // DD/MM/YYYY, change as needed
+}
+
+function formatTime(timeString) {
+  // Handles both string (e.g. "18:40:01") and timestamp
+  if (!timeString) return '';
+  if (timeString.length === 8 && timeString[2] === ':' && timeString[5] === ':') return timeString; // already HH:MM:SS
+  const d = new Date(timeString);
+  if (!isNaN(d)) return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  return timeString;
+}
+
+let originalRows = {};
+let editedRows = {};
+
+document.getElementById('billFetchBtn').addEventListener('click', fetchBills);
+document.getElementById('saveChangesBtn').addEventListener('click', saveChanges);
+document.getElementById('ignoreChangesBtn').addEventListener('click', () => location.reload());
+
+function fetchBills() {
+  const from = document.getElementById('billFromDate').value;
+  const to = document.getElementById('billToDate').value;
+
+  fetch(`/api/bill-mgmt/fetch?from=${from}&to=${to}&role=admin`)
+    .then(res => res.json())
+    .then(bills => {
+      const tbody = document.querySelector('#billManagerTable tbody');
+      tbody.innerHTML = '';
+      bills.forEach(bill => {
+        originalRows[bill.bill_id] = { ...bill };
+        const row = tbody.insertRow();
+
+       Object.entries(bill).forEach(([key, val]) => {
+  const cell = row.insertCell();
+  let displayVal = val;
+  if (key === 'bill_date') {
+    displayVal = formatDate(val);
+  }
+  if (key === 'bill_time') {
+    displayVal = formatTime(val);
+  }
+  if (['quantity', 'subtotal', 'payment_method', 'card_invoice_number', 'E-commerce Invoice Number', 'patient_name', 'patient_phone', 'user'].includes(key)) {
+    cell.innerHTML = `<input type="text" class="bm-editable" data-field="${key}" value="${displayVal || ''}" disabled />`;
+  } else {
+    cell.textContent = displayVal;
+  }
+});
+
+
+        const actionCell = row.insertCell();
+        actionCell.innerHTML = `
+          <button onclick="editBillRow(${bill.bill_id}, this)">Edit</button>
+          <button onclick="deleteBillRow(${bill.bill_id}, this)">Delete</button>
+        `;
+        row.setAttribute('data-id', bill.bill_id);
+      });
+    });
+}
+
+function editBillRow(id, btn) {
+  const row = document.querySelector(`tr[data-id='${id}']`);
+  const inputs = row.querySelectorAll('input.bm-editable');
+  inputs.forEach(input => input.disabled = false);
+  btn.disabled = true;
+}
+
+function deleteBillRow(id, btn) {
+  if (!confirm("Are you sure you want to delete this bill?")) return;
+
+  fetch(`/api/bill-mgmt/delete/${id}`, { method: 'DELETE' })
+    .then(res => res.json())
+    .then(result => {
+      if (result.success) {
+        btn.closest('tr').remove();
+        delete originalRows[id];
+      }
+    });
+}
+
+function saveChanges() {
+  const rows = document.querySelectorAll('#billManagerTable tbody tr');
+  const updates = [];
+
+  rows.forEach(row => {
+    const id = row.dataset.id;
+    const inputs = row.querySelectorAll('input.bm-editable');
+    const update = { bill_id: id };
+
+    inputs.forEach(input => {
+      update[input.dataset.field] = input.value;
+    });
+
+    // Only push if changes exist
+    const original = originalRows[id];
+    const changed = Object.keys(update).some(key => update[key] !== String(original[key] || ''));
+    if (changed) updates.push(update);
+  });
+
+  if (updates.length === 0) return alert('No changes to save.');
+
+  fetch('/api/bill-mgmt/update-multiple', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ updates }),
+  })
+    .then(res => res.json())
+    .then(res => {
+      if (res.success) {
+        alert('Changes saved successfully.');
+        location.reload();
+      } else {
+        alert('Failed to save changes.');
+      }
+    });
+}
+
+//user info
+document.addEventListener('DOMContentLoaded', () => {
+  const userInfoString = sessionStorage.getItem('userInfo');
+  if (!userInfoString) {
+    window.location.href = 'index.html';
+    return;
+  }
+
+  try {
+    const userInfo = JSON.parse(userInfoString);
+    // Add admin check here:
+    if (!userInfo.isAdmin) {
+      alert('Access denied. Admins only.');
+      window.location.href = 'dashboard.html'; // Or wherever you want to redirect
+      return;
+    }
+    document.getElementById('pharmacist-name').textContent =
+      userInfo.fullName || userInfo.username;
+    document.getElementById('job-title').textContent =
+      userInfo.jobTitle || 'Staff';
+    document.getElementById('user-photo-img').src =
+      '/api/user-photo/' + userInfo.userId;
+  } catch (error) {
+    console.error('Invalid userInfo JSON:', error);
+    window.location.href = 'index.html';
+  }
+});
+
+function logout() {
+  sessionStorage.removeItem('userInfo');
+  window.location.href = 'index.html';
+}

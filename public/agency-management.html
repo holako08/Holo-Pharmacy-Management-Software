@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pharmacy Agencies Management</title>
+    <link rel="stylesheet" href="agency-management.css">
+    <link rel="shortcut icon" href="images/logo.png" type="image/x-icon">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="nav-bar-unique">
+        <div class="logo-unique">
+            <img src="images/logo.png" alt="Logo">
+        </div>
+        <ul class="nav-links-unique">
+            <li><a href="dashboard.html">Home</a></li>
+            <li><a href="pos.html">POS</a></li>
+            <li><a href="PDC.html">Pediatric Dose Calculator</a></li>
+            <li><a href="cross selling.html">Cross-selling Help</a></li>
+            <li>
+                <a href="#">Reports</a>
+                <ul class="dropdown-unique">
+                    <li><a href="sales report.html">Sales Report</a></li>
+                    <li><a href="item-wise sale report.html">Item-wise Sales Report</a></li>
+                    <li><a href="near-expiry-report.html">Near Expiry Report</a></li>
+                    <li><a href="stock-report.html">Stock Report</a></li>
+                </ul>
+            </li>
+            <li>
+                <a href="#">Pharmacists' Tools</a>
+                <ul class="dropdown-unique">
+                    <li><a href="requirements.html">Stock Requirements</a></li>
+                    <li><a href="variations.html">Stock Variations</a></li>
+                    <li><a href="testing.html">Blood Pressure and Sugar Check</a></li>
+                    <li><a href="request-center-usrZ3v.html">Requests Center</a></li>
+                </ul>
+            </li>
+            <li>
+                <a href="#">Admin Tools</a>
+                <ul class="dropdown-unique">
+                    <li><a href="edit medicines.html">Edit Medicines List</a></li>
+                    <li><a href="edit bills.html">Edit Bills</a></li>
+                    <li><a href="user management.html">Edit Users</a></li>
+                    <li><a href="admin-approvals.html">Admin Approvals</a></li>
+                </ul>
+            </li>
+        </ul>
+        <div class="search-unique">
+            <input type="text" placeholder="Search...">
+            <button>Search</button>
+        </div>
+    </nav>
+
+    <!-- User Info Section -->
+<div class="user-info">
+    <div class="user-details">
+        <span id="job-title">Pharmacist</span> <span id="pharmacist-name">MOHAMED</span> is logged-in
+    </div>
+    <div class="user-photo">
+        <img id="user-photo-img" src="images/default-profile.png" alt="User Photo">
+    </div>
+    <button id="logout-btn" class="logout-btn" onclick="logout()">Log-out</button>
+</div>
+
+    <!-- Main Content -->
+    <div class="main-container">
+        <div class="header-section">
+            <h1>Pharmacy Agencies Management</h1>
+            <button id="add-agency-btn" class="add-btn">Add New Agency</button>
+        </div>
+
+        <!-- Search and Filter Section -->
+        <div class="search-section">
+            <input type="text" id="search-input" placeholder="Search by name, ID, contact person, phone, or address..." class="search-input">
+            <div class="entries-info">
+                <span id="entries-info">Showing 0 to 0 of 0 entries</span>
+            </div>
+        </div>
+
+        <!-- Agencies Table -->
+        <div class="table-container">
+            <table id="agencies-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Agency Name</th>
+                        <th>Contact Person</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Address</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="agencies-tbody">
+                    <!-- Data will be populated here -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <span>Loading...</span>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination-container">
+            <div class="pagination-info">
+                <select id="page-size-select">
+                    <option value="10">10 per page</option>
+                    <option value="20" selected>20 per page</option>
+                    <option value="50">50 per page</option>
+                    <option value="100">100 per page</option>
+                </select>
+            </div>
+            <div class="pagination-controls">
+                <button id="prev-btn" class="pagination-btn">Previous</button>
+                <span id="page-info">Page 1 of 1</span>
+                <button id="next-btn" class="pagination-btn">Next</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Agency Modal -->
+    <div id="agency-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Add New Agency</h2>
+                <span class="close">&times;</span>
+            </div>
+            <form id="agency-form">
+                <input type="hidden" id="agency-id">
+                
+                <div class="form-group">
+                    <label for="agency-name">Agency Name *</label>
+                    <input type="text" id="agency-name" name="name" required maxlength="100">
+                </div>
+
+                <div class="form-group">
+                    <label for="contact-person">Contact Person</label>
+                    <input type="text" id="contact-person" name="contact_person" maxlength="100">
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" maxlength="100">
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Phone</label>
+                    <input type="text" id="phone" name="phone" maxlength="30">
+                </div>
+
+                <div class="form-group">
+                    <label for="address">Address</label>
+                    <textarea id="address" name="address" rows="3" maxlength="255"></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="cancel-btn">Cancel</button>
+                    <button type="submit" class="save-btn">Save Agency</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="delete-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Confirm Delete</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this agency?</p>
+                <p><strong id="delete-agency-name"></strong></p>
+                <p class="warning">This action cannot be undone.</p>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="cancel-btn">Cancel</button>
+                <button type="button" id="confirm-delete-btn" class="delete-btn">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="dashboard-footer">
+        © 2025 Pharmacy Management System | Designed by Pharmacist: MOHAMED HAMID | <a href="mailto:mhm.hamid@gmail.com">mhm.hamid@gmail.com</a> | All Rights Reserved
+    </div>
+
+    <script src="agency-management.js"></script>
+</body>
+</html>

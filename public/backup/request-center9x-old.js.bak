@@ -1,0 +1,433 @@
+
+// --- Universal XHR Helper ---
+function sendRequest9x(method, url, data, callback) {
+    const xhr = new XMLHttpRequest();
+    xhr.open(method, url, true);
+    xhr.withCredentials = true;
+
+    if (!(method === 'DELETE' && data === null)) {
+        xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+    // (Remove this extra closing brace)
+
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+            console.log('Request URL:', url);
+            console.log('Status:', xhr.status);
+            console.log('Response:', xhr.responseText);
+            try {
+                const response = xhr.responseText ? JSON.parse(xhr.responseText) : null;
+                callback(xhr.status, response);
+            } catch (error) {
+                console.error('Error parsing JSON:', error);
+                callback(xhr.status, null);
+            }
+        }
+    };
+
+    if (method === 'DELETE' && data === null) {
+        xhr.send();
+    } else {
+    xhr.send(JSON.stringify(data));
+};
+    xhr.send(JSON.stringify(data));
+}
+
+
+// --- Request Center Dashboard Logic ---
+function loadUsrDash9zStats() {
+    sendRequest9x('GET', '/api/my-requests-summary', null, function(status, data) {
+        if (status === 200 && data) {
+            document.getElementById('usrDash9z_totalRequests').querySelector('.card-number').textContent = data.total || 0;
+            document.getElementById('usrDash9z_pending').querySelector('.card-number').textContent = data.pending || 0;
+            document.getElementById('usrDash9z_approved').querySelector('.card-number').textContent = data.approved || 0;
+            document.getElementById('usrDash9z_rejected').querySelector('.card-number').textContent = data.rejected || 0;
+            document.getElementById('usrDash9z_usersInvolved').querySelector('.card-number').textContent = data.usersInvolved || 0;
+        }
+});
+
+// --- Expense Request Page ---
+function setupExpensePage9x() {
+    document.getElementById('u_exp9x_form').addEventListener('submit', expRq9x_submitExpense);
+    document.getElementById('u_exp9x_fetch_button').addEventListener('click', expRq9x_fetchExpenses);
+}
+
+function expRq9x_submitExpense(event) {
+    event.preventDefault();
+    const data = {
+        name: document.getElementById('u_exp9x_name').value,
+        department: document.getElementById('u_exp9x_department').value,
+        designation: document.getElementById('u_exp9x_designation').value,
+        period: document.getElementById('u_exp9x_period').value,
+        date: document.getElementById('u_exp9x_date').value,
+        email: document.getElementById('u_exp9x_email').value,
+        category: document.getElementById('u_exp9x_category').value,
+        description: document.getElementById('u_exp9x_description').value,
+        amount: parseFloat(document.getElementById('u_exp9x_amount').value)
+    };
+    sendRequest9x('POST', '/api/request/expense', data, function(status, res) {
+        if (status === 200) {
+            alert('Expense submitted successfully!');
+            document.getElementById('u_exp9x_form').reset();
+            expRq9x_fetchExpenses();
+        } else {
+            alert('Failed to submit expense.');
+        }
+    });
+}
+
+function expRq9x_fetchExpenses() {
+    const year = document.getElementById('u_exp9x_view_year').value;
+    const month = document.getElementById('u_exp9x_view_month').value;
+    if (!year || !month) {
+        alert('Please select year and month!');
+        return;
+    }
+    sendRequest9x('POST', '/api/fetch-my-expenses', { year, month }, function(status, expenses) {
+        if (status === 200) {
+            const tbody = document.getElementById('u_exp9x_expenses_table').querySelector('tbody');
+            tbody.innerHTML = '';
+            let total = 0;
+            const approvedData = [];
+
+            expenses.forEach(function(expense) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${expense.date}</td>
+                    <td>${expense.category}</td>
+                    <td>${expense.description}</td>
+                    <td>${expense.amount.toFixed(2)}</td>
+                    <td>${expense.status}</td>
+                    <td><button onclick="expRq9x_deleteExpense('${expense.id}')">🗑️</button></td>
+                `;
+                tbody.appendChild(tr);
+
+                if (expense.status === 'Approved') {
+                    total += parseFloat(expense.amount);
+                    approvedData.push(expense);
+                }
+            });
+
+            document.getElementById('u_exp9x_total').textContent = total.toFixed(2);
+            expRq9x_drawChart(approvedData);
+        } else {
+            alert('Failed to fetch expenses.');
+        }
+    });
+}
+
+function expRq9x_deleteExpense(id) {
+    if (!confirm('Are you sure you want to delete this expense?')) return;
+    sendRequest9x('DELETE', '/api/delete-expense/' + id, null, function(status) {
+        if (status === 200) {
+            alert('Deleted successfully');
+            expRq9x_fetchExpenses();
+        } else {
+            alert('Failed to delete.');
+        }
+    });
+}
+
+function expRq9x_drawChart(data) {
+    const ctx = document.getElementById('u_exp9x_summary_chart').getContext('2d');
+    if (window.expChart9x) window.expChart9x.destroy();
+
+    const categories = {};
+    data.forEach(d => {
+        categories[d.category] = (categories[d.category] || 0) + d.amount;
+    });
+
+    const labels = Object.keys(categories);
+    const amounts = Object.values(categories);
+
+    window.expChart9x = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: amounts,
+                backgroundColor: labels.map(() => `hsl(${Math.random()*360},70%,70%)`)
+            }]
+        }
+    });
+}
+
+// --- Maintenance Request Page ---
+function setupMaintenancePage5h() {
+    document.getElementById('mntRq5h_formSubmit').addEventListener('submit', mntRq5h_submitMaintenance);
+}
+
+function mntRq5h_submitMaintenance(event) {
+    event.preventDefault();
+    const data = {
+        issueType: document.getElementById('mntRq5h_issueType').value,
+        reason: document.getElementById('mntRq5h_reason').value
+    };
+    sendRequest9x('POST', '/api/request/maintenance', data, function(status) {
+        if (status === 200) {
+            alert('Maintenance request submitted.');
+            document.getElementById('mntRq5h_formSubmit').reset();
+        } else {
+            alert('Failed to submit.');
+        }
+    });
+}
+
+// --- Stock Edit Request Page ---
+function setupStockEditPagev9t() {
+    document.getElementById('stkEd_v9t_formSubmit').addEventListener('submit', stkEdv9t_submitStockEdit);
+}
+
+function stkEdv9t_submitStockEdit(event) {
+    event.preventDefault();
+    const data = {
+        editType: document.getElementById('stkEd_v9t_editType').value,
+        reason: document.getElementById('stkEd_v9t_reason').value
+    };
+    sendRequest9x('POST', '/api/request/stock-edit', data, function(status) {
+        if (status === 200) {
+            alert('Stock edit request submitted.');
+            document.getElementById('stkEd_v9t_formSubmit').reset();
+        } else {
+            alert('Failed to submit.');
+        }
+    });
+}
+
+// --- Admin Approvals Page ---
+function loadAdminPendingRequests() {
+    sendRequest9x('GET', '/api/admin/fetch-pending', null, function(status, data) {
+        if (status === 200 && data) {
+            const section = document.getElementById('pendingRequestsSection');
+            section.innerHTML = '';
+
+            const userInfo = JSON.parse(sessionStorage.getItem('userInfo'));
+            const jobTitle = userInfo ? userInfo.jobTitle : '';
+
+            data.forEach(function(req) {
+                const div = document.createElement('div');
+
+                const approvalNeeded = (req.status.includes('Retail Ops')) ? 'Retail Ops Supervisor'
+                                    : (req.status.includes('Finance')) ? 'Finance Supervisor'
+                                    : (req.status.includes('Store Manager')) ? 'Store Manager'
+                                    : 'Unknown';
+
+                div.innerHTML = `
+                    <p><strong>Type:</strong> ${req.type} | <strong>ID:</strong> ${req.id}</p>
+                    <p><strong>Details:</strong> ${req.details}</p>
+                    <p><strong>Reason:</strong> ${req.reason || '-'}</p>
+                    <p><strong>Amount:</strong> ${req.amount !== null ? req.amount.toFixed(2) + ' OMR' : '-'}</p>
+                    <p><strong>Current Approver Needed:</strong> ${approvalNeeded}</p>
+                `;
+
+                const statusLower = req.status.toLowerCase();
+
+const canApprove = (
+    (req.type === 'Expense' && (
+        (statusLower.includes('pending') && (jobTitle === 'Retail Ops Supervisor' || jobTitle === 'Finance Supervisor'))
+    )) ||
+    (req.type === 'Maintenance' && (
+        (statusLower.includes('pending') && (jobTitle === 'Retail Ops Supervisor' || jobTitle === 'Finance Supervisor'))
+    )) ||
+    (req.type === 'Stock Edit' && (
+        (statusLower.includes('pending') && (jobTitle === 'Store Manager' || jobTitle === 'Retail Ops Supervisor'))
+    ))
+);
+
+                
+
+                if (canApprove) {
+                    const approveBtn = document.createElement('button');
+                    approveBtn.textContent = '✅ Approve';
+                    approveBtn.addEventListener('click', function() {
+                        approveRequest9x(req.type, req.id);
+                    });
+
+                    const rejectBtn = document.createElement('button');
+                    rejectBtn.textContent = '❌ Reject';
+                    rejectBtn.addEventListener('click', function() {
+                        rejectRequest9x(req.type, req.id);
+                    });
+                    
+                    div.appendChild(approveBtn);
+                    div.appendChild(rejectBtn);
+                }
+
+                div.innerHTML += `<hr>`;
+                section.appendChild(div);
+            });
+        } else {
+            alert('Failed to load pending requests.');
+        }
+    });
+}
+
+
+function approveRequest9x(requestType, requestId) {
+    sendRequest9x('POST', '/api/admin/approve', { requestType, requestId }, function(status) {
+        if (status === 200) {
+            alert('Approved successfully.');
+            loadAdminPendingRequests();
+        } else {
+            alert('Failed to approve.');
+        }
+    });
+}
+
+
+function rejectRequest9x(requestType, requestId) {
+    sendRequest9x('POST', '/api/admin/reject', { requestType, requestId }, function(status) {
+        if (status === 200) {
+            alert('Rejected successfully.');
+            loadAdminPendingRequests();
+        } else {
+            alert('Failed to reject.');
+        }
+    });
+}
+
+// --- Detect page and init ---
+document.addEventListener("DOMContentLoaded", function() {
+    const page = window.location.pathname;
+    if (page.includes("request-center-usrZ3v.html")) loadUsrDash9zStats();
+    if (page.includes("request-expense.html")) setupExpensePage9x();
+    if (page.includes("request-maintenance.html")) setupMaintenancePage5h();
+    if (page.includes("request-stock-edit.html")) setupStockEditPagev9t();
+    if (page.includes("admin-approvals.html")) loadAdminPendingRequests();
+});
+
+// --- Maintenance Request Fetch ---
+
+function mntRq5h_fetchMyRequests() {
+    const year = document.getElementById('mntRq5h_view_year').value;
+    const month = document.getElementById('mntRq5h_view_month').value;
+
+    if (!year || !month) {
+        alert('Please select year and month!');
+        return;
+    }
+
+    sendRequest9x('POST', '/api/fetch-my-maintenance', { year, month }, function(status, data) {
+        if (status === 200 && data) {
+            const tbody = document.getElementById('mntRq5h_table').querySelector('tbody');
+            tbody.innerHTML = '';
+
+            data.forEach(function(req) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${req.category}</td>
+                    <td>${req.reason}</td>
+                    <td>${req.status}</td>
+                    <td><button onclick="deleteMaintenanceRequest('${req.id}')">🗑️</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } else {
+            alert('Failed to fetch maintenance requests.');
+        }
+    });
+}
+
+
+    sendRequest9x('POST', '/api/fetch-my-maintenance', { year, month }, function(status, data) {
+        if (status === 200 && data) {
+            const tbody = document.getElementById('mntRq5h_table').querySelector('tbody');
+            tbody.innerHTML = '';
+
+            data.forEach(function(req) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${req.category}</td>
+                    <td>${req.reason}</td>
+                    <td>${req.status}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } else {
+            alert('Failed to fetch maintenance requests.');
+        }
+    });
+}
+
+
+
+// --- Stock Edit Request Fetch ---
+
+function stkEdv9t_fetchMyRequests() {
+    const year = document.getElementById('stkEd_v9t_view_year').value;
+    const month = document.getElementById('stkEd_v9t_view_month').value;
+
+    if (!year || !month) {
+        alert('Please select year and month!');
+        return;
+    }
+
+    sendRequest9x('POST', '/api/fetch-my-stockedits', { year, month }, function(status, data) {
+        if (status === 200 && data) {
+            const tbody = document.getElementById('stkEd_v9t_table').querySelector('tbody');
+            tbody.innerHTML = '';
+
+            data.forEach(function(req) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${req.category}</td>
+                    <td>${req.reason}</td>
+                    <td>${req.status}</td>
+                    <td><button onclick="deleteStockEditRequest('${req.id}')">🗑️</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } else {
+            alert('Failed to fetch stock edit requests.');
+        }
+    });
+}
+
+
+    sendRequest9x('POST', '/api/fetch-my-stockedits', { year, month }, function(status, data) {
+        if (status === 200 && data) {
+            const tbody = document.getElementById('stkEd_v9t_table').querySelector('tbody');
+            tbody.innerHTML = '';
+
+            data.forEach(function(req) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${req.category}</td>
+                    <td>${req.reason}</td>
+                    <td>${req.status}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } else {
+            alert('Failed to fetch stock edit requests.');
+        }
+    });
+}
+
+
+
+
+
+
+function deleteMaintenanceRequest(id) {
+    if (!confirm('Are you sure you want to delete this maintenance request?')) return;
+    sendRequest9x('DELETE', '/api/delete-maintenance/' + id, null, function(status) {
+        if (status === 200) {
+            alert('Deleted successfully');
+            mntRq5h_fetchMyRequests();
+        } else {
+            alert('Failed to delete maintenance request.');
+        }
+    });
+}
+
+function deleteStockEditRequest(id) {
+    if (!confirm('Are you sure you want to delete this stock edit request?')) return;
+    sendRequest9x('DELETE', '/api/delete-stockedit/' + id, null, function(status) {
+        if (status === 200) {
+            alert('Deleted successfully');
+            stkEdv9t_fetchMyRequests();
+        } else {
+            alert('Failed to delete stock edit request.');
+        }
+    });
+}

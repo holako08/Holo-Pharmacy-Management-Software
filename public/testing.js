@@ -1,0 +1,323 @@
+// --- MODAL GUIDELINES ---
+document.getElementById('showBpGuide').onclick = function() {
+    document.getElementById('bpModal').style.display = 'block';
+};
+document.getElementById('closeBpModal').onclick = function() {
+    document.getElementById('bpModal').style.display = 'none';
+};
+document.getElementById('showBgGuide').onclick = function() {
+    document.getElementById('bgModal').style.display = 'block';
+};
+document.getElementById('closeBgModal').onclick = function() {
+    document.getElementById('bgModal').style.display = 'none';
+};
+window.onclick = function(event) {
+    if (event.target == document.getElementById('bpModal')) document.getElementById('bpModal').style.display = "none";
+    if (event.target == document.getElementById('bgModal')) document.getElementById('bgModal').style.display = "none";
+};
+
+// --- BLOOD PRESSURE LOGIC ---
+function showDoctorReferral(msg) {
+    const div = document.getElementById('doctorReferral');
+    div.innerHTML = '⚠️ <b>Referral Required:</b> ' + msg;
+    div.style.display = 'block';
+}
+function clearDoctorReferral() {
+    document.getElementById('doctorReferral').style.display = 'none';
+}
+document.getElementById('diagnoseBPBtn').onclick = function() {
+    clearDoctorReferral();
+    const sys = Number(document.getElementById('systolicBP').value);
+    const dia = Number(document.getElementById('diastolicBP').value);
+    let diagnosis = '';
+    let warning = '';
+    let recommendations = [];
+
+    if (!sys || !dia) {
+        warning = 'Please enter both systolic and diastolic BP values.';
+    } else if (sys >= 180 || dia >= 120) {
+        diagnosis = "Hypertensive Crisis!";
+        warning = "Critical BP detected. Immediate referral to doctor is REQUIRED.";
+        recommendations = ['Refer patient to doctor immediately', 'Do not dispense antihypertensives'];
+        showDoctorReferral(warning);
+    } else if (sys >= 140 || dia >= 90) {
+        diagnosis = "Hypertension (≥140/90 mmHg)";
+        warning = "Refer patient to a physician for confirmation and further management.";
+        recommendations = [
+            "Refer patient to a doctor",
+            "Encourage lifestyle changes: reduce salt, exercise, weight loss",
+            "Re-check BP regularly"
+        ];
+        showDoctorReferral(warning);
+    } else if (sys >= 130 || dia >= 80) {
+        diagnosis = "Elevated BP (130-139/80-89 mmHg)";
+        warning = "Advise lifestyle modification. Refer if repeated high readings.";
+        recommendations = [
+            "Encourage diet/exercise changes",
+            "Re-check in 2-4 weeks"
+        ];
+    } else {
+        diagnosis = "Normal BP";
+        warning = "Maintain healthy lifestyle. Re-check yearly.";
+        recommendations = ["Continue healthy habits", "Annual BP check"];
+    }
+    document.getElementById('diagnosis').textContent = diagnosis;
+    document.getElementById('bpWarning').textContent = warning;
+    document.getElementById('bpWarning').style.display = 'block';
+    document.getElementById('recommendations').textContent = recommendations.length ? recommendations.join(', ') : '';
+};
+
+// --- BLOOD GLUCOSE LOGIC ---
+document.getElementById('diagnoseDiabetesBtn').onclick = function() {
+    clearDoctorReferral();
+    const fasting = Number(document.getElementById('fastingBG').value);
+    const random = Number(document.getElementById('nonFastingBG').value);
+    const fastingUnit = document.querySelector('input[name="fastingUnit"]:checked').value;
+    const randomUnit = document.querySelector('input[name="nonFastingUnit"]:checked').value;
+    let fastingVal = fastingUnit === 'mmol/L' ? fasting * 18 : fasting;
+    let randomVal = randomUnit === 'mmol/L' ? random * 18 : random;
+    let diagnosis = '';
+    let warning = '';
+    let recommendations = [];
+
+    if ((!fasting && !random) || (isNaN(fastingVal) && isNaN(randomVal))) {
+        warning = 'Please enter at least one blood glucose value.';
+    } else if (fastingVal >= 126 || randomVal >= 200) {
+        diagnosis = "Possible Diabetes";
+        warning = "Refer to doctor for confirmation and further testing.";
+        recommendations = [
+            "Refer patient to a doctor",
+            "Do not diagnose or start treatment in pharmacy",
+            "Encourage follow-up fasting BG or A1c testing"
+        ];
+        showDoctorReferral(warning);
+    } else if (fastingVal >= 100) {
+        diagnosis = "Prediabetes (Impaired Fasting Glucose)";
+        warning = "Advise lifestyle modifications. Refer if repeated or symptoms present.";
+        recommendations = [
+            "Recommend weight loss and exercise",
+            "Re-check BG in 3-6 months"
+        ];
+    } else {
+        diagnosis = "Normal Blood Glucose";
+        warning = "Maintain healthy habits. Re-check as advised.";
+        recommendations = ["Continue balanced diet", "Regular exercise"];
+    }
+    document.getElementById('diagnosis').textContent = diagnosis;
+    document.getElementById('bgWarning').textContent = warning;
+    document.getElementById('bgWarning').style.display = 'block';
+    document.getElementById('recommendations').textContent = recommendations.length ? recommendations.join(', ') : '';
+};
+
+// --- SAVE & PRINT ---
+document.getElementById('saveReportBtn').onclick = function() {
+    const name = document.getElementById('patientName').value;
+    const age = document.getElementById('patientAge').value;
+    const weight = document.getElementById('patientWeight').value;
+    const smoking = document.querySelector('input[name="smoking"]:checked').value;
+    const systolic = document.getElementById('systolicBP').value;
+    const diastolic = document.getElementById('diastolicBP').value;
+    const fpg = document.getElementById('fastingBG').value;
+    const npg = document.getElementById('nonFastingBG').value;
+    const diagnosis = document.getElementById('diagnosis').textContent;
+    const recommendations = document.getElementById('recommendations').textContent.split(', ');
+
+    const data = {
+        name, age, weight, smoking,
+        systolic: systolic || null,
+        diastolic: diastolic || null,
+        fpg: fpg || null,
+        npg: npg || null,
+        diagnosis,
+        recommendations
+    };
+
+    fetch('/save_patient', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(r => r.json())
+    .then(res => alert(res.message || 'Saved!'))
+    .catch(() => alert('Error saving patient data.'));
+};
+
+document.getElementById('printReportBtn').onclick = function() {
+    const name = document.getElementById('patientName').value || 'N/A';
+    const age = document.getElementById('patientAge').value || 'N/A';
+    const weight = document.getElementById('patientWeight').value || 'N/A';
+    const smoking = document.querySelector('input[name="smoking"]:checked').value || 'N/A';
+    const systolic = document.getElementById('systolicBP').value || '';
+    const diastolic = document.getElementById('diastolicBP').value || '';
+    const bp = systolic && diastolic ? `${systolic}/${diastolic}` : 'N/A';
+    const fpg = document.getElementById('fastingBG').value || 'N/A';
+    const npg = document.getElementById('nonFastingBG').value || 'N/A';
+    const fpgUnit = document.querySelector('input[name="fastingUnit"]:checked').value;
+    const diagnosis = document.getElementById('diagnosis').textContent || 'No diagnosis';
+    const recommendations = document.getElementById('recommendations').textContent || 'No recommendations';
+    const referral = document.getElementById('doctorReferral').textContent || '';
+
+    const report = `
+        <html><head><title>Screening Report</title>
+        <style>body{font-family:sans-serif;line-height:1.7;} h1,h3{text-align:center;}
+        .alert{color:#721c24;background:#f8d7da;padding:10px;border-radius:8px;}</style></head>
+        <body>
+        <h1>Pharmacy Screening Report</h1>
+        <h3>Patient Information</h3>
+        <p><b>Name:</b> ${name}</p>
+        <p><b>Age:</b> ${age}</p>
+        <p><b>Weight:</b> ${weight}</p>
+        <p><b>Smoking:</b> ${smoking}</p>
+        <h3>Measurements</h3>
+        <p><b>Blood Pressure:</b> ${bp}</p>
+        <p><b>Fasting Glucose:</b> ${fpg} ${fpgUnit}</p>
+        <p><b>Non-Fasting Glucose:</b> ${npg} ${fpgUnit}</p>
+        <h3>Results</h3>
+        <p>${diagnosis}</p>
+        <h3>Recommendations</h3>
+        <p>${recommendations}</p>
+        ${referral ? `<div class="alert">${referral}</div>` : ''}
+        <div class="alert">This screening is not a diagnosis. Consult a doctor for confirmation and treatment.</div>
+        </body></html>
+    `;
+    const w = window.open('', '', 'width=800,height=700');
+    w.document.write(report);
+    w.document.close();
+    w.print();
+};
+// --- PATIENT NAME AUTOCOMPLETE + AUTOFILL ---
+const patientNameInput = document.getElementById('patientName');
+const dropdown = document.getElementById('patientNameDropdown');
+
+let lastSearch = '';
+let patientCache = [];
+
+// Fetch patients by name
+async function fetchPatientMatches(name) {
+    if (!name) return [];
+    const res = await fetch('/api/searchPatientsForTesting', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ searchTerm: name })
+    });
+    if (!res.ok) return [];
+    return await res.json();
+}
+
+// Show dropdown suggestions
+function showDropdown(patients) {
+    if (!patients.length) {
+        dropdown.style.display = 'none';
+        return;
+    }
+    dropdown.innerHTML = '';
+    patients.forEach((pat, idx) => {
+        const div = document.createElement('div');
+        div.className = 'dropdown-item';
+        div.textContent = pat.name + (pat.age ? `, Age: ${pat.age}` : '');
+        div.onclick = () => selectPatient(pat);
+        dropdown.appendChild(div);
+    });
+    dropdown.style.display = 'block';
+}
+
+// Autofill all fields
+function selectPatient(patient) {
+    patientNameInput.value = patient.name || '';
+    document.getElementById('patientAge').value = patient.age || '';
+    document.getElementById('patientWeight').value = patient.weight || '';
+    if (patient.smoking === 'Smoker') {
+        document.getElementById('smokerYes').checked = true;
+    } else {
+        document.getElementById('smokerNo').checked = true;
+    }
+    document.getElementById('systolicBP').value = patient.systolic || '';
+    document.getElementById('diastolicBP').value = patient.diastolic || '';
+    document.getElementById('fastingBG').value = patient.fpg || '';
+    document.getElementById('nonFastingBG').value = patient.npg || '';
+    document.getElementById('diagnosis').textContent = patient.diagnosis || '';
+    document.getElementById('recommendations').textContent = patient.recommendations || '';
+    dropdown.style.display = 'none';
+}
+
+// Typing events
+patientNameInput.addEventListener('input', async function () {
+    const val = this.value.trim();
+    if (!val) { dropdown.style.display = 'none'; return; }
+    if (val === lastSearch) { return; }
+    lastSearch = val;
+    const matches = await fetchPatientMatches(val);
+    patientCache = matches;
+    showDropdown(matches);
+});
+
+// Hide dropdown on click elsewhere
+document.addEventListener('click', function(e) {
+    if (!dropdown.contains(e.target) && e.target !== patientNameInput) {
+        dropdown.style.display = 'none';
+    }
+});
+
+// Optional: arrow key navigation
+patientNameInput.addEventListener('keydown', function(e) {
+    if (dropdown.style.display === 'none') return;
+    const items = dropdown.querySelectorAll('.dropdown-item');
+    if (!items.length) return;
+
+    let idx = Array.from(items).findIndex(i => i.classList.contains('active'));
+    if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (idx >= 0) items[idx].classList.remove('active');
+        idx = (idx + 1) % items.length;
+        items[idx].classList.add('active');
+        items[idx].scrollIntoView({block:'nearest'});
+    } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (idx >= 0) items[idx].classList.remove('active');
+        idx = (idx - 1 + items.length) % items.length;
+        items[idx].classList.add('active');
+        items[idx].scrollIntoView({block:'nearest'});
+    } else if (e.key === 'Enter' && idx >= 0) {
+        e.preventDefault();
+        items[idx].click();
+    }
+});
+// --- USER INFO PANEL LOGIC (from stock-transactions.js) ---
+function fetchUserInfo() {
+    fetch('/api/user-info')
+      .then(r => r.json())
+      .then(data => {
+        if (!data.user) return;
+        const user = data.user;
+
+        // Set the global variable!
+        window.requestingUserName = user.fullName || user.username || '';
+
+        const userName = document.getElementById('user-name');
+        if (userName) userName.textContent = user.fullName;
+
+        const userJob = document.getElementById('user-job-title');
+        if (userJob) userJob.textContent = user.jobTitle;
+
+        const userPhoto = document.getElementById('user-photo');
+        if (userPhoto) {
+            userPhoto.onerror = function() {
+                userPhoto.src = 'images/default-profile.png';
+            };
+            userPhoto.src = `/api/user-photo/${user.userId}`;
+        }
+    });
+}
+
+// Call on page load
+document.addEventListener('DOMContentLoaded', function () {
+    fetchUserInfo();
+    document.getElementById('logout-btn').onclick = logout;
+});
+
+// Logout function
+function logout() {
+    fetch('/logout').finally(() => {
+        window.location.href = 'index.html';
+    });
+}

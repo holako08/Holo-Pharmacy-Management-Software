@@ -1,0 +1,433 @@
+// bill-return.js
+
+let bills = []; // Declare bills in a higher scope
+
+document.addEventListener('DOMContentLoaded', () => {
+  const userInfoString = sessionStorage.getItem('userInfo');
+  if (!userInfoString) {
+    window.location.href = 'index.html';
+    return;
+  }
+  try {
+    const userInfo = JSON.parse(userInfoString);
+    document.getElementById('pharmacist-name').textContent = userInfo.fullName || userInfo.username;
+    document.getElementById('job-title').textContent = userInfo.jobTitle || 'Staff';
+    document.getElementById('user-photo').src = '/api/user-photo/' + userInfo.userId;
+  } catch (error) {
+    window.location.href = 'index.html';
+  }
+});
+
+function logout() {
+  window.location.href = 'index.html';
+}
+
+function formatDate(dateString) {
+  if (!dateString) return '';
+  const d = new Date(dateString);
+  if (isNaN(d)) return dateString;
+  return d.toLocaleDateString('en-GB');
+}
+
+function formatTime(timeString) {
+  if (!timeString) return '';
+  if (timeString.length === 8 && timeString[2] === ':' && timeString[5] === ':') return timeString;
+  const d = new Date(timeString);
+  if (!isNaN(d)) return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  return timeString;
+}
+
+// Fetch bills within date range
+document.getElementById('fetchBillsBtn').onclick = fetchBills;
+document.getElementById('returnSelectedBtn').onclick = returnSelectedBills;
+document.getElementById('reprintSelectedBtn').onclick = reprintSelectedBills;
+document.getElementById('selectAll').onclick = function(e) {
+  document.querySelectorAll('.row-select').forEach(cb => cb.checked = e.target.checked);
+};
+
+function fetchBills() {
+  const from = document.getElementById('billFromDate').value;
+  const to = document.getElementById('billToDate').value;
+  fetch(`/api/bill-mgmt/fetch?from=${from}&to=${to}&role=user`)
+    .then(res => {
+      if (!res.ok) {
+        if (res.status === 401) window.location.href = 'index.html';
+        if (res.status === 403) {
+          alert("You do not have permission to view bills.");
+          return [];
+        }
+        throw new Error("Failed to fetch bills");
+      }
+      return res.json();
+    })
+    .then(fetchedBills => {
+      bills = fetchedBills;
+      if (!Array.isArray(bills)) return;
+      showBills(bills);
+    });
+}
+
+function showBills(billsToShow) {
+  const tbody = document.querySelector('#billReturnTable tbody');
+  tbody.innerHTML = '';
+  console.log("Bills to show:", billsToShow); // Debugging log
+  billsToShow.forEach(bill => {
+    console.log("Processing bill:", bill); // Debugging log
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td><input type="checkbox" class="row-select" data-id="${bill.bill_id}"></td>
+      <td>${bill.bill_id}</td>
+      <td>${bill.patient_name || ''}</td>
+      <td>${bill.item_name}</td>
+      <td>${bill.quantity}</td>
+      <td>${bill.subtotal}</td>
+      <td>${bill.batch_number || '-'}</td>
+      <td>${formatDate(bill.bill_date)}</td>
+      <td>${formatTime(bill.bill_time)}</td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
+function getSelectedBillIds() {
+  const selectedCheckboxes = Array.from(document.querySelectorAll('.row-select:checked'));
+  const ids = selectedCheckboxes.map(cb => cb.dataset.id);
+  console.log("Selected IDs:", ids); // Debugging log
+  return ids;
+}
+
+function reprintSelectedBills() {
+  const ids = getSelectedBillIds();
+  console.log("reprintSelectedBills: IDs obtained:", ids, "Length:", ids.length); // Debugging log
+  if (ids.length === 0) {
+    console.log("reprintSelectedBills: Alerting 'No bills selected.' because length is 0."); // Debugging log
+    return alert("No bills selected to reprint."); // More specific alert
+  }
+
+  // Fetch all selected bills, then print as one invoice
+  Promise.all(ids.map(id =>
+    fetch(`/api/bill-returns/reprint/${id}`)
+    .then(res => res.json())
+    .then(data => data.success ? data.bill : null)
+  )).then(fetchedBillsFiltered => {
+    console.log("reprintSelectedBills: Fetched bills for reprinting (before filter):", fetchedBillsFiltered); // Debugging log
+    const validBillsForPrint = fetchedBillsFiltered.filter(b => b);
+    console.log("reprintSelectedBills: Valid bills for printing (after filter):", validBillsForPrint); // Debugging log
+    if (!validBillsForPrint.length) {
+      console.log("reprintSelectedBills: Alerting 'No valid bills to print.' because length is 0."); // Debugging log
+      return alert("No valid bills could be fetched for reprinting. They might have been deleted or an error occurred."); // More specific alert
+    }
+    printCombinedBillsPOSFormat(validBillsForPrint);
+  }).catch(error => {
+    console.error("reprintSelectedBills: Fetch error:", error);
+    alert("An error occurred during reprinting: " + error.message);
+  });
+}
+
+// Send bill return request
+function returnBills(billIds) {
+  console.log("returnBills: IDs to process:", billIds, "Length:", billIds.length); // Debugging log
+  if (billIds.length === 0) {
+    console.log("returnBills: Alerting 'No bills selected.' because length is 0."); // Debugging log
+    return alert("No bills selected to return."); // More specific alert
+  }
+  if (!confirm("Are you sure you want to return these bill(s)? This will reverse the sale and add stock back.")) return; // More descriptive confirmation
+
+  // The server-side /api/bill-returns/return will now handle fetching bill details,
+  // fetching packet size, calculating the correct return quantity, and updating stock.
+  fetch('/api/bill-returns/return', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ bill_ids: billIds }) // Sending just the bill IDs
+  }).then(res => res.json()).then(data => {
+    console.log("returnBills: API response:", data); // Debugging log
+    if (data.success) {
+      alert("Bills returned successfully! " + (data.message || '')); // Success alert with server message
+      fetchBills(); // Refresh the bills list
+    } else {
+      alert(data.message || "Return failed.");
+    }
+  }).catch(error => {
+    console.error("returnBills: Fetch error:", error); // Debugging log
+    alert("An error occurred during return request: " + error.message);
+  });
+}
+
+// Removed fetchPacketSizes from here, as it's now a server-side responsibility for returns.
+// If it's used by other client-side components, keep it in those components or a utility file.
+
+
+function returnSelectedBills() {
+  const ids = getSelectedBillIds();
+  if (ids.length === 0) return alert("No bills selected.");
+  returnBills(ids);
+}
+
+// Trigger reprint (uses backend to get bill, then window.print or POS print logic)
+function reprintBills(billIds) {
+  billIds.forEach(id => {
+    fetch(`/api/bill-returns/reprint/${id}`)
+      .then(res => res.json())
+      .then(data => {
+        if (!data.success) return alert(data.message || "Failed to fetch bill for printing.");
+        printBillPOSFormat(data.bill);
+      });
+  });
+}
+
+function printBillPOSFormat(bill) {
+  // If bill is a single-item bill (your current structure), display as a one-row bill
+  // If you support multi-item bills in future, refactor accordingly
+
+  const items = [
+    {
+      item_name: bill.item_name,
+      quantity: bill.quantity,
+      price: bill.price,
+      subtotal: bill.subtotal
+    }
+  ];
+
+  // Get discount (if you save discount in bills table, else set to 0)
+  // You can enhance this if you add discount column in future.
+  const discount = bill.discount ? parseFloat(bill.discount) : 0;
+
+  // Calculate grand total
+  const subtotal = items.reduce((sum, i) => sum + parseFloat(i.subtotal), 0);
+  const final_total = subtotal - (subtotal * discount / 100);
+
+  // Bill fields
+  const patient_name = bill.patient_name || "";
+  const patient_phone = bill.patient_phone || "";
+  const payment_method = bill.payment_method || "";
+  const card_invoice_number = bill.card_invoice_number || "";
+  const ecommerce_invoice_number = bill["E-commerce Invoice Number"] || "";
+  const bill_date = bill.bill_date ? (new Date(bill.bill_date)).toLocaleDateString("en-GB") : "";
+  const bill_time = bill.bill_time || "";
+  const user = bill.user || "";
+
+  // Exact POS-style HTML
+  const html = `
+    <style>
+      body { font-family: Arial; padding: 30px; }
+      h2 { text-align: center; }
+      table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+      th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
+      .total { font-size: 1.2em; font-weight: bold; margin-top: 20px; text-align: right; }
+      .footer { text-align: center; margin-top: 30px; font-style: italic; }
+      .meta { margin-top: 15px; }
+      .meta p { margin: 0 0 5px 0; }
+    </style>
+    <h2>This is for the purposes of knowing the prices - NOT AN INVOICE</h2>
+    <div class="meta">
+      <p><strong>Date:</strong> ${bill_date} <strong>Time:</strong> ${bill_time}</p>
+      <p><strong>Bill ID:</strong> ${bill.bill_id}</p>
+      <p><strong>Patient Name:</strong> ${patient_name}</p>
+      <p><strong>Phone:</strong> ${patient_phone}</p>
+      <p><strong>Payment Method:</strong> ${payment_method}</p>
+      ${card_invoice_number ? `<p><strong>Card Invoice:</strong> ${card_invoice_number}</p>` : ""}
+      ${ecommerce_invoice_number ? `<p><strong>E-commerce Invoice:</strong> ${ecommerce_invoice_number}</p>` : ""}
+      <p><strong>Served by:</strong> ${user}</p>
+    </div>
+    <table>
+      <thead>
+        <tr><th>Item</th><th>Qty</th><th>Price</th><th>Subtotal</th></tr>
+      </thead>
+      <tbody>
+        ${items.map(item => `
+          <tr>
+            <td>${item.item_name}</td>
+            <td>${item.quantity}</td>
+            <td>${item.price}</td>
+            <td>${parseFloat(item.subtotal).toFixed(3)}</td>
+          </tr>
+        `).join("")}
+      </tbody>
+    </table>
+    <p class="total">Discount: ${discount}%</p>
+    <p class="total">Grand Total: ${final_total.toFixed(3)}</p>
+    <div class="footer">Thanks for shopping with us. Get well soon!</div>
+  `;
+
+  const win = window.open('', '', 'width=800,height=600');
+  win.document.write(html);
+  win.document.close();
+  win.focus();
+  win.print();
+  win.onafterprint = () => win.close();
+}
+
+function printMultipleBillsPOSFormat(bills) {
+  let html = `
+    <style>
+      body { font-family: Arial; padding: 30px; }
+      h2 { text-align: center; }
+      table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+      th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
+      .total { font-size: 1.2em; font-weight: bold; margin-top: 20px; text-align: right; }
+      .footer { text-align: center; margin-top: 30px; font-style: italic; }
+      .meta { margin-top: 15px; }
+      .meta p { margin: 0 0 5px 0; }
+      .bill-break { page-break-after: always; border-top: 2px dashed #bbb; margin: 40px 0; }
+    </style>
+  `;
+
+  bills.forEach((bill, i) => {
+    const items = [
+      {
+        item_name: bill.item_name,
+        quantity: bill.quantity,
+        price: bill.price,
+        subtotal: bill.subtotal
+      }
+    ];
+    const discount = bill.discount ? parseFloat(bill.discount) : 0;
+    const subtotal = items.reduce((sum, it) => sum + parseFloat(it.subtotal), 0);
+    const final_total = subtotal - (subtotal * discount / 100);
+
+    const patient_name = bill.patient_name || "";
+    const patient_phone = bill.patient_phone || "";
+    const payment_method = bill.payment_method || "";
+    const card_invoice_number = bill.card_invoice_number || "";
+    const ecommerce_invoice_number = bill["E-commerce Invoice Number"] || "";
+    const bill_date = bill.bill_date ? (new Date(bill.bill_date)).toLocaleDateString("en-GB") : "";
+    const bill_time = bill.bill_time || "";
+    const user = bill.user || "";
+
+    html += `
+      <h2>This is for the purposes of knowing the prices - NOT ANVOICE</h2>
+      <div class="meta">
+        <p><strong>Date:</strong> ${bill_date} <strong>Time:</strong> ${bill_time}</p>
+        <p><strong>Bill ID:</strong> ${bill.bill_id}</p>
+        <p><strong>Patient Name:</strong> ${patient_name}</p>
+        <p><strong>Phone:</strong> ${patient_phone}</p>
+        <p><strong>Payment Method:</strong> ${payment_method}</p>
+        ${card_invoice_number ? `<p><strong>Card Invoice:</strong> ${card_invoice_number}</p>` : ""}
+        ${ecommerce_invoice_number ? `<p><strong>E-commerce Invoice:</strong> ${ecommerce_invoice_number}</p>` : ""}
+        <p><strong>Served by:</strong> ${user}</p>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Item</th><th>Qty</th><th>Price</th><th>Subtotal</th></tr>
+        </thead>
+        <tbody>
+          ${items.map(item => `
+            <tr>
+              <td>${item.item_name}</td>
+              <td>${item.quantity}</td>
+              <td>${item.price}</td>
+              <td>${parseFloat(item.subtotal).toFixed(3)}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+      <p class="total">Discount: ${discount}%</p>
+      <p class="total">Grand Total: ${final_total.toFixed(3)}</p>
+      <div class="footer">Thanks for shopping with us. Get well soon!</div>
+      ${i < bills.length - 1 ? '<div class="bill-break"></div>' : ''}
+    `;
+  });
+
+  const win = window.open('', '', 'width=800,height=600');
+  if (!win) {
+    alert("Unable to open print window. Please disable popup blocker and try again.");
+    return;
+  }
+  win.document.write(html);
+  win.document.close();
+  win.focus();
+  win.print();
+  win.onafterprint = () => win.close();
+}
+
+function printCombinedBillsPOSFormat(bills) {
+  if (!bills || !bills.length) return;
+
+  // Sort bills by bill_id to get the lowest as the "Invoice No"
+  bills.sort((a, b) => Number(a.bill_id) - Number(b.bill_id));
+  const invoiceNo = bills[0].bill_id;
+  const bill_date = bills[0].bill_date ? (new Date(bills[0].bill_date)).toLocaleDateString("en-GB") : "";
+  const bill_time = bills[0].bill_time || "";
+  const patient_name = bills[0].patient_name || "";
+  const patient_phone = bills[0].patient_phone || "";
+  const payment_method = bills[0].payment_method || "";
+  const card_invoice_number = bills[0].card_invoice_number || "";
+  const ecommerce_invoice_number = bills[0]["E-commerce Invoice Number"] || "";
+  const user = bills[0].user || "";
+
+  // Group by item (optional): if same item in multiple bills, sum qty and subtotal
+  const grouped = {};
+  bills.forEach(bill => {
+    const key = bill.item_name;
+    if (!grouped[key]) {
+      grouped[key] = {
+        item_name: bill.item_name,
+        quantity: 0,
+        price: bill.price,
+        subtotal: 0
+      };
+    }
+    grouped[key].quantity += parseFloat(bill.quantity);
+    grouped[key].subtotal += parseFloat(bill.subtotal);
+  });
+  const items = Object.values(grouped);
+
+  // Compute grand total and discount
+  const discount = bills[0].discount ? parseFloat(bills[0].discount) : 0;
+  const subtotal = items.reduce((sum, i) => sum + parseFloat(i.subtotal), 0);
+  const final_total = subtotal - (subtotal * discount / 100);
+
+  // Bill HTML (similar to pos.js)
+  const html = `
+    <style>
+      body { font-family: Arial; padding: 30px; }
+      h2 { text-align: center; }
+      table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+      th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
+      .total { font-size: 1.2em; font-weight: bold; margin-top: 20px; text-align: right; }
+      .footer { text-align: center; margin-top: 30px; font-style: italic; }
+      .meta { margin-top: 15px; }
+      .meta p { margin: 0 0 5px 0; }
+    </style>
+    <h2>This is for the purposes of knowing the prices - NOT AN INVOICE</h2>
+    <div class="meta">
+      <p><strong>Date:</strong> ${bill_date} <strong>Time:</strong> ${bill_time}</p>
+      <p><strong>Invoice No.:</strong> ${invoiceNo}</p>
+      <p><strong>Patient Name:</strong> ${patient_name}</p>
+      <p><strong>Phone:</strong> ${patient_phone}</p>
+      <p><strong>Payment Method:</strong> ${payment_method}</p>
+      ${card_invoice_number ? `<p><strong>Card Invoice:</strong> ${card_invoice_number}</p>` : ""}
+      ${ecommerce_invoice_number ? `<p><strong>E-commerce Invoice:</strong> ${ecommerce_invoice_number}</p>` : ""}
+      <p><strong>Served by:</strong> ${user}</p>
+    </div>
+    <table>
+      <thead>
+        <tr><th>Item</th><th>Qty</th><th>Price</th><th>Subtotal</th></tr>
+      </thead>
+      <tbody>
+        ${items.map(item => `
+          <tr>
+            <td>${item.item_name}</td>
+            <td>${item.quantity}</td>
+            <td>${item.price}</td>
+            <td>${parseFloat(item.subtotal).toFixed(3)}</td>
+          </tr>
+        `).join("")}
+      </tbody>
+    </table>
+    <p class="total">Discount: ${discount}%</p>
+    <p class="total">Grand Total: ${final_total.toFixed(3)}</p>
+    <div class="footer">Thanks for shopping with us. Get well soon!</div>
+  `;
+
+  const win = window.open('', '', 'width=800,height=600');
+  if (!win) {
+    alert("Unable to open print window. Please disable popup blocker and try again.");
+    return;
+  }
+  win.document.write(html);
+  win.document.close();
+  win.focus();
+  win.print();
+  win.onafterprint = () => win.close();
+}

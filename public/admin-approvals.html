@@ -1,0 +1,105 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Approvals</title>
+  <link rel="stylesheet" href="nav-bar2.css">
+  <link rel="shortcut icon" href="images/logo.png" type="image/x-icon">
+  <link rel="stylesheet" href="responsive.css">
+  <script>
+    if (!sessionStorage.getItem('userInfo') || JSON.parse(sessionStorage.getItem('userInfo')).isAdmin !== true) {
+      window.location.href = 'dashboard.html';
+    }
+  </script>
+</head>
+<body>
+  <nav class="nav-bar-unique">
+    <div class="logo-unique">
+      <img src="images/logo.png" alt="Logo">
+    </div>
+    <ul class="nav-links-unique">
+      <li><a href="dashboard.html">Home</a></li>
+      <li><a href="pos.html">POS</a></li>
+      <li><a href="PDC.html">Pediatric Dose Calculator</a></li>
+      <li><a href="cross selling.html">Cross-selling Help</a></li>
+      <li>
+        <a href="#">Reports</a>
+        <ul class="dropdown-unique">
+          <li><a href="sales report.html">Sales Report</a></li>
+          <li><a href="item-wise sale report.html">Item-wise Sales Report</a></li>
+
+<li><a href="near-expiry-report.html">Near Expiry Report</a></li>
+<li><a href="stock-report.html">Stock Report</a></li>
+
+        </ul>
+      </li>
+      <li>
+        <a href="#">Pharmacists’ Tools</a>
+        <ul class="dropdown-unique">
+          <li><a href="requirements.html">Stock Requirements</a></li>
+          <li><a href="variations.html">Stock Variations</a></li>
+          <li><a href="testing.html">Blood Pressure and Sugar Check</a></li>
+          <li><a href="request-center-usrZ3v.html">Requests to Admin</a></li>
+        </ul>
+      </li>
+      <li>
+        <a href="#">Admin Tools</a>
+        <ul class="dropdown-unique">
+          <li><a href="edit medicines.html">Edit Medicines List</a></li>
+          <li><a href="edit bills.html">Edit Bills</a></li>
+          <li><a href="user management.html">Edit Users</a></li>
+          <li><a href="admin-approvals.html">Review Requests</a></li>
+        </ul>
+      </li>
+    </ul>
+    <div class="search-unique">
+      <input type="text" placeholder="Search...">
+      <button>Search</button>
+    </div>
+  </nav>
+
+  <div class="user-info">
+    <div class="user-details">
+      <span id="job-title">Pharmacist</span> <span id="pharmacist-name">MOHAMED</span> is logged-in
+    </div>
+    <div class="profile-pic">
+      <img id="user-photo" src="/api/user-photo/14" alt="Profile">
+    </div>
+    <button id="logout-btn" class="logout-btn" onclick="logout()">Log-out</button>
+  </div>
+
+  <main class="approval-panel">
+    <h1 class="form-title">Pending Approvals</h1>
+    <div id="pendingRequestsSection"></div>
+  </main>
+
+  <div class="dashboard-footer">
+    © 2025 Pharmacy Management System | Designed by Pharmacist: MOHAMED HAMID |
+    <a href="mailto:mhm.hamid@gmail.com">mhm.hamid@gmail.com</a> | All Rights Reserved
+  </div>
+
+  <script src="request-center9x.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const userInfoString = sessionStorage.getItem('userInfo');
+      if (!userInfoString) {
+        window.location.href = 'index.html';
+        return;
+      }
+      try {
+        const userInfo = JSON.parse(userInfoString);
+        document.getElementById('pharmacist-name').textContent = userInfo.fullName || userInfo.username;
+        document.getElementById('job-title').textContent = userInfo.jobTitle || 'Staff';
+        document.getElementById('user-photo').src = '/api/user-photo/' + userInfo.userId;
+      } catch (error) {
+        window.location.href = 'index.html';
+      }
+    });
+    function logout() {
+      window.location.href = 'index.html';
+    }
+  </script>
+</body>
+</html>

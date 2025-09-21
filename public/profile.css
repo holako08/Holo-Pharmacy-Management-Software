@@ -1,0 +1,264 @@
+/* === RESET & BASE === */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f4f4f4;
+    color: #222;
+  }
+  
+  /* === NAVBAR === */
+  .nav-bar-unique {
+    background-color: #000;
+    color: gold;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 999;
+  }
+  
+  .logo-unique img {
+    height: 40px;
+  }
+  
+  .nav-links-unique {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 25px;
+  }
+  
+  .nav-links-unique li {
+    position: relative;
+  }
+  
+  .nav-links-unique > li > a {
+    text-decoration: none;
+    color: gold;
+    font-weight: bold;
+    padding: 8px 12px;
+    border-radius: 5px;
+  }
+  
+  .nav-links-unique > li > a:hover {
+    background-color: #444;
+    color: white;
+  }
+  
+  .dropdown-unique {
+    display: none;
+    position: absolute;
+    top: 100%;
+    background-color: #222;
+    min-width: 200px;
+    border-radius: 6px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+  }
+  
+  .dropdown-unique li {
+    border-bottom: 1px solid #333;
+  }
+  
+  .dropdown-unique li:last-child {
+    border-bottom: none;
+  }
+  
+  .dropdown-unique a {
+    display: block;
+    padding: 10px 15px;
+    color: #eee;
+    text-decoration: none;
+  }
+  
+  .dropdown-unique a:hover {
+    background-color: goldenrod;
+    color: black;
+  }
+  
+  .nav-links-unique li:hover .dropdown-unique {
+    display: block;
+  }
+  
+  .search-unique {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  
+  .search-unique input {
+    padding: 6px 10px;
+    border-radius: 4px;
+    border: 1px solid #555;
+    background-color: #111;
+    color: white;
+  }
+  
+  .search-unique input::placeholder {
+    color: #aaa;
+  }
+  
+  .search-unique button {
+    padding: 6px 12px;
+    background-color: goldenrod;
+    color: black;
+    border: none;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  
+  .search-unique button:hover {
+    background-color: #ffd700;
+  }
+  
+  /* === MAIN LAYOUT === */
+  .main-content-unique {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 100px; /* accounts for fixed nav */
+    padding-bottom: 60px;
+  }
+  
+  /* === PROFILE BOX === */
+  .profile-container-unique {
+    background: #fff;
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    width: 100%;
+    max-width: 420px;
+  }
+  
+  /* === PROFILE IMAGE === */
+  .profile-photo-section-unique {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  #profilePhotoPreview {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #999;
+    margin-bottom: 10px;
+  }
+  
+  #profilePhotoInput {
+    font-size: 0.9em;
+  }
+  
+  /* === FORM FIELDS === */
+  form label {
+    font-weight: bold;
+    margin-top: 12px;
+    display: block;
+  }
+  
+  form input,
+  form select {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 0.95em;
+  }
+  
+  /* === PASSWORD FIELD === */
+  .password-field-wrapper {
+    position: relative;
+  }
+  
+  .eye-icon {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    user-select: none;
+  }
+  
+  /* === BUTTONS === */
+  .button-bar-unique {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+    gap: 10px;
+  }
+  
+  form button {
+    flex: 1;
+    padding: 10px;
+    background: #111;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.3s ease;
+  }
+  
+  form button:hover {
+    background: goldenrod;
+    color: black;
+  }
+  
+  /* === STATUS MESSAGE === */
+  #updateStatusUnique {
+    margin-top: 15px;
+    text-align: center;
+    font-weight: bold;
+    color: green;
+  }
+  
+  /* === RESPONSIVE === */
+  @media (max-width: 600px) {
+    .nav-links-unique {
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+  
+    .main-content-unique {
+      padding: 90px 10px 60px;
+    }
+  
+    .search-unique input {
+      max-width: 120px;
+    }
+  }
+
+    /* === FOOTER === */
+    .footer-unique {
+        background-color: #000;
+        color: #ccc;
+        text-align: center;
+        padding: 15px 10px;
+        font-size: 0.9em;
+        margin-top: auto;
+      }
+      
+      .footer-unique a {
+        color: goldenrod;
+        text-decoration: none;
+        font-weight: bold;
+      }
+      
+      .footer-unique a:hover {
+        color: white;
+        text-decoration: underline;
+      }
+      

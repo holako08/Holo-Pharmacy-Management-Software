@@ -1,0 +1,88 @@
+/* --- User Info Panel --- */
+.user-info-panel {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    background: #f4f8fb;
+    border-radius: 18px;
+    padding: 10px 20px;
+    margin: 25px auto 18px auto;
+    width: fit-content;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.user-info-panel img#user-photo {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #b6d2f2;
+}
+.user-info-panel div {
+    display: flex;
+    flex-direction: column;
+    font-size: 1.04em;
+    line-height: 1.2;
+}
+.user-info-panel #user-name {
+    font-weight: bold;
+    color: #13518f;
+}
+.user-info-panel #user-job-title {
+    color: #666;
+    font-size: 0.95em;
+}
+.user-info-panel #logout-btn {
+    margin-left: 12px;
+    background: #ef475b;
+    color: #fff;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+}
+.user-info-panel #logout-btn:hover {
+    background: #cc3442;
+}
+
+/* --- Stock Request Table --- */
+#request-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    font-size: 1.03em;
+    background: #fdfdff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(100,120,170,0.06);
+}
+#request-table th, #request-table td {
+    border: 1px solid #d3e0ee;
+    padding: 10px 12px;
+    text-align: left;
+}
+#request-table th {
+    background: #e6f0fa;
+    color: #1a4977;
+}
+#request-table tr:nth-child(even) {
+    background: #f7fbff;
+}
+#request-table td input[type="number"] {
+    width: 75px;
+    padding: 5px 7px;
+    border-radius: 7px;
+    border: 1px solid #b6d2f2;
+    font-size: 1em;
+}
+#request-table td button {
+    background: #ef475b;
+    color: #fff;
+    border: none;
+    padding: 6px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+#request-table td button:hover {
+    background: #cc3442;
+}

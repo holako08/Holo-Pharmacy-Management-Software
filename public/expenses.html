@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Pharmacy Expenses Manager</title>
+  <link rel="stylesheet" href="expenses.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="nav-bar.css">
+    <link rel="shortcut icon" href="images/logo.png" type="image/x-icon">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+</head>
+<body>
+
+  <nav class="nav-bar-unique">
+    <div class="logo-unique">
+        <img src="images/logo.png" alt="Logo">
+    </div>
+    <ul class="nav-links-unique">
+        <li><a href="dashboard.html">Home</a></li>
+        <li><a href="pos.html">POS</a></li>
+        <li><a href="PDC.html">Pediatric Dose Calculator</a></li>
+        <li><a href="cross selling.html">Cross-selling Help</a></li>
+        <li>
+            <a href="#">Reports</a>
+            <ul class="dropdown-unique">
+                <li><a href="sales report.html">Sales Report</a></li>
+                <li><a href="item-wise sale report.html">Item-wise Sales Report</a></li>
+
+<li><a href="near-expiry-report.html">Near Expiry Report</a></li>
+<li><a href="stock-report.html">Stock Report</a></li>
+
+            </ul>
+        </li>
+        <li>
+            <a href="#">Pharmacists’ Tools</a>
+            <ul class="dropdown-unique">
+                <li><a href="requirements.html">Stock Requirements</a></li>
+                <li><a href="variations.html">Stock Variations</a></li>
+                <li><a href="testing.html">Blood Pressure and Sugar Check</a></li>
+                <li><a href="expenses.html">Pharmacy Expenses Manager</a></li>
+            </ul>
+        </li>
+        <li>
+            <a href="#">Admin Tools</a>
+            <ul class="dropdown-unique">
+                <li><a href="edit medicines.html">Edit Medicines List</a></li>
+                <li><a href="edit bills.html">Edit Bills</a></li>
+                <li><a href="user management.html">Edit Users</a></li>
+                <li><a href="#">User Statistics</a></li>
+            </ul>
+        </li>
+    </ul>
+    <div class="search-unique">
+        <input type="text" placeholder="Search...">
+        <button>Search</button>
+    </div>
+</nav>
+
+  <div class="top-banner">
+    <div class="user-info">
+      <span class="job-title" id="userJobTitle">Job Title</span>
+      <span class="username" id="userName">Username</span>
+      <div class="profile-pic"><img src="" alt="Profile" /></div>
+    </div>
+    <div class="user-dropdown">
+      <div class="banner-text greeting">Welcome</div>
+      <div class="dropdown-menu">
+        <ul>
+          <li><a href="profile.html">My Profile</a></li>
+          <li><a href="#">Settings</a></li>
+          <li><a href="#" id="logoutBtn">Logout</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="u_exp__container">
+    <h1>Pharmacy Expenses Manager</h1>
+    <form id="u_exp__form">
+      <fieldset>
+        <legend>User Info</legend>
+        <input type="text" id="u_exp__name" placeholder="Name" required />
+        <input type="text" id="u_exp__department" placeholder="Department" required />
+        <input type="text" id="u_exp__designation" placeholder="Designation" required />
+        <input type="month" id="u_exp__period" required />
+        <input type="date" id="u_exp__date" required />
+        <input type="email" id="u_exp__email" placeholder="Email" required />
+      </fieldset>
+      <fieldset>
+        <legend>Expense Entry</legend>
+        <select id="u_exp__category" required>
+          <option value="">Select Category</option>
+          <option>Business Travel</option>
+          <option>Petrol</option>
+          <option>Visa/Labor</option>
+          <option>Internet</option>
+          <option>Stationery</option>
+          <option>Entertainment</option>
+          <option>Retail Shop</option>
+          <option>Others</option>
+        </select>
+        <input type="text" id="u_exp__description" placeholder="Description" required />
+        <input type="number" step="0.01" id="u_exp__amount" placeholder="Amount" required />
+        <button type="submit">Save</button>
+      </fieldset>
+    </form>
+
+    <hr />
+
+    <label>View by Month: 
+    <select id="u_exp__view_year">
+      <option value="">Year</option>
+      <script>
+        for (let y = 2022; y <= new Date().getFullYear(); y++) {
+          document.write(`<option value="${y}">${y}</option>`);
+        }
+      </script>
+    </select>
+    <select id="u_exp__view_month">
+      <option value="">Month</option>
+      <option value="01">January</option>
+      <option value="02">February</option>
+      <option value="03">March</option>
+      <option value="04">April</option>
+      <option value="05">May</option>
+      <option value="06">June</option>
+      <option value="07">July</option>
+      <option value="08">August</option>
+      <option value="09">September</option>
+      <option value="10">October</option>
+      <option value="11">November</option>
+      <option value="12">December</option>
+    </select>
+    </label>
+    <button id="u_exp__fetch_button">Fetch</button>
+    <button id="u_exp__print">🖨️ Print</button>
+    <button id="u_exp__export_excel">📁 Export to Excel</button>
+
+
+    <table id="u_exp__expenses_table">
+      <thead>
+        <tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th><th>Actions</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <div class="u_exp__monthly_total">Total: <span id="u_exp__total">0.00</span> OMR</div>
+
+    <canvas id="u_exp__summary_chart" width="600" height="300"></canvas>
+  </div>
+
+  <div class="dashboard-footer">
+    © 2025 Pharmacy Management System | Designed by Pharmacist: MOHAMED HAMID| <a href="mailto:mhm.hamid@gmail.com.com">mhm.hamid@gmail.com</a> | All Rights Reserved
+</div>
+
+  <script>
+    // Load user info from session storage
+    document.addEventListener('DOMContentLoaded', () => {
+      const userInfo = JSON.parse(sessionStorage.getItem('userInfo') || '{}');
+      if (!userInfo.username) {
+        window.location.href = 'index.html';
+      } else {
+        document.getElementById('userName').textContent = userInfo.fullName || userInfo.username;
+        document.getElementById('userJobTitle').textContent = userInfo.jobTitle || 'Staff';
+        document.querySelector('.greeting').textContent = `Welcome, ${userInfo.fullName?.split(' ')[0] || userInfo.username}`;
+      }
+
+      document.getElementById('logoutBtn').addEventListener('click', function (e) {
+        e.preventDefault();
+        sessionStorage.removeItem('userInfo');
+        fetch('/logout').finally(() => {
+          window.location.href = 'index.html';
+        });
+      });
+    });
+  </script>
+  <script src="expenses.js"></script>
+</body>
+</html>

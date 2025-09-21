@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pediatric Dose Calculator</title>
+    <link rel="stylesheet" href="PDC.css">
+    <link rel="icon" href="4.jpg" type="image/x-icon">
+    <link rel="stylesheet" href="nav-bar.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="shortcut icon" href="images/logo.png" type="image/x-icon">
+    <link rel="stylesheet" href="responsive.css">
+</head>
+<body>
+<nav class="nav-bar-unique">
+  <div class="logo-unique">
+    <img src="images/logo.png" alt="Logo">
+  </div>
+  <ul class="nav-links-unique">
+    <li><a href="dashboard.html">Home</a></li>
+    <li><a href="pos.html">POS</a></li>
+    <li><a href="PDC.html">Pediatric Dose Calculator</a></li>
+    <li><a href="cross selling.html">Cross-selling Help</a></li>
+    <li>
+      <a href="#">Reports</a>
+      <ul class="dropdown-unique">
+        <li><a href="sales report.html">Sales Report</a></li>
+        <li><a href="item-wise sale report.html">Item-wise Sales Report</a></li>
+
+<li><a href="near-expiry-report.html">Near Expiry Report</a></li>
+<li><a href="stock-report.html">Stock Report</a></li>
+
+      </ul>
+    </li>
+    <li>
+      <a href="#">Pharmacists’ Tools</a>
+      <ul class="dropdown-unique">
+        <li><a href="requirements.html">Stock Requirements</a></li>
+        <li><a href="variations.html">Stock Variations</a></li>
+        <li><a href="testing.html">Blood Pressure and Sugar Check</a></li>
+        <li><a href="request-center-usrZ3v.html">Requests Center</a></li>
+      </ul>
+    </li>
+    <li>
+      <a href="#">Admin Tools</a>
+      <ul class="dropdown-unique">
+        <li><a href="edit medicines.html">Edit Medicines List</a></li>
+        <li><a href="edit bills.html">Edit Bills</a></li>
+        <li><a href="user management.html">Edit Users</a></li>
+        <li><a href="admin-approvals.html">Admin Approvals</a></li>
+      </ul>
+    </li>
+  </ul>
+  <div class="search-unique">
+    <input type="text" placeholder="Search...">
+    <button>Search</button>
+  </div>
+</nav>
+    <!-- Main Pediatric Dose Calculator Content -->
+    <div class="calculator-container">
+        <h1>Pediatric Dose Calculator</h1>
+        <div class="user-info">
+            <div class="user-details">
+              <span id="job-title">Pharmacist</span> <span id="pharmacist-name">MOHAMED</span> is logged-in
+            </div>
+            <div class="profile-pic">
+                <img id="user-photo" src="images/default-profile.png" alt="Profile" style="width:60px; height:60px; border-radius:50%; object-fit:cover; object-position:center;">
+              </div>
+              
+            <button id="logout-btn" class="logout-btn" onclick="logout()">Log-out</button>
+          </div>
+        <div class="input-container">
+            <div class="input-section">
+                <h2>Enter</h2>
+                <label>Child weight:</label>
+                <input type="text" id="weight" placeholder="Enter weight" data-toggle="tooltip" title="Enter the child's weight.">
+                <select id="weightUnit">
+                    <option value="kg">kg</option>
+                    <option value="lbs">lbs</option>
+                </select>
+
+                <label>Adult dose:</label>
+                <input type="text" id="dose" placeholder="Enter adult dose" data-toggle="tooltip" title="Enter the adult dose.">
+                <select id="doseUnit">
+                    <option value="mg">mg</option>
+                    <option value="g">g</option>
+                </select>
+
+                <label>Syrup concentration (mg):</label>
+                <input type="text" id="syrupMg" placeholder="e.g. 200 mg" data-toggle="tooltip" title="Enter the syrup concentration in mg.">
+
+                <label>Syrup concentration (mL):</label>
+                <input type="text" id="syrupMl" placeholder="e.g. 5 mL" data-toggle="tooltip" title="Enter the syrup concentration in mL.">
+
+                <button class="calculate-btn">Calculate dose</button>
+                <button class="clear-btn">Clear</button>
+            </div>
+
+            <div class="result-section">
+                <h2>Result</h2>
+                <div class="result-box">
+                    <p>Dose result here</p>
+                </div>
+
+                <div class="adult-dose-search">
+                    <button class="adult-dose-btn">Adult dose search</button>
+                    <div class="dropdown">
+                      <input type="text" id="doseSearchInput" placeholder="Search drugs..." style="width:100%; padding:8px; margin-bottom:10px;"/>
+                        
+<div id="doseSuggestions" style="background:white; border:1px solid #ccc; max-height:200px; overflow-y:auto;"></div>
+
+                        <!-- Manage Dose List Button -->
+<button class="manage-dose-btn" onclick="openDoseManager()">Manage Adult Dose List</button>
+                    </div>
+                    <div id="doseDescription" style="margin-top: 10px; font-size: 42px; color: #333; font-weight: bolder;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Adult Dose Manager Modal -->
+<div id="doseManagerModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background-color:rgba(0,0,0,0.6); z-index:9999; justify-content:center; align-items:center;">
+  <div style="background:white; padding:20px; border-radius:10px; width:90%; max-width:500px;">
+    <h3>Manage Adult Dose List</h3>
+    <div style="margin-bottom:10px;">
+      <input id="newDrugName" placeholder="Drug name" style="width:100%; padding:8px;"/>
+      <input id="newDrugDose" placeholder="Dose description" style="width:100%; padding:8px; margin-top:5px;"/>
+      <button onclick="addNewDrug()" style="width:100%; margin-top:5px;">Add / Update</button>
+    </div>
+    <ul id="drugList" style="list-style:none; padding:0; max-height:200px; overflow-y:auto;"></ul>
+    <button onclick="closeDoseManager()" style="margin-top:10px; width:100%;">Close</button>
+  </div>
+</div>
+
+
+    <div class="dashboard-footer">
+        © 2025 Pharmacy Management System | Designed by Pharmacist: MOHAMED HAMID| <a href="mailto:mhm.hamid@gmail.com.com">mhm.hamid@gmail.com</a> | All Rights Reserved
+      </div>
+<script src="pdc.js"></script>
+    
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

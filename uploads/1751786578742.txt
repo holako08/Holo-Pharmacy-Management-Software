@@ -1,0 +1,11 @@
+SRR No: 2
+From Branch: Main Branch
+To Branch: Sub1
+Requested By: Mohamed Hamid Mohamed Hamid
+Request Date: Sun Jul 06 2025 11:01:49 GMT+0400 (Gulf Standard Time)
+
+Item Name	Quantity
+test medicine 1	10
+test medicine 2	10
+PANADOL EXTRA OPTIZORB TABLETS 48`S	10
+LANZOL 30 MG CAPSULES  30`S	10

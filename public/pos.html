@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pharmacy POS</title>
+  <link rel="stylesheet" href="pos.css" />
+  <link rel="stylesheet" href="nav-bar.css">
+  <link rel="shortcut icon" href="images/logo.png" type="image/x-icon">
+  <style>
+    .main-content {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+    .left-column {
+      flex: 2;
+      min-width: 600px;
+    }
+    .right-column {
+      flex: 1;
+      min-width: 300px;
+    }
+    #frequent-bills, #medicine-info {
+      margin-bottom: 20px;
+    }
+    #user-photo {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center;
+}
+  </style>
+</head>
+<body>
+
+<nav class="nav-bar-unique">
+  <div class="logo-unique">
+    <img src="images/logo.png" alt="Logo">
+  </div>
+  <ul class="nav-links-unique">
+    <li><a href="dashboard.html">Home</a></li>
+    <li><a href="pos.html">POS</a></li>
+    <li><a href="PDC.html">Pediatric Dose Calculator</a></li>
+    <li><a href="cross selling.html">Cross-selling Help</a></li>
+    <li>
+      <a href="#">Reports</a>
+      <ul class="dropdown-unique">
+        <li><a href="sales report.html">Sales Report</a></li>
+        <li><a href="item-wise sale report.html">Item-wise Sales Report</a></li>
+
+<li><a href="near-expiry-report.html">Near Expiry Report</a></li>
+<li><a href="stock-report.html">Stock Report</a></li>
+
+      </ul>
+    </li>
+    <li>
+      <a href="#">Pharmacists’ Tools</a>
+      <ul class="dropdown-unique">
+        <li><a href="requirements.html">Stock Requirements</a></li>
+        <li><a href="variations.html">Stock Variations</a></li>
+        <li><a href="testing.html">Blood Pressure and Sugar Check</a></li>
+        <li><a href="request-center-usrZ3v.html">Requests Center</a></li>
+      </ul>
+    </li>
+    <li>
+      <a href="#">Admin Tools</a>
+      <ul class="dropdown-unique">
+        <li><a href="edit medicines.html">Edit Medicines List</a></li>
+        <li><a href="edit bills.html">Edit Bills</a></li>
+        <li><a href="user management.html">Edit Users</a></li>
+        <li><a href="admin-approvals.html">Admin Approvals</a></li>
+      </ul>
+    </li>
+  </ul>
+  <div class="search-unique">
+    <input type="text" placeholder="Search...">
+    <button>Search</button>
+  </div>
+</nav>
+
+<div class="user-info">
+  <div class="user-details">
+    <span id="job-title">Pharmacist</span> <span id="pharmacist-name">MOHAMED</span> is logged-in
+  </div>
+  <div class="profile-pic">
+      <img id="user-photo" src="" alt="Profile">
+  </div>
+  <button id="logout-btn" class="logout-btn" onclick="logout()">Log-out</button>
+</div>
+
+<!-- Patient Information -->
+<section id="patient-info">
+  <label for="patient-name">Patient Name:</label>
+  <input type="text" id="patient-name" autocomplete="off" />
+  <div id="patient-name-suggestions" class="suggestion-box"></div>
+
+  <label for="patient-phone">Phone:</label>
+  <input type="text" id="patient-phone" autocomplete="off" />
+  <div id="patient-phone-suggestions" class="suggestion-box"></div>
+</section>
+
+<!-- Medicine Search -->
+<section id="medicine-search">
+  <label for="medicine-input">Search Medicine (F1):</label>
+  <input type="text" id="medicine-input" autocomplete="off" />
+  <div id="search-results" class="suggestion-box"></div>
+</section>
+
+<div class="main-content">
+  <!-- LEFT COLUMN -->
+  <div class="left-column">
+
+    <!-- Cart Table -->
+    <section id="cart-section">
+      <table id="cart-table">
+        <thead>
+          <tr>
+            <th>Item Name</th>
+            <th>Price</th>
+            <th>Quantity</th>
+            <th>Expiry</th>
+            <th>Stock</th>
+            <th>Packet Size</th>
+            <th>Subtotal</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="cart-body">
+          <!-- Items will be appended here -->
+        </tbody>
+      </table>
+      <div id="cart-total-section">
+        <label for="discount">Discount %:</label>
+        <input type="number" id="discount" step="0.001" />
+        <span id="grand-total" class="total-bold">Total: 0.000</span>
+      </div>
+    </section>
+
+    <!-- Payment Methods -->
+    <section id="payment-section">
+      <h3>Payment Method</h3>
+
+      <label><input type="radio" name="payment-method" value="cash" checked /> Cash</label>
+      <input type="number" id="cash-given" placeholder="Amount Given" step="0.001" />
+      <span id="cash-change">Change: 0.000</span>
+
+      <br/>
+
+      <label><input type="radio" name="payment-method" value="card" /> Card</label>
+      <input type="text" id="card-invoice" placeholder="Card Invoice #" />
+
+      <br/>
+
+      <label><input type="radio" name="payment-method" value="ecommerce" /> E-commerce</label>
+      <input type="text" id="ecommerce-invoice" placeholder="E-commerce Invoice #" />
+
+      <br/>
+
+      <label><input type="radio" name="payment-method" value="insurance" /> Insurance</label>
+      <button id="insurance-details-btn">Enter Insurance Details</button>
+    </section>
+
+    <!-- Action Buttons -->
+    <section id="action-buttons">
+      <button id="save-bill" class="btn green">Save Bill (F2)</button>
+      <button id="print-bill" class="btn blue">Print Bill</button>
+      <button id="add-frequent" class="btn yellow">Add to Frequent Bills</button>
+      <button id="clear-cart" class="btn red">Clear Cart (DEL)</button>
+      <button id="export-cart-excel" class="btn blue" title="Export Cart to Excel" style="vertical-align:middle;">
+  <img src="images/excel-icon.jpeg" alt="Excel" style="height:1em;vertical-align:middle;margin-right:5px;"> Export Cart
+</button>
+    </section>
+
+  </div>
+
+  <!-- RIGHT COLUMN -->
+  <div class="right-column">
+
+    <!-- Frequent Bills Section -->
+    <aside id="frequent-bills">
+      <h3>Frequent Bills</h3>
+      <div id="frequent-bill-list">
+        <!-- Frequent bill buttons go here -->
+      </div>
+    </aside>
+
+    <!-- Medicine Info Section -->
+    <section id="medicine-info">
+      <h3>Medicine Information</h3>
+      <div id="info-display">
+        <!-- Dynamic content like cross selling, interactions, etc. -->
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<div class="dashboard-footer">
+  © 2025 Pharmacy Management System | Designed by Pharmacist: MOHAMED HAMID |
+  <a href="mailto:mhm.hamid@gmail.com">mhm.hamid@gmail.com</a> | All Rights Reserved
+</div>
+
+<!-- Hidden Print Area -->
+<div id="print-area" style="display:none;"></div>
+
+<script src="pos.js"></script>
+<script>//user info section
+  document.addEventListener('DOMContentLoaded', () => {
+    const userInfoString = sessionStorage.getItem('userInfo');
+    if (!userInfoString) {
+      console.log('No userInfo found in session storage, redirecting to login page');
+      window.location.href = 'index.html';
+      return;
+    }
+  
+    try {
+      const userInfo = JSON.parse(userInfoString);
+      console.log('Parsed userInfo:', userInfo);
+      
+      // Update user profile information in the header
+      document.getElementById('pharmacist-name').textContent = userInfo.fullName || userInfo.username;
+      document.getElementById('job-title').textContent = userInfo.jobTitle || 'Staff';
+      document.getElementById('user-photo').src = '/api/user-photo/' + userInfo.userId;
+      
+      // Optional: You could also add the user's avatar if available
+      // const avatarContainer = document.querySelector('.profile-pic img');
+      // if (userInfo.avatar) {
+      //   avatarContainer.src = userInfo.avatar;
+      // }
+    } catch (error) {
+      console.error('Error parsing user information:', error);
+      alert('There was an error loading your profile. Please log in again.');
+      window.location.href = 'index.html';
+    }
+  });
+  
+  //logout button
+  function logout() {
+    // Redirect to the login page or perform any other log-out action
+    window.location.href = 'index.html'; // Assuming you have a login page named index.html
+  }</script>
+</body>
+</html>
