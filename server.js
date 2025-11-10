@@ -8,13 +8,16 @@ const moment = require('moment');
 const bcrypt = require('bcrypt');
 const expressSession = require('express-session');
 const multer = require('multer');
+const puppeteer = require('puppeteer');
 const path = require('path');
 const fs = require('fs');
 const ExcelJS = require('exceljs');
+const Groq = require('groq-sdk');
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 const workbook = new ExcelJS.Workbook();
 
 const app = express();
-const port = 3000;
+const port = 3002;
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -22,6 +25,16 @@ app.use(cors());
 app.use(express.static('public'));
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static('uploads')); // Serve uploaded files
+// serve everything inside /public/images under the /images prefix
+app.use('/images', express.static(path.join(__dirname, 'public/images')));
+
+// Session middleware
+app.use(expressSession({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: true,
+  cookie: { secure: false, maxAge: 36000000 } // 10 hours, secure:false for development
+}));
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -120,6 +133,24 @@ const customerRequestsPool = mysql2.createPool({
   connectionLimit: 10
 });
 
+// CP DB Pool (Capital Pharmacy)
+const capitalPharmacyPool = mysql2.createPool({
+    host: 'localhost',
+    user: 'root',
+    password: process.env.DB_PASSWORD, // Assuming same password
+    database: 'capital-pharmacy-products',
+    connectionLimit: 10
+});
+
+// CTPR DB Pool
+const ctprPool = mysql2.createPool({
+    host: 'localhost',
+    user: 'root',
+    password: process.env.DB_PASSWORD, // Assuming same password
+    database: 'ctpr',
+    connectionLimit: 10
+});
+
 const stockTransactionsPool = require('mysql2').createPool({
     host: 'localhost',
     user: 'root',
@@ -136,6 +167,18 @@ const popool = mysql2.createPool({
     connectionLimit: 10
 });
 
+const groq = new Groq({
+    apiKey: process.env.GROQ_API_KEY
+});
+
+let model;
+if (process.env.GOOGLE_API_KEY) {
+    const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
+    // Use the model requested by the user
+    model = genAI.getGenerativeModel({ model: "gemini-2.5-pro" }); 
+} else {
+    console.warn('GOOGLE_API_KEY not found in .env file. AI features will be disabled.');
+}
 
 // Connect to MySQL
 connection.connect(error => {
@@ -213,6 +256,14 @@ app.get('/api/pos/medicines/search', (req, res) => {
 // Enhanced medicine search: each batch is a row (with batch info)
 app.get('/api/pos/medicines/search-with-batches', async (req, res) => {
   const { q } = req.query;
+  // Get the user's branch from the session
+  const userBranch = req.session.user ? req.session.user.branch : null;
+
+  // If user is not logged in or has no branch, return no results
+  if (!userBranch) {
+    console.warn("Search attempt with no user branch in session.");
+    return res.json([]);
+  }
 
   // Get all medicines matching the query (by name, active, or barcode)
   const meds = await new Promise((resolve, reject) => {
@@ -229,42 +280,34 @@ app.get('/api/pos/medicines/search-with-batches', async (req, res) => {
     });
   });
 
-  // For each medicine, get its batches (all batches, any stock, sorted by expiry)
+  // For each medicine, get its batches (ONLY from the user's branch)
   const allResults = [];
   for (let med of meds) {
-    const [batches] = await medicinesPool.promise().query(
-      `SELECT batch_id, batch_number, expiry, quantity
-       FROM batches
-       WHERE medicine_id = ?
-       ORDER BY expiry ASC, batch_id ASC`,
-      [med.id]
-    );
-    if (batches.length > 0) {
-      for (let batch of batches) {
-        allResults.push({
-          id: med.id,
-          item_name: med.item_name,
-          price: med.price,
-          barcode: med.barcode,
-          batch_id: batch.batch_id,
-          batch_number: batch.batch_number,
-          expiry: batch.expiry,
-          stock: batch.quantity
-        });
-      }
-    } else {
-      // Medicine with no batches (legacy/fallback)
-      allResults.push({
-        id: med.id,
-        item_name: med.item_name,
-        price: med.price,
-        barcode: med.barcode,
-        batch_id: null,
-        batch_number: null,
-        expiry: null,
-        stock: null
-      });
-    }
+   const [batches] = await medicinesPool.promise().query(
+  `SELECT batch_id, batch_number, expiry, quantity, branch
+   FROM batches
+   WHERE medicine_id = ? AND branch = ?  -- <-- Filter by branch
+   ORDER BY expiry ASC, batch_id ASC`,
+  [med.id, userBranch] // <-- Pass userBranch as parameter
+);
+
+// Only add results if batches were found in the user's branch
+if (batches.length > 0) {
+  for (let batch of batches) {
+    allResults.push({
+      id: med.id,
+      item_name: med.item_name,
+      price: med.price,
+      barcode: med.barcode,
+      batch_id: batch.batch_id,
+      batch_number: batch.batch_number,
+      expiry: batch.expiry,
+      stock: batch.quantity,
+      branch: batch.branch 
+    });
+  }
+} 
+// If no batches are found in this branch, do not add the medicine to the results.
   }
   res.json(allResults);
 });
@@ -409,8 +452,11 @@ app.post('/api/pos/bills/save', (req, res) => {
     card_invoice_number,
     ecommerce_invoice_number,
     items,
-    user
   } = req.body;
+
+  // Get user's full name and branch from the session
+  const user = req.session.user ? req.session.user.fullName : 'Unknown User';
+  const branch = req.session.user ? req.session.user.branch : 'Unknown Branch';
 
   const billDate = new Date().toISOString().split('T')[0];
   const billTime = new Date().toTimeString().split(' ')[0];
@@ -419,20 +465,20 @@ app.post('/api/pos/bills/save', (req, res) => {
     return res.status(400).json({ success: false, message: 'Cart is empty.' });
   }
 
+  // MODIFIED: This function now passes the (err, result) to the callback
   const insertItem = (item, cb) => {
     const item_name = item.item_name || 'Unknown Item';
     const quantity = parseFloat(item.quantity) || 0;
     const price = parseFloat(item.price) || 0;
     const subtotal = parseFloat(item.subtotal) || 0;
 
-    // NEW: Add batch fields
     const insertQuery = `
       INSERT INTO bills (
         bill_date, bill_time, item_name, quantity, price, subtotal,
         batch_id, batch_number, expiry,
         payment_method, card_invoice_number, \`E-commerce Invoice Number\`,
-        patient_name, patient_phone, user
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        patient_name, patient_phone, user, branch
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     billsPool.query(
@@ -446,52 +492,73 @@ app.post('/api/pos/bills/save', (req, res) => {
         subtotal,
         item.batch_id || null,
         item.batch_number || null,
-        item.expiry ? item.expiry.split('T')[0] : null,  // Save date only
+        item.expiry ? item.expiry.split('T')[0] : null,
         payment_method || 'Unknown',
         card_invoice_number || '',
         ecommerce_invoice_number || '',
         patient_name || '',
         patient_phone || '',
-        user || 'Unknown User'
+        user,
+        branch
       ],
-      cb
+      cb // Pass (err, result) directly to the callback
     );
   };
 
-  const updateStock = async (item, cb) => {
-    try {
-      if (item.batch_id) {
-        // Fetch packet_size for the medicine associated with the batch
-        const [medRows] = await medicinesPool.promise().query(
-          'SELECT mt.packet_size FROM batches b JOIN medicines_table mt ON b.medicine_id = mt.id WHERE b.batch_id = ? LIMIT 1',
-          [item.batch_id]
-        );
-        const packetSize = (medRows && medRows.length && medRows[0].packet_size) ? medRows[0].packet_size : 1;
-        const deductAmount = parseFloat(item.quantity) / packetSize;
-
-        const updateBatch = 'UPDATE batches SET quantity = quantity - ? WHERE batch_id = ?';
-        medicinesPool.query(updateBatch, [deductAmount, item.batch_id], cb);
-      } else {
-        // Fallback for items without batches (deduct from main table using packet_size)
-        const query = 'SELECT packet_size FROM medicines_table WHERE item_name = ? LIMIT 1';
-        medicinesPool.query(query, [item.item_name], (err, rows) => {
-          if (err) return cb(err);
-          const packetSize = (rows && rows.length && rows[0].packet_size) ? rows[0].packet_size : 1;
-          const deductAmount = parseFloat(item.quantity) / packetSize;
-          const updateQuery = 'UPDATE medicines_table SET stock = stock - ? WHERE item_name = ?';
-          medicinesPool.query(updateQuery, [deductAmount, item.item_name], cb);
+  /**
+   * Updates stock for a billed item.
+   * Prioritizes deducting from a batch with a matching branch.
+   * Falls back to a batch with a NULL branch if the specific branch isn't found.
+   * Finally, falls back to the legacy medicines_table if no batch_id is provided.
+   */
+  const updateStock = (item, branch, cb) => {
+    // If there's no batch ID, fall back to the legacy method of updating the main medicines table.
+    if (!item.batch_id) {
+        medicinesPool.query('SELECT packet_size FROM medicines_table WHERE item_name = ? LIMIT 1', [item.item_name], (err, rows) => {
+            if (err) return cb(err);
+            const packetSize = (rows && rows.length > 0 && rows[0].packet_size) ? rows[0].packet_size : 1;
+            const deductAmount = parseFloat(item.quantity) / packetSize;
+            medicinesPool.query('UPDATE medicines_table SET stock = stock - ? WHERE item_name = ?', [deductAmount, item.item_name], cb);
         });
-      }
-    } catch (err) {
-      cb(err); // Propagate async errors to the callback
+        return; // Exit the function here
     }
-  };
+
+    // Main logic for items that have a batch_id
+    // First, get the packet size for accurate stock deduction.
+    medicinesPool.query(
+        'SELECT mt.packet_size FROM batches b JOIN medicines_table mt ON b.medicine_id = mt.id WHERE b.batch_id = ? LIMIT 1',
+        [item.batch_id],
+        (err, medRows) => {
+            if (err) return cb(err);
+
+            const packetSize = (medRows && medRows.length > 0 && medRows[0].packet_size) ? medRows[0].packet_size : 1;
+            const deductAmount = parseFloat(item.quantity) / packetSize;
+
+            // Directly update the specific batch using its unique ID, ignoring the branch.
+            // This ensures stock is deducted from the correct source in a cross-branch sale.
+            const updateSql = 'UPDATE batches SET quantity = quantity - ? WHERE batch_id = ?';
+            
+            medicinesPool.query(updateSql, [deductAmount, item.batch_id], (err, result) => {
+                if (err) return cb(err);
+                
+                if (result.affectedRows === 0) {
+                    // This is a critical warning: the batch that was sold could not be found in the database.
+                    console.error(`CRITICAL STOCK UPDATE FAILURE: Batch with ID ${item.batch_id} for item "${item.item_name}" was not found for stock deduction.`);
+                }
+                
+                cb(); // Callback successfully to allow the bill-saving process to complete.
+            });
+        }
+    );
+};
 
   let completed = 0;
   let errored = false;
+  let firstInsertId = null; // NEW: To capture the first bill_id
 
   items.forEach((item) => {
-    insertItem(item, (err) => {
+    // MODIFIED: The callback now receives (err, insertResult)
+    insertItem(item, (err, insertResult) => {
       if (errored) return;
       if (err) {
         console.error("Insert error:", err);
@@ -499,7 +566,13 @@ app.post('/api/pos/bills/save', (req, res) => {
         return res.status(500).json({ success: false, message: 'Failed to insert bill item.' });
       }
 
-      updateStock(item, (err2) => {
+      // NEW: Capture the first insertId
+      if (firstInsertId === null) {
+        firstInsertId = insertResult.insertId;
+      }
+
+      // Pass the 'branch' from the session into the updateStock function
+      updateStock(item, branch, (err2) => {
         if (errored) return;
         if (err2) {
           console.error("Stock update error:", err2);
@@ -509,13 +582,93 @@ app.post('/api/pos/bills/save', (req, res) => {
 
         completed++;
         if (completed === items.length) {
-          res.json({ success: true });
+          // MODIFIED: Return the firstBillId
+          res.json({ success: true, firstBillId: firstInsertId });
         }
       });
     });
   });
 });
 
+// Check for drug-drug interactions
+app.post('/api/pos/check-interactions', async (req, res) => {
+  // CHANGED: Receive activeIngredients instead of itemNames
+  const { activeIngredients } = req.body;
+
+  if (!activeIngredients || !Array.isArray(activeIngredients) || activeIngredients.length < 2) {
+    return res.status(400).json({ 
+      success: false,
+      error: 'At least two unique active ingredients are required for an interaction check.' 
+    });
+  }
+
+  // Check if the AI model is available
+  if (!model) {
+      return res.status(503).json({ success: false, error: 'AI service is not configured. Missing GOOGLE_API_KEY.' });
+  }
+
+  // Create a clear prompt for the AI based on user requirements
+  const prompt = `
+   Analyze this list of active pharmaceutical ingredients: ${activeIngredients.join(', ')}.
+
+    Identify ONLY clinically SERIOUS drug-drug interactions between them. 
+    "Serious" is defined as interactions that can cause life-threatening events, major organ toxicity, marked therapeutic failure, major bleeding, severe QT prolongation, or respiratory depression.
+    Ignore ALL minor, moderate, or theoretical interactions.
+
+    Your response MUST be in one of two formats:
+
+    1. If NO serious interactions are found:
+       Return ONLY the text "No serious interactions found."
+
+    2. If serious interactions ARE found:
+       Return ONLY an HTML table (and nothing else) with three columns: "Ingredient A", "Ingredient B", and "Serious Interaction Details". 
+       The table should have inline CSS for large fonts (font-size: 1.2em;).
+
+    Example of table format (if interactions are found):
+<table border="1" style="width:100%; border-collapse: collapse; font-size: 1.2em;">
+  <thead>
+    <tr style="background-color: #f2f2f2;">
+      <th style="padding: 8px;">Ingredient A</th>
+      <th style="padding: 8px;">Ingredient B</th>
+      <th style="padding: 8px;">Serious Interaction Details</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="padding: 8px;">Warfarin</td>
+      <td style="padding: 8px;">Aspirin</td>
+      <td style="padding: 8px;">Increased risk of major bleeding due to synergistic anticoagulant effects.</td>
+    </tr>
+  </tbody>
+</table>
+  `;
+
+  try {
+    // CHANGED: Use Gemini API instead of Groq
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const report = response.text().trim(); // Use text() and trim()
+
+    // Check if the response is *only* the "no interactions" string
+    if (report === "No serious interactions found.") {
+         res.json({ success: true, interaction_report: report });
+    }
+    // Check if the response is an HTML table
+    else if (report.startsWith('<table')) {
+         res.json({ success: true, interaction_report: report });
+    }
+    // Handle unexpected AI responses
+    else {
+        console.warn("Gemini API returned an unexpected format:", report);
+        // Default to "no serious interactions" as a safe fallback
+        res.json({ success: true, interaction_report: "No serious interactions found." });
+    }
+
+  } catch (err) {
+    console.error("Gemini API error:", err);
+    res.status(500).json({ success: false, error: 'Failed to check interactions with AI service.' });
+  }
+});
 
 // ==================== Frequent Bills ====================
 
@@ -664,13 +817,7 @@ async function fetchItemDetails(itemName) {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Session middleware
-app.use(expressSession({
-  secret: process.env.SESSION_SECRET,
-  resave: false,
-  saveUninitialized: true,
-  cookie: { secure: false, maxAge: 36000000 } // 10 hours, secure:false for development
-}));
+
 
 // Serve index.html for root path
 app.get('/', (req, res) => {
@@ -679,87 +826,71 @@ app.get('/', (req, res) => {
 
 // Login route
 app.post('/login', (req, res) => {
-  const { username, password } = req.body;
-  
-  // Input validation
-  if (!username || !password) {
-      console.log('Login attempt failed: Missing username or password');
-      return res.status(400).json({ success: false, message: 'Username and password are required' });
-  }
-  
- 
-  
-  // Query database for user
-  const query = 'SELECT UserID, Username, PasswordHash, IsAdmin, FullName, JobTitle FROM users WHERE Username = ?';
-  
-  connection.query(query, [username], async (error, results) => {
-      if (error) {
-          console.error('Database error during login:', error);
-          return res.status(500).json({ success: false, message: 'Database error occurred. Please try again.' });
-      }
-      
-      if (results.length === 0) {
-          console.log(`Login failed: No user found with username '${username}'`);
-          return res.status(401).json({ success: false, message: 'Invalid username or password' });
-      }
-      
-      const user = results[0];
-     
-     
-      
-      try {
-          let passwordMatch = false;
-          
-          if (user.PasswordHash && user.PasswordHash.startsWith('$2')) {
-             
-              
-              passwordMatch = await bcrypt.compare(password, user.PasswordHash);
-              
-             
-              if (!passwordMatch) {
-                  // Try logging the first few chars of both hashes for comparison
-                  const testHash = await bcrypt.hash(password, 10);
-                  
-              }
-          } 
-          // If password is stored as plain text, hash it and compare
-          else if (user.PasswordHash) {
-             
-              const hashedPassword = await bcrypt.hash(password, 10); // Hash the input password
-              passwordMatch = (hashedPassword === user.PasswordHash);
-          }
-          
-         
-          
-          if (!passwordMatch) {
-              return res.status(401).json({ success: false, message: 'Invalid username or password' });
-          }
-          
-          // Set session data
-          req.session.user = {
-              userId: user.UserID,
-              username: user.Username,
-              isAdmin: user.IsAdmin === 1,
-              fullName: user.FullName || user.Username,
-              jobTitle: user.JobTitle || 'Staff'
-          };
-          
-          
-          
-          // Return success with user info
-          return res.json({
-              success: true,
-              userId: user.UserID,
-              username: user.Username,
-              isAdmin: user.IsAdmin === 1,
-              fullName: user.FullName || user.Username,
-              jobTitle: user.JobTitle || 'Staff'
-          });
-      } catch (err) {
-          console.error('Password comparison error:', err);
-          return res.status(500).json({ success: false, message: 'Authentication error occurred. Please try again.' });
-      }
-  });
+    // Destructure branch from the request body
+    const { username, password, branch } = req.body;
+    
+    // Input validation now includes branch
+    if (!username || !password || !branch) {
+        console.log('Login attempt failed: Missing username, password, or branch');
+        return res.status(400).json({ success: false, message: 'Username, password, and branch are required' });
+    }
+    
+    // Query database for user (no change needed here)
+    const query = 'SELECT UserID, Username, PasswordHash, IsAdmin, FullName, JobTitle FROM users WHERE Username = ?';
+    
+    connection.query(query, [username], async (error, results) => {
+        if (error) {
+            console.error('Database error during login:', error);
+            return res.status(500).json({ success: false, message: 'Database error occurred. Please try again.' });
+        }
+        
+        if (results.length === 0) {
+            console.log(`Login failed: No user found with username '${username}'`);
+            return res.status(401).json({ success: false, message: 'Invalid username or password' });
+        }
+        
+        const user = results[0];
+        
+        try {
+            let passwordMatch = false;
+            
+            if (user.PasswordHash && user.PasswordHash.startsWith('$2')) {
+                passwordMatch = await bcrypt.compare(password, user.PasswordHash);
+            }
+            // This 'else if' block for plain text comparison is highly insecure and should be removed in production
+            else if (user.PasswordHash) {
+                 passwordMatch = (password === user.PasswordHash);
+            }
+            
+            if (!passwordMatch) {
+                return res.status(401).json({ success: false, message: 'Invalid username or password' });
+            }
+            
+            // Set session data, using the branch from the request
+            req.session.user = {
+                userId: user.UserID,
+                username: user.Username,
+                isAdmin: user.IsAdmin === 1,
+                fullName: user.FullName || user.Username,
+                branch: branch, // Use the branch sent from the login form
+                jobTitle: user.JobTitle || 'Staff'
+            };
+            
+            // Return success with user info, including the branch
+            return res.json({
+                success: true,
+                userId: user.UserID,
+                username: user.Username,
+                isAdmin: user.IsAdmin === 1,
+                fullName: user.FullName || user.Username,
+                jobTitle: user.JobTitle || 'Staff',
+                branch: branch // Send the selected branch back to the client
+            });
+        } catch (err) {
+            console.error('Password comparison error:', err);
+            return res.status(500).json({ success: false, message: 'Authentication error occurred. Please try again.' });
+        }
+    });
 });
 
 // Logout route
@@ -786,13 +917,14 @@ app.get('/api/user-info', isAuthenticated, (req, res) => {
 app.post('/api/addUser', upload.single('photo'), async (req, res) => {
   const {
     username, password, isAdmin = 0, fullName = '', jobTitle = '', gender = '',
-    birthdate = null, email = '', phoneNumber = '', idNumber = '', licenseNumber = ''
+    birthdate = null, email = '', phoneNumber = '', idNumber = '', licenseNumber = '',
+    branch = '', joiningDate = null, salary = null // <-- Add new fields
   } = req.body;
 
   let photoBlob = null;
   if (req.file) {
     photoBlob = fs.readFileSync(req.file.path);
-    fs.unlinkSync(req.file.path); // Optional cleanup
+    fs.unlinkSync(req.file.path);
   }
 
   if (!username || !password) {
@@ -801,17 +933,27 @@ app.post('/api/addUser', upload.single('photo'), async (req, res) => {
 
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
+    // Add new fields to the INSERT query
     const query = `
-      INSERT INTO users (Username, PasswordHash, IsAdmin, FullName, JobTitle, Gender, Birthdate, Email, PhoneNumber, IDNumber, LicenseNumber, Photo)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO users (Username, PasswordHash, IsAdmin, FullName, JobTitle, Gender, Birthdate, Email, PhoneNumber, IDNumber, LicenseNumber, Photo, Branch, JoiningDate, Salary)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
-    const values = [username, hashedPassword, isAdmin, fullName, jobTitle, gender, birthdate || null, email, phoneNumber, idNumber, licenseNumber, photoBlob];
+    // Add new fields to the values array
+    const values = [
+        username, hashedPassword, isAdmin, fullName, jobTitle, gender, birthdate || null, 
+        email, phoneNumber, idNumber, licenseNumber, photoBlob, 
+        branch, joiningDate || null, salary || null
+    ];
     
     connection.query(query, values, (err) => {
-      if (err) return res.status(500).json({ success: false, message: 'Database error occurred' });
+      if (err) {
+        console.error("Database error adding user:", err);
+        return res.status(500).json({ success: false, message: 'Database error occurred' });
+      }
       res.json({ success: true, message: 'User added successfully' });
     });
   } catch (err) {
+    console.error("Password hash error during user add:", err);
     res.status(500).json({ success: false, message: 'Error hashing password' });
   }
 });
@@ -821,7 +963,8 @@ app.post('/api/addUser', upload.single('photo'), async (req, res) => {
 app.post('/api/updateUser', upload.single('photo'), async (req, res) => {
   const {
     userId, username, password, isAdmin, fullName, jobTitle,
-    gender, birthdate, email, phoneNumber, idNumber, licenseNumber
+    gender, birthdate, email, phoneNumber, idNumber, licenseNumber,
+    branch, joiningDate, salary // <-- Add new fields
   } = req.body;
 
   if (!userId) return res.status(400).json({ success: false, message: 'User ID is required' });
@@ -842,7 +985,8 @@ app.post('/api/updateUser', upload.single('photo'), async (req, res) => {
     try {
       const hashed = await bcrypt.hash(password, 10);
       set('PasswordHash', hashed);
-    } catch {
+    } catch (err) {
+      console.error("Password hash error during user update:", err);
       return res.status(500).json({ success: false, message: 'Password hash error' });
     }
   }
@@ -856,6 +1000,11 @@ app.post('/api/updateUser', upload.single('photo'), async (req, res) => {
   if (idNumber !== undefined) set('IDNumber', idNumber);
   if (licenseNumber !== undefined) set('LicenseNumber', licenseNumber);
   if (photoBlob) set('Photo', photoBlob);
+  // Add setters for new fields
+  if (branch !== undefined) set('Branch', branch);
+  if (joiningDate !== undefined) set('JoiningDate', joiningDate || null);
+  if (salary !== undefined) set('Salary', salary || null);
+
 
   if (!updates.length) return res.status(400).json({ success: false, message: 'No fields to update' });
 
@@ -863,17 +1012,20 @@ app.post('/api/updateUser', upload.single('photo'), async (req, res) => {
   values.push(userId);
 
   connection.query(query, values, (err) => {
-    if (err) return res.status(500).json({ success: false, message: 'Update failed' });
+    if (err) {
+      console.error("Database error during user update:", err);
+      return res.status(500).json({ success: false, message: 'Update failed' });
+    }
     res.json({ success: true, message: 'User updated successfully' });
   });
 });
-
 
 // Get all users
 app.get('/api/getUsers', (req, res) => {
   const query = `
     SELECT UserID, Username, IsAdmin, FullName, JobTitle, Gender, Birthdate, Email,
-           PhoneNumber, IDNumber, LicenseNumber, Photo
+           PhoneNumber, IDNumber, LicenseNumber, Photo,
+           Branch, JoiningDate, Salary -- <-- Add new fields
     FROM users
   `;
   connection.query(query, (err, results) => {
@@ -887,7 +1039,8 @@ app.post('/api/getUser', (req, res) => {
   const { userId } = req.body;
   const query = `
     SELECT UserID, Username, IsAdmin, FullName, JobTitle, Gender, Birthdate, Email,
-           PhoneNumber, IDNumber, LicenseNumber, Photo
+           PhoneNumber, IDNumber, LicenseNumber, Photo,
+           Branch, JoiningDate, Salary -- <-- Add new fields
     FROM users WHERE UserID = ?
   `;
   connection.query(query, [userId], (err, results) => {
@@ -1257,7 +1410,7 @@ const executeMedicinesQuery = (sql, params) => {
   });
 };
 
-// ADD MEDICINE (with image as BLOB)
+// ADD MEDICINE (with image as BLOB and new columns)
 app.post('/add-medicine', upload.single('item_pic'), (req, res) => {
   const body = req.body;
   let imageData = null;
@@ -1283,15 +1436,19 @@ app.post('/add-medicine', upload.single('item_pic'), (req, res) => {
     body.uses || null,
     body.dosage || null,
     body.location || null,
-    imageData // Store image as BLOB!
+    imageData, // item_pic
+    body.arabic_name || null,     // NEW
+    body.active_name_3 || null,     // NEW
+    body.supplier || null         // NEW
   ];
 
   const sql = `
     INSERT INTO medicines_table (
       item_name, price, barcode, expiry, stock, packet_size,
       active_name_1, active_name_2, cross_selling, significant_side_effects,
-      significant_interactions, uses, dosage, location, item_pic
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      significant_interactions, uses, dosage, location, item_pic,
+      arabic_name, active_name_3, supplier
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   medicinesPool.query(sql, values, (err, result) => {
@@ -1303,6 +1460,7 @@ app.post('/add-medicine', upload.single('item_pic'), (req, res) => {
   });
 });
 
+// UPDATE MEDICINE (with image as BLOB and new columns)
 app.post('/update-medicine', upload.single('item_pic'), (req, res) => {
   const body = req.body;
   const id = body.id;
@@ -1311,7 +1469,8 @@ app.post('/update-medicine', upload.single('item_pic'), (req, res) => {
     "item_name", "price", "barcode", "expiry", "stock", "packet_size",
     "active_name_1", "active_name_2", "cross_selling",
     "significant_side_effects", "significant_interactions",
-    "uses", "dosage", "location"
+    "uses", "dosage", "location",
+    "arabic_name", "active_name_3", "supplier" // NEW COLUMNS ADDED
   ];
 
   let values = fields.map((field) => body[field] || null);
@@ -1337,17 +1496,57 @@ app.post('/update-medicine', upload.single('item_pic'), (req, res) => {
     res.json({ message: "Medicine updated successfully" });
   });
 });
+// DUPLICATE MEDICINE DATA
+app.post('/api/duplicate-medicine-data', (req, res) => {
+  const { targetMedicineId, data } = req.body;
+
+  if (!targetMedicineId || !data || typeof data !== 'object') {
+    return res.status(400).json({ message: "Invalid request. Missing target ID or data." });
+  }
+
+  // Define a whitelist of fields that are allowed to be duplicated
+  const allowedFields = [
+    "active_name_1", "active_name_2", "active_name_3", "supplier", 
+    "cross_selling", "significant_side_effects", "significant_interactions", 
+    "uses", "dosage", "location"
+  ];
+  
+  const fieldsToUpdate = Object.keys(data).filter(key => allowedFields.includes(key));
+
+  if (fieldsToUpdate.length === 0) {
+    return res.status(400).json({ message: "No valid data fields provided for duplication." });
+  }
+
+  const setClause = fieldsToUpdate.map(field => `${field} = ?`).join(', ');
+  const values = fieldsToUpdate.map(field => data[field] || null);
+  values.push(targetMedicineId); // Add the ID for the WHERE clause
+
+  const sql = `UPDATE medicines_table SET ${setClause} WHERE id = ?`;
+
+  medicinesPool.query(sql, values, (err, result) => {
+    if (err) {
+      console.error("Error duplicating medicine data:", err);
+      return res.status(500).json({ message: "Error duplicating medicine data in the database." });
+    }
+    if (result.affectedRows === 0) {
+        return res.status(404).json({ message: "Target medicine not found." });
+    }
+    res.json({ message: "Medicine data duplicated successfully." });
+  });
+});
 
 // --- BATCHES API ---
 
 // Add a batch
 app.post('/api/batches/add', (req, res) => {
-    const { medicine_id, batch_number, expiry, quantity, received_date } = req.body;
+    // Add 'branch' to the destructured request body
+    const { medicine_id, batch_number, expiry, quantity, received_date, branch } = req.body;
     const sql = `
-        INSERT INTO batches (medicine_id, batch_number, expiry, quantity, received_date)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO batches (medicine_id, batch_number, expiry, quantity, received_date, branch)
+        VALUES (?, ?, ?, ?, ?, ?)
     `;
-    medicinesPool.query(sql, [medicine_id, batch_number || null, expiry || null, quantity || null, received_date || null], (err, result) => {
+    // Add 'branch' to the values array
+    medicinesPool.query(sql, [medicine_id, batch_number || null, expiry || null, quantity || null, received_date || null, branch || null], (err, result) => {
         if (err) return res.status(500).json({ error: 'Failed to add batch' });
         res.json({ message: 'Batch added', batch_id: result.insertId });
     });
@@ -1355,12 +1554,14 @@ app.post('/api/batches/add', (req, res) => {
 
 // Edit a batch
 app.post('/api/batches/edit', (req, res) => {
-    const { batch_id, batch_number, expiry, quantity, received_date } = req.body;
+    // Add 'branch' to the destructured request body
+    const { batch_id, batch_number, expiry, quantity, received_date, branch } = req.body;
     const sql = `
-        UPDATE batches SET batch_number = ?, expiry = ?, quantity = ?, received_date = ?
+        UPDATE batches SET batch_number = ?, expiry = ?, quantity = ?, received_date = ?, branch = ?
         WHERE batch_id = ?
     `;
-    medicinesPool.query(sql, [batch_number || null, expiry || null, quantity || null, received_date || null, batch_id], (err) => {
+    // Add 'branch' to the values array
+    medicinesPool.query(sql, [batch_number || null, expiry || null, quantity || null, received_date || null, branch || null, batch_id], (err) => {
         if (err) return res.status(500).json({ error: 'Failed to update batch' });
         res.json({ message: 'Batch updated' });
     });
@@ -1434,28 +1635,37 @@ app.get('/api/pos/medicines/photo/:id', (req, res) => {
 });
 
 //sales report
+//sales report
 app.post('/fetch-extended-sales', (req, res) => {
-  const { fromDate, toDate } = req.body;
+  // Destructure branch from body
+  const { fromDate, toDate, branch } = req.body;
   
-  const query = `
+  // Base query
+  let query = `
       SELECT payment_method, SUM(subtotal) as total
       FROM bills
       WHERE bill_date BETWEEN ? AND ?
       AND (payment_method = 'ecommerce' OR payment_method = 'insurance')
-      GROUP BY payment_method
   `;
+  let params = [fromDate, toDate];
+
+  // Dynamically add branch condition
+  if (branch && branch.toLowerCase() !== 'all branches') {
+      query += ' AND branch = ?';
+      params.push(branch);
+  }
+
+  query += ' GROUP BY payment_method';
   
-  billsPool.query(query, [fromDate, toDate], (err, results) => {
+  billsPool.query(query, params, (err, results) => { // Use updated query and params
       if (err) {
           console.error('Database query error:', err);
           return res.status(500).send('Internal Server Error');
       }
       
-      // Initialize default values
       let eCommerceSales = 0;
       let insuranceSales = 0;
       
-      // Process results if any found
       if (results && results.length > 0) {
           results.forEach(result => {
               if (result.payment_method && result.payment_method.toLowerCase() === 'ecommerce') {
@@ -1473,24 +1683,40 @@ app.post('/fetch-extended-sales', (req, res) => {
   });
 });
 
-// Modify the existing generate-report endpoint to include all payment methods
+// Modify the existing generate-report endpoint to include all payment methods AND branch
 app.post('/generate-report', (req, res) => {
-  const { fromDate, toDate } = req.body;
+  // Destructure branch from body
+  const { fromDate, toDate, branch } = req.body;
   
-  const query = `
+  // Base query
+  let query = `
       SELECT subtotal, payment_method
       FROM bills
       WHERE bill_date BETWEEN ? AND ?
   `;
+  let params = [fromDate, toDate];
+
+  // Dynamically add branch condition
+  if (branch && branch.toLowerCase() !== 'all branches') {
+      query += ' AND branch = ?';
+      params.push(branch);
+  }
   
-  billsPool.query(query, [fromDate, toDate], (err, results) => {
+  billsPool.query(query, params, (err, results) => { // Use updated query and params
       if (err) {
           console.error('Database query error:', err);
           return res.status(500).send('Internal Server Error');
       }
       
       if (results.length === 0) {
-          return res.status(404).send('No bills found within the specified date range');
+          // Return empty/zero results instead of 404, as this is valid (no sales)
+          return res.json({
+              totalSales: 0,
+              cashSales: 0,
+              cardSales: 0,
+              eCommerceSales: 0,
+              insuranceSales: 0
+          });
       }
       
       let totalSales = 0;
@@ -1531,13 +1757,21 @@ app.post('/generate-report', (req, res) => {
 
 //download sales report as xlsx
 app.post('/api/download-sales-xlsx', async (req, res) => {
-  const { fromDate, toDate } = req.body;
+  // Destructure branch from body
+  const { fromDate, toDate, branch } = req.body;
 
   try {
-      const [bills] = await billsPool.promise().query(
-          `SELECT payment_method, subtotal, bill_date FROM bills WHERE bill_date BETWEEN ? AND ?`,
-          [fromDate, toDate]
-      );
+      // Base query and params
+      let sql = `SELECT payment_method, subtotal, bill_date FROM bills WHERE bill_date BETWEEN ? AND ?`;
+      let params = [fromDate, toDate];
+
+      // Dynamically add branch condition
+      if (branch && branch.toLowerCase() !== 'all branches') {
+          sql += ' AND branch = ?';
+          params.push(branch);
+      }
+
+      const [bills] = await billsPool.promise().query(sql, params); // Use updated sql and params
 
       if (!bills.length) {
           return res.status(404).json({ message: "No sales data for selected date range." });
@@ -1564,6 +1798,7 @@ app.post('/api/download-sales-xlsx', async (req, res) => {
       worksheet.columns = [
           { header: 'From Date', key: 'from', width: 15 },
           { header: 'To Date', key: 'to', width: 15 },
+          { header: 'Branch', key: 'branch', width: 18 }, // <-- Added branch column
           { header: 'Cash Sales', key: 'cash', width: 15 },
           { header: 'Card Sales', key: 'card', width: 15 },
           { header: 'E-commerce Sales', key: 'ecommerce', width: 20 },
@@ -1574,19 +1809,41 @@ app.post('/api/download-sales-xlsx', async (req, res) => {
       worksheet.addRow({
           from: fromDate,
           to: toDate,
+          branch: (branch && branch.toLowerCase() === 'all branches') ? 'All Branches' : branch, // <-- Added branch data
           cash: cash,
           card: card,
           ecommerce: ecommerce,
           insurance: insurance,
           total: total
       });
+      
+      // Style the header row
+      worksheet.getRow(1).font = { bold: true };
+      worksheet.getRow(1).fill = {
+        type: 'pattern',
+        pattern:'solid',
+        fgColor:{argb:'FFC6E0B4'} // Light green fill
+      };
+      worksheet.getRow(1).border = {
+        top: {style:'thin'},
+        left: {style:'thin'},
+        bottom: {style:'thin'},
+        right: {style:'thin'}
+      };
+
 
       // Proper date formatting
       worksheet.getColumn('from').numFmt = 'mm/dd/yyyy';
       worksheet.getColumn('to').numFmt = 'mm/dd/yyyy';
 
+      // Format currency columns
+      ['cash', 'card', 'ecommerce', 'insurance', 'total'].forEach(colKey => {
+          worksheet.getColumn(colKey).numFmt = '#,##0.00 "OMR"';
+      });
+
+
       res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-      res.setHeader('Content-Disposition', `attachment; filename=sales_report_${fromDate}_to_${toDate}.xlsx`);
+      res.setHeader('Content-Disposition', `attachment; filename=sales_report_${branch.replace(/ /g, '_')}_${fromDate}_to_${toDate}.xlsx`);
 
       await workbook.xlsx.write(res);
       res.end();
@@ -1736,6 +1993,53 @@ app.post('/api/deleteRequirement', (req, res) => {
      
       res.json({ message: 'Requirement deleted successfully' });
   });
+});
+
+// NEW Endpoint to fetch stock from an agent's DB
+app.get('/api/agent-stock/:agent/:itemName', async (req, res) => {
+    const { agent, itemName } = req.params;
+
+    if (!itemName) {
+        return res.status(400).json({ stock: null, error: 'Item name is required.' });
+    }
+
+    try {
+        let stock = null;
+        let query = '';
+        let params = [itemName];
+        let pool = null;
+        let stockField = '';
+
+        switch (agent.toUpperCase()) {
+            case 'CP':
+                pool = capitalPharmacyPool;
+                query = 'SELECT stock FROM imported_products WHERE Itemname = ? LIMIT 1';
+                stockField = 'stock';
+                break;
+            case 'CTPR':
+                pool = ctprPool;
+                query = 'SELECT ClosQty FROM ctpr_products WHERE ItemName = ? LIMIT 1';
+                stockField = 'ClosQty';
+                break;
+            case 'AHP':
+                // No DB for AHP, return null
+                return res.json({ stock: null });
+            default:
+                return res.status(400).json({ stock: null, error: 'Invalid agent specified.' });
+        }
+
+        const [rows] = await pool.promise().query(query, params);
+
+        if (rows.length > 0) {
+            stock = rows[0][stockField];
+        }
+
+        res.json({ stock: stock !== null ? Number(stock) : null });
+
+    } catch (err) {
+        console.error(`Error fetching stock for ${itemName} from ${agent}:`, err);
+        res.status(500).json({ stock: null, error: 'Database error while fetching stock.' });
+    }
 });
 
 //user profile
@@ -2698,19 +3002,19 @@ app.post('/api/bill-mgmt/update-multiple', isAuthenticated, isAdmin, (req, res) 
     const {
       bill_id, quantity, subtotal, payment_method,
       card_invoice_number, ['E-commerce Invoice Number']: ecomm,
-      patient_name, patient_phone, user,
+      patient_name, patient_phone, user, branch // <-- Added branch
     } = update;
 
     billsPool.query(
       `UPDATE bills SET 
         quantity = ?, subtotal = ?, payment_method = ?,
         card_invoice_number = ?, \`E-commerce Invoice Number\` = ?,
-        patient_name = ?, patient_phone = ?, user = ?
+        patient_name = ?, patient_phone = ?, user = ?, branch = ?
       WHERE bill_id = ?`,
       [
         quantity, subtotal, payment_method,
         card_invoice_number, ecomm,
-        patient_name, patient_phone, user, bill_id
+        patient_name, patient_phone, user, branch, bill_id // <-- Added branch
       ],
       (err) => {
         if (--pending === 0) res.json({ success: true });
@@ -2722,7 +3026,7 @@ app.post('/api/bill-mgmt/update-multiple', isAuthenticated, isAdmin, (req, res) 
 // ==================================item-wise sales report====================================================
 app.post('/api/bills-report/data', (req, res) => {
   const {
-    dateStart, dateEnd, itemName, patientName, patientPhone, user, paymentMethod,
+    dateStart, dateEnd, itemName, patientName, patientPhone, user, paymentMethod, branch, // <-- Added branch
     cardInvoice, ecomInvoice, priceMin, priceMax, page, pageSize
   } = req.body;
   const offset = ((parseInt(page, 10) || 1) - 1) * (parseInt(pageSize, 10) || 20);
@@ -2737,6 +3041,7 @@ app.post('/api/bills-report/data', (req, res) => {
   if (patientPhone)     { wheres.push('patient_phone LIKE ?'); params.push('%'+patientPhone+'%'); }
   if (user)             { wheres.push('user LIKE ?'); params.push('%'+user+'%'); }
   if (paymentMethod)    { wheres.push('payment_method LIKE ?'); params.push('%'+paymentMethod+'%'); }
+  if (branch)           { wheres.push('branch LIKE ?'); params.push('%'+branch+'%'); } // <-- Added branch condition
   if (cardInvoice)      { wheres.push('card_invoice_number LIKE ?'); params.push('%'+cardInvoice+'%'); }
   if (ecomInvoice)      { wheres.push('`E-commerce Invoice Number` LIKE ?'); params.push('%'+ecomInvoice+'%'); }
   if (priceMin)         { wheres.push('price >= ?'); params.push(priceMin); }
@@ -2775,15 +3080,9 @@ app.post('/api/bills-report/data', (req, res) => {
   });
 });
 
-/**
- * 5. POST /api/bills-report/export
- *    Exports filtered bills data to Excel (.xlsx)
- *    Expects same body as data endpoint.
- *    Returns: XLSX file download (application/vnd.openxmlformats-officedocument.spreadsheetml.sheet)
- */
 app.post('/api/bills-report/export', (req, res) => {
   const {
-    dateStart, dateEnd, itemName, patientName, patientPhone, user, paymentMethod,
+    dateStart, dateEnd, itemName, patientName, patientPhone, user, paymentMethod, branch, // <-- Added branch
     cardInvoice, ecomInvoice, priceMin, priceMax
   } = req.body;
   let wheres = [];
@@ -2796,6 +3095,7 @@ app.post('/api/bills-report/export', (req, res) => {
   if (patientPhone)     { wheres.push('patient_phone LIKE ?'); params.push('%'+patientPhone+'%'); }
   if (user)             { wheres.push('user LIKE ?'); params.push('%'+user+'%'); }
   if (paymentMethod)    { wheres.push('payment_method LIKE ?'); params.push('%'+paymentMethod+'%'); }
+  if (branch)           { wheres.push('branch LIKE ?'); params.push('%'+branch+'%'); } // <-- Added branch condition
   if (cardInvoice)      { wheres.push('card_invoice_number LIKE ?'); params.push('%'+cardInvoice+'%'); }
   if (ecomInvoice)      { wheres.push('`E-commerce Invoice Number` LIKE ?'); params.push('%'+ecomInvoice+'%'); }
   if (priceMin)         { wheres.push('price >= ?'); params.push(priceMin); }
@@ -2811,12 +3111,12 @@ app.post('/api/bills-report/export', (req, res) => {
     const worksheetData = [
       [
         'Date', 'Time', 'Item Name', 'Quantity', 'Price', 'Subtotal', 'Payment Method',
-        'Card Invoice #', 'E-commerce Invoice #', 'Patient Name', 'Patient Phone', 'User'
+        'Card Invoice #', 'E-commerce Invoice #', 'Patient Name', 'Patient Phone', 'User', 'Branch' // <-- Added Branch header
       ],
       ...rows.map(row => [
         row.bill_date ? new Date(row.bill_date).toLocaleDateString('en-GB') : '',
         row.bill_time ? (function(t){
-          let [h,m] = t.split(':'); 
+          let [h,m] = t.split(':');
           let hour = Number(h), ampm = hour >= 12 ? 'PM' : 'AM';
           hour = hour % 12 || 12;
           return `${hour}:${m} ${ampm}`;
@@ -2830,7 +3130,8 @@ app.post('/api/bills-report/export', (req, res) => {
         row['E-commerce Invoice Number'] || '',
         row.patient_name || '',
         row.patient_phone || '',
-        row.user || ''
+        row.user || '',
+        row.branch || '' // <-- Added Branch data
       ])
     ];
     // Add summary row at the end
@@ -2958,152 +3259,226 @@ app.post('/api/filter-expiry-D8k1P', (req, res) => {
 // --- 3. Excel Export ---
 app.post('/api/export-expiry-V2h5K', async (req, res) => {
     const { startDate, endDate } = req.body;
-    const sql = `SELECT item_name, barcode, stock, expiry FROM medicines_table
-                 WHERE expiry BETWEEN ? AND ?
-                 ORDER BY expiry ASC`;
-    medicinesPool.query(sql, [startDate, endDate], async (err, results) => {
-        if (err) return res.status(500).json({ error: 'DB Error', details: err });
+    if (!startDate || !endDate) {
+        return res.status(400).json({ error: 'Start and end dates required' });
+    }
 
-        // Excel creation
-        const workbook = new ExcelJS.Workbook()
-        const worksheet = workbook.addWorksheet('Near Expiry Report');
+    let results = [];
+    try {
+        // 1. Batch rows
+        const [batchRows] = await medicinesPool.promise().query(
+          `SELECT m.item_name, m.barcode, b.batch_number, b.expiry, b.quantity AS stock
+           FROM medicines_table m
+           JOIN batches b ON b.medicine_id = m.id
+           WHERE b.expiry BETWEEN ? AND ?
+           ORDER BY b.expiry ASC`,
+          [startDate, endDate]
+        );
+        // 2. Legacy fallback
+        const [fallbackRows] = await medicinesPool.promise().query(
+          `SELECT m.item_name, m.barcode, NULL AS batch_number, m.expiry, m.stock
+           FROM medicines_table m
+           LEFT JOIN batches b ON b.medicine_id = m.id
+           WHERE b.medicine_id IS NULL AND m.expiry BETWEEN ? AND ?
+           ORDER BY m.expiry ASC`,
+          [startDate, endDate]
+        );
+        // 3. Combine results
+        results = [...batchRows, ...fallbackRows];
 
-        worksheet.columns = [
-            { header: 'Item Name', key: 'item_name', width: 32 },
-            { header: 'Barcode', key: 'barcode', width: 22 },
-            { header: 'Expiry Date', key: 'expiry', width: 18 },
-            { header: 'Stock', key: 'stock', width: 12 }
-        ];
+    } catch (err) {
+        console.error("Excel export near expiry error:", err);
+        return res.status(500).json({ error: 'DB Error', details: err.message });
+    }
 
-        // Bold headers
-        worksheet.getRow(1).eachCell(cell => {
-            cell.font = { bold: true };
-            cell.alignment = { vertical: 'middle', horizontal: 'center' };
-        });
+    // Excel creation
+    const workbook = new ExcelJS.Workbook()
+    const worksheet = workbook.addWorksheet('Near Expiry Report');
 
-        // Add data
-        results.forEach(row => {
-            worksheet.addRow({
-                item_name: row.item_name,
-                barcode: row.barcode,
-                stock: row.stock,
-                expiry: row.expiry ? (new Date(row.expiry)).toLocaleDateString('en-GB') : ''
-            });
-        });
+    // Check if batch number column is needed
+    const hasBatch = results.some(row => row.batch_number !== undefined && row.batch_number !== null);
 
-        // Auto-fit columns
-        worksheet.columns.forEach(column => {
-            let maxLength = column.header.length;
-            column.eachCell({ includeEmpty: true }, cell => {
-                const cellLength = cell.value ? cell.value.toString().length : 0;
-                if (cellLength > maxLength) maxLength = cellLength;
-            });
-            column.width = maxLength + 2;
-        });
+    // Define columns conditionally
+    const columns = [
+        { header: 'Item Name', key: 'item_name', width: 32 },
+        { header: 'Barcode', key: 'barcode', width: 22 },
+    ];
+    if (hasBatch) {
+        columns.push({ header: 'Batch Number', key: 'batch_number', width: 20 });
+    }
+    columns.push(
+        { header: 'Expiry Date', key: 'expiry', width: 18 },
+        { header: 'Stock', key: 'stock', width: 12 }
+    );
+    worksheet.columns = columns;
 
-        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        res.setHeader('Content-Disposition', 'attachment; filename="NearExpiryReport.xlsx"');
-        await workbook.xlsx.write(res);
-        res.end();
+    // Bold headers
+    worksheet.getRow(1).eachCell(cell => {
+        cell.font = { bold: true };
+        cell.alignment = { vertical: 'middle', horizontal: 'center' };
     });
+
+    // Add data
+    results.forEach(row => {
+        const rowData = {
+            item_name: row.item_name,
+            barcode: row.barcode,
+            stock: row.stock,
+            expiry: row.expiry ? (new Date(row.expiry)).toLocaleDateString('en-GB') : ''
+        };
+        if (hasBatch) {
+            rowData.batch_number = (row.batch_number !== null && row.batch_number !== undefined) ? row.batch_number : '';
+        }
+        worksheet.addRow(rowData);
+    });
+
+    // Auto-fit columns
+    worksheet.columns.forEach(column => {
+        let maxLength = column.header.length;
+        column.eachCell({ includeEmpty: true }, cell => {
+            const cellLength = cell.value ? cell.value.toString().length : 0;
+            if (cellLength > maxLength) maxLength = cellLength;
+        });
+        // Use the greater of calculated max or defined width, capped at 50
+        column.width = Math.min(Math.max(column.width || 10, maxLength + 2), 50);
+    });
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename="NearExpiryReport.xlsx"');
+    await workbook.xlsx.write(res);
+    res.end();
 });
-//stock report
-// Batch-aware stock report (paginated, with search and threshold)
-app.get('/api/stock-report-BR51f', async (req, res) => {
+
+// NEW: Batch-aware stock report (paginated, with search and threshold)
+app.get('/api/batch-stock-report-V2', async (req, res) => {
   let { q = '', lowStockThreshold = 5, page = 1, perPage = 20 } = req.query;
   page = parseInt(page) || 1;
   perPage = parseInt(perPage) || 20;
   const offset = (page - 1) * perPage;
-  const params = [`%${q}%`, `%${q}%`, `%${q}%`, `%${q}%`, lowStockThreshold, perPage, offset];
+  
+  // Base queries
+  let whereClauses = [];
+  let params = [];
 
-  // Get paginated batch-aware stock summary
+  // Search filter
+  if (q) {
+    whereClauses.push(`(m.item_name LIKE ? OR m.barcode LIKE ?)`);
+    params.push(`%${q}%`, `%${q}%`);
+  }
+
+  // Low stock threshold filter
+  if (lowStockThreshold) {
+    whereClauses.push(`b.quantity < ?`);
+    params.push(lowStockThreshold);
+  }
+
+  const whereSql = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
+  
   const dataSql = `
     SELECT 
-      m.id, 
       m.item_name, 
       m.barcode,
-      m.price,
-      IFNULL(SUM(b.quantity), m.stock) AS stock,
-      IFNULL(MIN(b.expiry), m.expiry) AS expiry
-    FROM medicines_table m
-    LEFT JOIN batches b ON b.medicine_id = m.id
-    WHERE (m.item_name LIKE ? OR m.barcode LIKE ? OR m.active_name_1 LIKE ? OR m.active_name_2 LIKE ?)
-    GROUP BY m.id, m.item_name, m.barcode, m.price, m.stock, m.expiry
-    HAVING stock IS NOT NULL AND stock < ? OR stock IS NULL
-    ORDER BY m.item_name
+      b.batch_number,
+      b.branch,
+      b.expiry,
+      b.received_date,
+      b.quantity
+    FROM batches b
+    JOIN medicines_table m ON b.medicine_id = m.id
+    ${whereSql}
+    ORDER BY b.expiry ASC, m.item_name ASC
     LIMIT ? OFFSET ?
   `;
+
   const countSql = `
     SELECT COUNT(*) AS total
-    FROM (
-      SELECT m.id
-      FROM medicines_table m
-      LEFT JOIN batches b ON b.medicine_id = m.id
-      WHERE (m.item_name LIKE ? OR m.barcode LIKE ? OR m.active_name_1 LIKE ? OR m.active_name_2 LIKE ?)
-      GROUP BY m.id
-    ) sub
+    FROM batches b
+    JOIN medicines_table m ON b.medicine_id = m.id
+    ${whereSql}
   `;
 
   try {
-    const [dataRows] = await medicinesPool.promise().query(dataSql, params);
-    const [countRows] = await medicinesPool.promise().query(countSql, params.slice(0, 4));
+    const [dataRows] = await medicinesPool.promise().query(dataSql, [...params, perPage, offset]);
+    const [countRows] = await medicinesPool.promise().query(countSql, params);
     res.json({ data: dataRows, total: (countRows[0] && countRows[0].total) || 0 });
   } catch (err) {
-    console.error("Stock report error:", err);
-    res.status(500).json({ error: "Stock report failed" });
+    console.error("Batch stock report error:", err);
+    res.status(500).json({ error: "Batch stock report failed" });
   }
 });
 
-// POST /api/export-stock-report-RT65z
-app.post('/api/export-stock-report-RT65z', (req, res) => {
+// NEW: Export batch-aware stock report to Excel
+app.post('/api/export-batch-stock-report-V2', async (req, res) => {
   const { lowStockThreshold = 5, q = '' } = req.body;
+  
+  let whereClauses = [];
+  let params = [];
+
+  if (q) {
+    whereClauses.push(`(m.item_name LIKE ? OR m.barcode LIKE ?)`);
+    params.push(`%${q}%`, `%${q}%`);
+  }
+  if (lowStockThreshold) {
+    whereClauses.push(`b.quantity < ?`);
+    params.push(lowStockThreshold);
+  }
+
+  const whereSql = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
+
   const sql = `
-    SELECT item_name, barcode, price, expiry, stock
-    FROM medicines_table
-    WHERE item_name LIKE ? OR CAST(barcode AS CHAR) LIKE ?
-    ORDER BY stock ASC, item_name ASC
+    SELECT 
+      m.item_name, m.barcode, b.batch_number, b.branch,
+      b.expiry, b.received_date, b.quantity
+    FROM batches b
+    JOIN medicines_table m ON b.medicine_id = m.id
+    ${whereSql}
+    ORDER BY b.expiry ASC, m.item_name ASC
   `;
-  const likeQ = `%${q}%`;
-  medicinesPool.query(sql, [likeQ, likeQ], async (err, results) => {
-    if (err) return res.status(500).json({ error: 'DB error', details: err });
-    const threshold = Number(lowStockThreshold) || 5;
+
+  try {
+    const [results] = await medicinesPool.promise().query(sql, params);
+    
     const ExcelJS = require('exceljs');
     const workbook = new ExcelJS.Workbook();
-    const ws = workbook.addWorksheet('Stock Report');
+    const ws = workbook.addWorksheet('Batch Stock Report');
 
     ws.columns = [
       { header: 'Item Name', key: 'item_name', width: 30 },
       { header: 'Barcode', key: 'barcode', width: 18 },
-      { header: 'Price', key: 'price', width: 12 },
-      { header: 'Expiry', key: 'expiry', width: 16 },
-      { header: 'Stock', key: 'stock', width: 12 }
+      { header: 'Batch Number', key: 'batch_number', width: 20 },
+      { header: 'Branch', key: 'branch', width: 15 },
+      { header: 'Expiry Date', key: 'expiry', width: 16 },
+      { header: 'Received Date', key: 'received_date', width: 16 },
+      { header: 'Quantity', key: 'quantity', width: 12 }
     ];
     ws.getRow(1).font = { bold: true };
 
     results.forEach(row => {
-      const r = ws.addRow({
-        item_name: row.item_name,
-        barcode: row.barcode,
-        price: row.price,
-        expiry: row.expiry ? (new Date(row.expiry)).toLocaleDateString('en-GB') : '',
-        stock: row.stock
+      const addedRow = ws.addRow({
+        ...row,
+        expiry: row.expiry ? new Date(row.expiry).toLocaleDateString('en-GB') : '',
+        received_date: row.received_date ? new Date(row.received_date).toLocaleDateString('en-GB') : ''
       });
-      if (Number(row.stock) < threshold) {
-        r.eachCell(cell => {
+      // Highlight low stock rows
+      if (Number(row.quantity) < Number(lowStockThreshold)) {
+        addedRow.eachCell(cell => {
           cell.fill = {
             type: 'pattern',
             pattern: 'solid',
-            fgColor: { argb: 'FFFFC107' } // amber highlight
+            fgColor: { argb: 'FFFFE080' } // Light amber
           };
         });
       }
     });
 
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', 'attachment; filename=stock_report.xlsx');
+    res.setHeader('Content-Disposition', 'attachment; filename=batch_stock_report.xlsx');
     await workbook.xlsx.write(res);
     res.end();
-  });
+  } catch (err) {
+    console.error('Excel export error:', err);
+    res.status(500).json({ error: 'DB error', details: err });
+  }
 });
 
 // GET: Number of low stock items (<5 by default or set via query) - BATCH AWARE
@@ -3201,11 +3576,11 @@ app.get('/api/search-items', (req, res) => {
   const sql = `
     SELECT id, item_name, barcode, active_name_1, active_name_2
     FROM medicines_table
-    WHERE item_name LIKE ? OR CAST(barcode AS CHAR) LIKE ? OR active_name_1 LIKE ? OR active_name_2 LIKE ?
+    WHERE item_name LIKE ? OR CAST(barcode AS CHAR) LIKE ? OR active_name_1 LIKE ? OR active_name_2 LIKE ? OR id = ?
     ORDER BY item_name ASC LIMIT 15
   `;
   const likeQ = `%${q}%`;
-  medicinesPool.query(sql, [likeQ, likeQ, likeQ, likeQ], (err, results) => {
+  medicinesPool.query(sql, [likeQ, likeQ, likeQ, likeQ, q], (err, results) => {
     if (err) return res.json([]);
     res.json(results);
   });
@@ -3337,15 +3712,32 @@ app.post('/tsk-create-admin-p9m1', isAuthenticated, isAdmin, (req, res) => {
 // 3. Update checklist item status
 app.put('/tsk-update-item-q4n8', isAuthenticated, (req, res) => {
   const { itemId, completed } = req.body;
+  
+  // First, update the item
   taskspool.query(
     'UPDATE task_items SET completed = ?, completed_at = IF(? = 1, NOW(), NULL) WHERE id = ?',
     [completed ? 1 : 0, completed ? 1 : 0, itemId],
-    (err, result) => {
-      if (err) return res.status(500).json({ error: 'DB error' });
-      res.json({ success: true });
+    (err, updateResult) => {
+      if (err) return res.status(500).json({ error: 'DB error on update' });
+      if (updateResult.affectedRows === 0) {
+        return res.status(404).json({ error: 'Item not found' });
+      }
+
+      // If the item was marked as completed, fetch its new timestamp
+      if (completed) {
+        taskspool.query('SELECT completed_at FROM task_items WHERE id = ?', [itemId], (err, selectResult) => {
+          if (err || selectResult.length === 0) return res.status(500).json({ error: 'DB error on select' });
+          // ✅ NEW: Return the timestamp
+          res.json({ success: true, completed_at: selectResult[0].completed_at });
+        });
+      } else {
+        // If it was unchecked, return null for the timestamp
+        res.json({ success: true, completed_at: null });
+      }
     }
   );
 });
+
 
 // 4. Delete a task (admin only)
 app.delete('/tsk-remove-admin-w2r7', isAuthenticated, isAdmin, (req, res) => {
@@ -3832,73 +4224,50 @@ function fixMaybeStringArray(val) {
 // ----------- THE FULL ENDPOINT -----------
 app.post('/api/stock-mgmt-x9z/process-transfer', async (req, res) => {
     try {
-        function fixMaybeStringArray(val) {
-            if (Array.isArray(val)) return val;
-            try { return JSON.parse(val); } catch {}
-            if (typeof val === "string" && val[0] === "[" && val.includes("'")) {
-                try { return JSON.parse(val.replace(/'/g, '"')); } catch {}
-            }
-            if (typeof val === "string" && val.includes(",")) {
-                return val.split(",").map(x => x.trim());
-            }
-            return [val];
-        }
-
         const {
             items, quantities, batches, expiry_dates,
-            branch_from, branch_to
+            branch_from, branch_to, based_on_srr
         } = req.body;
+        
+        const srr_id = based_on_srr;
 
-        const itemsArr = fixMaybeStringArray(items);
-        const quantitiesArr = fixMaybeStringArray(quantities);
-        const batchesArr = fixMaybeStringArray(batches);
-        const expiryArr = fixMaybeStringArray(expiry_dates);
-
-        if (
-            !Array.isArray(itemsArr) || !Array.isArray(quantitiesArr) ||
-            !Array.isArray(batchesArr) || !Array.isArray(expiryArr) ||
-            !branch_from || !branch_to ||
-            itemsArr.length !== quantitiesArr.length ||
-            itemsArr.length !== batchesArr.length ||
-            itemsArr.length !== expiryArr.length ||
-            itemsArr.length === 0
-        ) {
+        if (!Array.isArray(items) || !items.length || !branch_from || !branch_to) {
             return res.status(400).json({ success: false, error: "Invalid transfer data." });
         }
 
         const transfer_id = "TRN" + Date.now();
-        let transferring_user = (req.session && req.session.user && req.session.user.fullName) || 'Unknown';
+        const transferring_user = (req.session && req.session.user && req.session.user.fullName) || 'Unknown';
 
-        // Insert into DB
         const sql = `
-            INSERT INTO stock_transfers
-                (transfer_id, items, quantities, batches, expiry_dates, transferring_user, transfer_date, branch_from, branch_to, status, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, NOW(), ?, ?, 'pending', NOW())
+            INSERT INTO stock_transfers (transfer_id, items, quantities, batches, expiry_dates, transferring_user, transfer_date, branch_from, branch_to, status)
+            VALUES (?, ?, ?, ?, ?, ?, NOW(), ?, ?, 'pending')
         `;
         const values = [
-            transfer_id,
-            JSON.stringify(itemsArr),
-            JSON.stringify(quantitiesArr),
-            JSON.stringify(batchesArr),
-            JSON.stringify(expiryArr),
-            transferring_user,
-            branch_from,
-            branch_to
+            transfer_id, JSON.stringify(items), JSON.stringify(quantities),
+            JSON.stringify(batches), JSON.stringify(expiry_dates),
+            transferring_user, branch_from, branch_to
         ];
-
         await stockTransactionsPool.promise().query(sql, values);
 
-        // Deduct stock for each batch
-        for (let i = 0; i < itemsArr.length; i++) {
-            const batchNum = batchesArr[i];
-            const qty = parseFloat(quantitiesArr[i]);
-            const updateSql = 'UPDATE batches SET quantity = quantity - ? WHERE batch_number = ?';
-            await medicinesPool.promise().query(updateSql, [qty, batchNum]);
+        for (let i = 0; i < items.length; i++) {
+            const qty = parseFloat(quantities[i]);
+            await medicinesPool.promise().query(
+                'UPDATE batches SET quantity = quantity - ? WHERE batch_number = ?',
+                [qty, batches[i]]
+            );
+        }
+        
+        // Requirement #3: Update SRR status to 'transferred'
+        if (srr_id) {
+            await stockTransactionsPool.promise().query(
+                "UPDATE stock_requests SET status = 'transferred' WHERE srr_id = ?",
+                [srr_id]
+            );
         }
 
         res.json({ success: true, transfer_id });
     } catch (err) {
-        console.error('[TRANSFER SAVE] Error:', err, req.body);
+        console.error('[TRANSFER SAVE] Error:', err);
         res.status(500).json({ success: false, error: "Failed to save transfer." });
     }
 });
@@ -4095,6 +4464,7 @@ app.post('/api/stock-mgmt-x9z/upload-stn', isAuthenticated, upload.single('trans
         }
     });
 });
+// MODIFIED Endpoint to process receipt and update batch inventory with branch
 app.post('/api/stock-mgmt-x9z/process-receipt', isAuthenticated, async (req, res) => {
     try {
         const {
@@ -4104,47 +4474,52 @@ app.post('/api/stock-mgmt-x9z/process-receipt', isAuthenticated, async (req, res
         const receipt_id = "RCPT" + Date.now();
         const receipt_date = new Date();
 
-        // For each item/batch, add to batch qty (or create new batch if not exist)
+        // For each item/batch, add to batch qty or create new batch for the receiving branch
         for (let i = 0; i < items.length; i++) {
             const item = items[i];
             const batch_number = batches[i];
-            const expiry = expiry_dates[i];
+            const expiry = expiry_dates[i] ? new Date(expiry_dates[i]).toISOString().slice(0, 10) : null;
             const qty = Number(quantities[i]);
 
-            // Find medicine by name
+            // Find medicine by name to get its ID
             const [med] = await medicinesPool.promise().query(
                 "SELECT id FROM medicines_table WHERE item_name = ?", [item]
             );
             let med_id;
             if (!med.length) {
-                // Insert new medicine if not exist (barebones, you may want to expand)
-                const r = await medicinesPool.promise().query(
+                // If medicine doesn't exist, create a basic entry
+                const [newMedResult] = await medicinesPool.promise().query(
                     "INSERT INTO medicines_table (item_name, stock) VALUES (?, ?)", [item, 0]
                 );
-                med_id = r[0].insertId;
+                med_id = newMedResult.insertId;
             } else {
                 med_id = med[0].id;
             }
 
-            // Check if batch exists
+            // --- MODIFIED LOGIC ---
+            // Check if a batch with the same number AND branch already exists
             const [batch] = await medicinesPool.promise().query(
-                "SELECT batch_id FROM batches WHERE batch_number = ? AND medicine_id = ?", [batch_number, med_id]
+                "SELECT batch_id FROM batches WHERE medicine_id = ? AND batch_number = ? AND branch = ?",
+                [med_id, batch_number, branch_to] // Use receiving branch in query
             );
+
             if (batch.length) {
-                // Update qty
+                // Batch exists in the target branch, so just update its quantity
                 await medicinesPool.promise().query(
-                    "UPDATE batches SET quantity = quantity + ? WHERE batch_id = ?", [qty, batch[0].batch_id]
+                    "UPDATE batches SET quantity = quantity + ? WHERE batch_id = ?",
+                    [qty, batch[0].batch_id]
                 );
             } else {
-                // Create new batch
+                // Batch does not exist in the target branch, so create a new record
                 await medicinesPool.promise().query(
-                    "INSERT INTO batches (medicine_id, batch_number, expiry, quantity) VALUES (?, ?, ?, ?)",
-                    [med_id, batch_number, expiry, qty]
+                    "INSERT INTO batches (medicine_id, batch_number, expiry, quantity, branch, received_date) VALUES (?, ?, ?, ?, ?, CURDATE())",
+                    [med_id, batch_number, expiry, qty, branch_to] // Add branch_to here
                 );
             }
+            // --- END OF MODIFIED LOGIC ---
         }
 
-        // Log receipt
+        // Log the receipt transaction
         await stockTransactionsPool.promise().query(
             `INSERT INTO stock_receipts 
             (receipt_id, transfer_id, items, quantities, batches, expiry_dates, sending_user, receiving_user, receipt_date, branch_from, branch_to, status)
@@ -4156,15 +4531,15 @@ app.post('/api/stock-mgmt-x9z/process-receipt', isAuthenticated, async (req, res
             ]
         );
 
-        // Update transfer status
+        // Update the original transfer's status to 'completed'
         await stockTransactionsPool.promise().query(
             "UPDATE stock_transfers SET status = 'completed' WHERE transfer_id = ?", [transfer_id]
         );
 
         res.json({ success: true, receipt_id });
     } catch (err) {
-        console.error('process-receipt error', err);
-        res.status(500).json({ error: "Failed to process receipt" });
+        console.error('Error processing receipt:', err);
+        res.status(500).json({ error: "Failed to process receipt due to a server error." });
     }
 });
 // Place this at the top of server.js
@@ -4369,6 +4744,80 @@ app.post('/api/stock-mgmt-x9z/create-request', async (req, res) => {
     );
     res.json({ success: true, srr_id: result.insertId });
 });
+// GET a stock request by its ID, checking its status first.
+app.get('/api/stock-mgmt-x9z/request/:srr_id', async (req, res) => {
+    try {
+        const { srr_id } = req.params;
+        const [rows] = await stockTransactionsPool.promise().query(
+            "SELECT * FROM stock_requests WHERE srr_id = ?",
+            [srr_id]
+        );
+
+        if (!rows.length) {
+            return res.status(404).json({ success: false, message: 'Stock request not found.' });
+        }
+
+        const request = rows[0];
+
+        if (request.status === 'transferred') {
+            return res.json({ success: false, message: 'This request has already been transferred and cannot be processed again.' });
+        }
+
+        // ======================= THE FIX IS HERE =======================
+        let items = request.items; // Get the items field from the database record.
+
+        // Check if it's a string. Only then should we try to parse it.
+        // The mysql2 driver often auto-parses JSON columns, so it might already be an array.
+        if (typeof items === 'string') {
+            try {
+                items = JSON.parse(items);
+            } catch {
+                items = []; // If parsing the string fails, default to an empty array.
+            }
+        }
+        
+        // Final safety check to ensure we always send an array.
+        if (!Array.isArray(items)) {
+            items = [];
+        }
+        // ===================== END OF FIX ==============================
+        
+        res.json({ success: true, srr_id: request.srr_id, items });
+
+    } catch (err) {
+        console.error('Error fetching stock request by ID:', err);
+        res.status(500).json({ success: false, message: 'Server error.' });
+    }
+});
+
+// GET a specific stock transfer by its ID
+app.get('/api/stock-mgmt-x9z/get-transfer/:id', isAuthenticated, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const [rows] = await stockTransactionsPool.promise().query(
+            "SELECT * FROM stock_transfers WHERE transfer_id = ?",
+            [id]
+        );
+
+        if (!rows.length) {
+            return res.status(404).json({ success: false, error: 'Transfer not found.' });
+        }
+
+        const transfer = rows[0];
+
+        // The mysql2 driver might return JSON fields as strings, so we parse them.
+        transfer.items = typeof transfer.items === 'string' ? JSON.parse(transfer.items) : transfer.items || [];
+        transfer.quantities = typeof transfer.quantities === 'string' ? JSON.parse(transfer.quantities) : transfer.quantities || [];
+        transfer.batches = typeof transfer.batches === 'string' ? JSON.parse(transfer.batches) : transfer.batches || [];
+        transfer.expiry_dates = typeof transfer.expiry_dates === 'string' ? JSON.parse(transfer.expiry_dates) : transfer.expiry_dates || [];
+
+        res.json({ success: true, transfer });
+
+    } catch (err) {
+        console.error('Error fetching transfer by ID:', err);
+        res.status(500).json({ success: false, error: 'Server error while fetching transfer.' });
+    }
+});
 
 // 2. Download SRR as TXT
 app.get('/api/stock-mgmt-x9z/generate-srr-file/:srr_id', async (req, res) => {
@@ -4398,24 +4847,51 @@ items.forEach(itm => {
 });
 
 // 3. Parse SRR TXT file (for importing request into Transfer)
-app.post('/api/stock-mgmt-x9z/parse-srr-file', upload.single('srrfile'), (req, res) => {
-    const fs = require('fs');
-    if (!req.file) return res.status(400).json({ error: "No file" });
-    const txt = fs.readFileSync(req.file.path, 'utf8');
-    // Basic parsing for: Item Name\tQuantity per line after first blank line
-    const lines = txt.split('\n');
-    let startIdx = lines.findIndex(l => l.trim().startsWith('Item Name'));
-    if (startIdx < 0) return res.json({ error: "No item table in file." });
-    let items = [];
-    for (let i = startIdx + 1; i < lines.length; ++i) {
-        let [item, qty] = lines[i].split('\t');
-        if (item && qty && item.trim()) items.push({ item_name: item.trim(), qty: parseFloat(qty) });
+app.post('/api/stock-mgmt-x9z/parse-srr-file', upload.single('srrfile'), async (req, res) => {
+    if (!req.file) return res.status(400).json({ success: false, message: "No file provided." });
+    
+    try {
+        const txt = fs.readFileSync(req.file.path, 'utf8');
+        fs.unlinkSync(req.file.path); // Clean up file
+
+        // Extract SRR ID from file
+        const srrIdMatch = txt.match(/SRR No:\s*(\d+)/);
+        const srr_id = srrIdMatch ? srrIdMatch[1] : null;
+
+        if (srr_id) {
+            // Requirement #4: Prevent adding if already 'transferred'
+            const [rows] = await stockTransactionsPool.promise().query(
+                "SELECT status FROM stock_requests WHERE srr_id = ?",
+                [srr_id]
+            );
+            if (rows.length && rows[0].status === 'transferred') {
+                return res.json({ success: false, message: `Request SRR-${srr_id} has already been transferred.` });
+            }
+        }
+
+        const lines = txt.split('\n');
+        let startIdx = lines.findIndex(l => l.trim().toLowerCase().startsWith('item name'));
+        if (startIdx < 0) return res.json({ success: false, message: "Could not find item table header in the file." });
+
+        let items = [];
+        for (let i = startIdx + 1; i < lines.length; ++i) {
+            let [item, qty] = lines[i].split('\t');
+            if (item && qty && item.trim()) {
+                items.push({ item_name: item.trim(), qty: parseFloat(qty) || 0 });
+            }
+        }
+        
+        res.json({ success: true, items, srr_id });
+
+    } catch (err) {
+        console.error('Error parsing SRR file:', err);
+        res.status(500).json({ success: false, message: 'Server error during file parsing.' });
     }
-    res.json({ items });
 });
 
 //======================================================================bill return and bill reprint
 // --- Bill Return Endpoint ---
+// --- Bill Return Endpoint (PRESERVES ORIGINAL LOGIC + ADDS BRANCH AWARENESS) ---
 app.post('/api/bill-returns/return', async (req, res) => {
   const { bill_ids } = req.body;
   if (!Array.isArray(bill_ids) || bill_ids.length === 0) {
@@ -4430,10 +4906,10 @@ app.post('/api/bill-returns/return', async (req, res) => {
     let successfulReturns = [];
     let failedReturns = [];
 
-    for (let bill_id of bill_ids) {
-      // 1. Fetch the original bill details AND item_name to get packet_size
+    for (const bill_id of bill_ids) {
+      // 1. Fetch the original bill details, NOW INCLUDING the 'branch'
       const [rows] = await connection.query(
-        'SELECT bill_id, item_name, quantity, price, subtotal, payment_method, card_invoice_number, `E-commerce Invoice Number`, patient_name, patient_phone, user, batch_id, batch_number, expiry FROM bills WHERE bill_id = ?',
+        'SELECT * FROM bills WHERE bill_id = ?', // Using * is safe here as we know the columns
         [bill_id]
       );
 
@@ -4446,15 +4922,19 @@ app.post('/api/bill-returns/return', async (req, res) => {
 
       // 2. Fetch packet_size for the item from the medicines database
       let packetSize = 1; // Default to 1 if not found or error
+      let medicineId = null;
       if (b.item_name) {
           try {
               const [medicineRows] = await medicinesPool.promise().query(
-                  'SELECT packet_size FROM medicines_table WHERE item_name = ? LIMIT 1',
+                  'SELECT id, packet_size FROM medicines_table WHERE item_name = ? LIMIT 1',
                   [b.item_name]
               );
-              if (medicineRows.length > 0 && medicineRows[0].packet_size) {
-                  packetSize = parseFloat(medicineRows[0].packet_size);
-                  if (isNaN(packetSize) || packetSize <= 0) packetSize = 1;
+              if (medicineRows.length > 0) {
+                  medicineId = medicineRows[0].id;
+                  if (medicineRows[0].packet_size) {
+                    packetSize = parseFloat(medicineRows[0].packet_size);
+                    if (isNaN(packetSize) || packetSize <= 0) packetSize = 1;
+                  }
               }
           } catch (medErr) {
               console.error(`Server: Error fetching packet_size for ${b.item_name}:`, medErr);
@@ -4462,59 +4942,54 @@ app.post('/api/bill-returns/return', async (req, res) => {
           }
       }
 
-      // 3. Calculate the actual quantity to return (number of packets)
-      const originalQuantity = parseFloat(b.quantity) || 0;
-      const quantityToReturn = (originalQuantity / packetSize);
-      const subtotalToReturn = (originalQuantity * (parseFloat(b.price) || 0)) / packetSize; // Recalculate subtotal for return based on quantity unit
+      // 3. Calculate the actual stock quantity to return (number of packets/boxes)
+      const originalUnitQuantity = parseFloat(b.quantity) || 0;
+      const quantityToReturnToStock = (originalUnitQuantity / packetSize);
 
-      if (quantityToReturn <= 0) {
+      if (quantityToReturnToStock <= 0) {
           console.warn(`Server: Calculated quantity to return is zero or negative for Bill ID ${bill_id}. Skipping stock update.`);
           failedReturns.push(`Bill ID ${bill_id} has zero or negative effective quantity.`);
           continue;
       }
       
       // 4. Insert a negative bill (as a return transaction)
-      // Use the calculated quantityToReturn for the 'quantity' column in the new bill record
+      // CORRECTION: Use the original negative unit quantity and subtotal for accurate reporting.
       await connection.query(
         `INSERT INTO bills (
           bill_date, bill_time, item_name, quantity, price, subtotal,
           payment_method, card_invoice_number, \`E-commerce Invoice Number\`,
-          patient_name, patient_phone, user, batch_id, batch_number, expiry
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          patient_name, patient_phone, user, branch, batch_id, batch_number, expiry
+        ) VALUES (CURDATE(), CURTIME(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
-          new Date().toISOString().slice(0, 10), // Current date
-          new Date().toTimeString().slice(0, 8), // Current time
           b.item_name,
-          -quantityToReturn, // Negative quantity
+          -originalUnitQuantity, // Log the exact unit quantity that was returned
           b.price,
-          -subtotalToReturn, // Negative subtotal based on calculated quantity
-          b.payment_method,
+          -b.subtotal,          // Log the exact subtotal that was returned
+          'RETURNED',
           b.card_invoice_number,
           b['E-commerce Invoice Number'],
           b.patient_name,
           b.patient_phone,
-          b.user,
-          b.batch_id,    // Include original batch info for traceability
+          req.session.user ? req.session.user.fullName : 'Unknown User', // User performing the return
+          b.branch, // Log the original branch of sale
+          b.batch_id,
           b.batch_number,
           b.expiry
         ]
       );
 
       // 5. Add quantity back to stock (prioritize batch if available, else legacy stock)
-      // The quantity to add back is the calculated quantityToReturn
+      // The quantity to add back is the calculated packet/box quantity
       if (b.batch_id) {
         const [batchUpdateResult] = await medicinesPool.promise().query(
           'UPDATE batches SET quantity = quantity + ? WHERE batch_id = ?',
-          [quantityToReturn, b.batch_id]
+          [quantityToReturnToStock, b.batch_id]
         );
         if (batchUpdateResult.affectedRows === 0) {
-          console.warn(`Server: Batch ${b.batch_id} not found for stock update on bill return ${bill_id}. Attempting to find by medicine_id and batch_number.`);
-          const [meds] = await medicinesPool.promise().query(
-            'SELECT id FROM medicines_table WHERE item_name = ? LIMIT 1',
-            [b.item_name]
-          );
-          if (meds.length && b.batch_number && b.expiry) {
-              const medicineId = meds[0].id;
+          console.warn(`Server: Batch ${b.batch_id} not found for stock update on bill return ${bill_id}. Attempting fallback...`);
+          
+          if (medicineId && b.batch_number && b.expiry) {
+              // Fallback A: Try to find another batch with the same details
               const [existingBatch] = await medicinesPool.promise().query(
                   'SELECT batch_id FROM batches WHERE medicine_id = ? AND batch_number = ? AND expiry = ?',
                   [medicineId, b.batch_number, b.expiry]
@@ -4522,56 +4997,53 @@ app.post('/api/bill-returns/return', async (req, res) => {
               if (existingBatch.length) {
                   await medicinesPool.promise().query(
                       'UPDATE batches SET quantity = quantity + ? WHERE batch_id = ?',
-                      [quantityToReturn, existingBatch[0].batch_id]
+                      [quantityToReturnToStock, existingBatch[0].batch_id]
                   );
-                  console.log(`Server: Updated existing batch for item ${b.item_name} by batch_number/expiry for bill ${bill_id}`);
+                  successfulReturns.push(`Bill ID ${bill_id}: Stock returned to existing matching batch.`);
               } else {
+                  // Fallback B: Create a new batch in the CORRECT branch
                   await medicinesPool.promise().query(
-                      'INSERT INTO batches (medicine_id, batch_number, expiry, quantity, received_date) VALUES (?, ?, ?, ?, CURDATE())',
-                      [medicineId, b.batch_number, b.expiry, quantityToReturn, new Date().toISOString().slice(0, 10)]
+                      'INSERT INTO batches (medicine_id, batch_number, expiry, quantity, received_date, branch) VALUES (?, ?, ?, ?, CURDATE(), ?)',
+                      [medicineId, `RETURN-${b.bill_id}`, b.expiry, quantityToReturnToStock, b.branch] // KEY CHANGE: Added b.branch
                   );
-                  console.log(`Server: Created new batch for returned item ${b.item_name} for bill ${bill_id}`);
+                  successfulReturns.push(`Bill ID ${bill_id}: Created new return-batch in branch '${b.branch}'.`);
               }
-          } else if (meds.length) {
-              await medicinesPool.promise().query(
+          } else if (medicineId) {
+            // Fallback C: No batch info, update legacy stock
+            await medicinesPool.promise().query(
                 'UPDATE medicines_table SET stock = stock + ? WHERE id = ?',
-                [quantityToReturn, medicineId]
-              );
-              console.log(`Server: Updated legacy stock for item ${b.item_name} for bill ${bill_id} (no specific batch match).`);
+                [quantityToReturnToStock, medicineId]
+            );
+            successfulReturns.push(`Bill ID ${bill_id}: Returned to legacy stock (batch info missing).`);
           } else {
-              console.warn(`Server: Could not update stock for returned item ${b.item_name} (medicine not found) for bill ${bill_id}.`);
+            failedReturns.push(`Bill ID ${bill_id}: Could not return stock (medicine not found).`);
           }
         } else {
-            console.log(`Server: Successfully updated batch ${b.batch_id} for bill ${bill_id}.`);
+            successfulReturns.push(`Bill ID ${bill_id}: Stock returned to original batch #${b.batch_number}.`);
         }
       } else {
-        // Fallback for items without batch_id in bill (legacy behavior)
-        const [meds] = await medicinesPool.promise().query(
-          'SELECT id FROM medicines_table WHERE item_name = ? LIMIT 1',
-          [b.item_name]
-        );
-        if (meds.length) {
+        // Legacy behavior for bills with no batch_id
+        if (medicineId) {
           await medicinesPool.promise().query(
             'UPDATE medicines_table SET stock = stock + ? WHERE id = ?',
-            [quantityToReturn, meds[0].id]
+            [quantityToReturnToStock, medicineId]
           );
-          console.log(`Server: Updated legacy stock for item ${b.item_name} for bill ${bill_id} (no batch in bill).`);
+          successfulReturns.push(`Bill ID ${bill_id}: Stock returned to main inventory (legacy item).`);
         } else {
-          console.warn(`Server: Could not update stock for returned item ${b.item_name} (medicine not found) for bill ${bill_id}.`);
+          failedReturns.push(`Bill ID ${bill_id}: Could not return stock (medicine not found).`);
         }
       }
       returnedBillsCount++;
-      successfulReturns.push(`Bill ID ${bill_id}: Returned ${quantityToReturn.toFixed(3)} unit(s) of ${b.item_name}.`);
     }
 
     await connection.commit(); // Commit the transaction
 
     let message = `${returnedBillsCount} bill(s) processed.`;
     if (successfulReturns.length > 0) {
-        message += `\nSuccess: ${successfulReturns.join('\n')}`;
+        message += `\n\n--- Success Details ---\n` + successfulReturns.join('\n');
     }
     if (failedReturns.length > 0) {
-        message += `\nFailures: ${failedReturns.join('\n')}`;
+        message += `\n\n--- Failure Details ---\n` + failedReturns.join('\n');
     }
 
     res.json({ success: true, message: message });
@@ -4584,6 +5056,7 @@ app.post('/api/bill-returns/return', async (req, res) => {
     connection.release(); // Release the connection
   }
 });
+
 
 
 
@@ -4626,13 +5099,13 @@ app.get('/api/pharma-agencies-xyz123', asyncHandler(async (req, res) => {
             searchParams = [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, searchPattern];
         }
 
-        // Get total count - FIXED: Use query instead of execute for dynamic params
+        // Get total count
         const countQuery = `SELECT COUNT(*) as total FROM pharma_agencies ${whereClause}`;
         const [countResult] = await popool.promise().query(countQuery, searchParams);
         const totalRecords = countResult[0].total;
         const totalPages = Math.ceil(totalRecords / limit);
 
-        // Get agencies data - FIXED: Use query instead of execute for dynamic params
+        // Get agencies data
         const dataQuery = `
             SELECT agency_id, name, contact_person, email, phone, address 
             FROM pharma_agencies 
@@ -4652,7 +5125,11 @@ app.get('/api/pharma-agencies-xyz123', asyncHandler(async (req, res) => {
             hasPrev: page > 1
         };
 
-        res.json(formatResponse(true, agencies, 'Agencies retrieved successfully', pagination));
+        // **** FIX IS HERE ****
+        // The original line was: res.json(agencies);
+        // It now sends the full structured response object.
+        res.json(formatResponse(true, agencies, 'Agencies fetched successfully', pagination));
+
     } catch (error) {
         console.error('Error fetching agencies:', error);
         res.status(500).json(formatResponse(false, null, 'Internal server error'));
@@ -5308,6 +5785,12 @@ const fonts = {
         bold: path.join(__dirname, 'fonts/Roboto-Bold.ttf'),
         italics: path.join(__dirname, 'fonts/Roboto-Italic.ttf'),
         bolditalics: path.join(__dirname, 'fonts/Roboto-BoldItalic.ttf')
+    },
+    // --- NEW ARABIC FONT DEFINITION ---
+    // This tells pdfmake to load the font files you just downloaded
+    ArabicFont: {
+        normal: path.join(__dirname, 'fonts/Amiri-Regular.ttf'),
+        bold: path.join(__dirname, 'fonts/Amiri-Bold.ttf'),
     }
 };
 const printer = new PdfPrinter(fonts);
@@ -5624,167 +6107,6 @@ app.get('/api/goods-receipt-notes/:id', async (req, res) => {
     }
 });
 
-// FIXED GRN CREATION: Properly handle FOC items
-app.post('/api/goods-receipt-notes/from-po', async (req, res) => {
-    const connection = await popool.promise().getConnection();
-    
-    try {
-        await connection.beginTransaction();
-        
-        const { po_id, received_by, remarks, items } = req.body;
-        
-        if (!po_id || !items || !Array.isArray(items) || items.length === 0) {
-            return res.status(400).json({ success: false, message: 'PO and at least one item required' });
-        }
-
-        // Generate GRN code
-        const now = new Date();
-        const ddmmyy = String(now.getDate()).padStart(2, '0') +
-                       String(now.getMonth() + 1).padStart(2, '0') +
-                       String(now.getFullYear()).slice(-2);
-        
-        const [maxGrn] = await connection.query(
-            `SELECT grn_code FROM goods_receipt_notes WHERE grn_code LIKE ? ORDER BY grn_code DESC LIMIT 1`,
-            [`GRN-${ddmmyy}%`]
-        );
-        
-        let seq = 1;
-        if (maxGrn.length && maxGrn[0].grn_code) {
-            const match = maxGrn[0].grn_code.match(/(\d{4})$/);
-            if (match) seq = parseInt(match[1], 10) + 1;
-        }
-        const grn_code = `GRN-${ddmmyy}${String(seq).padStart(4, '0')}`;
-
-        // Process items with FOC handling
-        let total_grn_amount = 0;
-        const processedItems = [];
-        
-        for (const item of items) {
-            // Get PO item details
-            const [poiRows] = await connection.query(
-                `SELECT poi_id, wholesale_price FROM purchase_order_items 
-                 WHERE po_id = ? AND medicine_id = ? LIMIT 1`,
-                [po_id, item.medicine_id]
-            );
-            
-            if (!poiRows.length) {
-                console.warn(`No PO item found for medicine_id ${item.medicine_id} in PO ${po_id}`);
-                continue;
-            }
-            
-            const poi_id = poiRows[0].poi_id;
-            const po_wholesale_price = Number(poiRows[0].wholesale_price) || 0;
-            
-            // ✅ FIX: Use FOC status from CLIENT, not database
-            const is_foc = Boolean(item.is_foc); // Use client's FOC status
-            const quantity = Number(item.quantity) || 0;
-            
-            // CORRECT FOC HANDLING using client's value
-            let received_price, received_subtotal;
-            if (is_foc) {
-                received_price = 0;
-                received_subtotal = 0;
-                console.log(`[GRN CREATE] Item ${item.medicine_id} is FOC - setting price/subtotal to 0`);
-            } else {
-                received_price = Number(item.received_price) || po_wholesale_price;
-                received_subtotal = quantity * received_price;
-                total_grn_amount += received_subtotal;
-                console.log(`[GRN CREATE] Item ${item.medicine_id} non-FOC - subtotal: ${received_subtotal}`);
-            }
-            
-            processedItems.push({
-                poi_id,
-                batch_number: item.batch_number,
-                expirydate: item.expirydate,
-                quantity,
-                received_price,
-                received_subtotal,
-                is_foc
-            });
-        }
-
-        console.log(`[GRN CREATE] Total amount (excluding FOC): ${total_grn_amount}`);
-        console.log(`[GRN CREATE] FOC items count: ${processedItems.filter(i => i.is_foc).length}`);
-
-        // Insert GRN header with correct total (excluding FOC)
-        const [grnResult] = await connection.query(
-            `INSERT INTO goods_receipt_notes (grn_code, po_id, received_by, remarks, received_at, total_amount)
-             VALUES (?, ?, ?, ?, NOW(), ?)`,
-            [grn_code, po_id, received_by, remarks || '', total_grn_amount]
-        );
-        const grn_id = grnResult.insertId;
-
-        // Insert GRN items
-        for (const item of processedItems) {
-            await connection.query(
-                `INSERT INTO grn_items (grn_id, poi_id, batch_number, expirydate, quantity, received_price, received_subtotal)
-                 VALUES (?, ?, ?, ?, ?, ?, ?)`,
-                [grn_id, item.poi_id, item.batch_number, item.expirydate, item.quantity, item.received_price, item.received_subtotal]
-            );
-            
-            // Update batch inventory (both FOC and non-FOC items get added to stock)
-            try {
-                // Get medicine_id from poi_id
-                const [medIdRows] = await connection.query(
-                    'SELECT medicine_id FROM purchase_order_items WHERE poi_id = ?',
-                    [item.poi_id]
-                );
-                
-                if (medIdRows.length) {
-                    const medicine_id = medIdRows[0].medicine_id;
-                    
-                    const [existingBatch] = await medicinesPool.promise().query(
-                        `SELECT batch_id FROM batches WHERE medicine_id = ? AND batch_number = ? AND expiry = ?`,
-                        [medicine_id, item.batch_number, item.expirydate]
-                    );
-                    
-                    if (existingBatch.length) {
-                        await medicinesPool.promise().query(
-                            `UPDATE batches SET quantity = quantity + ? WHERE batch_id = ?`,
-                            [item.quantity, existingBatch[0].batch_id]
-                        );
-                    } else {
-                        await medicinesPool.promise().query(
-                            `INSERT INTO batches (medicine_id, batch_number, expiry, quantity, received_date)
-                             VALUES (?, ?, ?, ?, CURDATE())`,
-                            [medicine_id, item.batch_number, item.expirydate, item.quantity]
-                        );
-                    }
-                }
-            } catch (batchError) {
-                console.error('Batch update error:', batchError);
-            }
-        }
-
-        // Update PO status
-        await connection.query(
-            `UPDATE purchase_orders SET status = 'Received', updated_at = NOW() WHERE po_id = ?`,
-            [po_id]
-        );
-
-        await connection.commit();
-        
-        res.json({ 
-            success: true, 
-            grn_code, 
-            grn_id, 
-            total_amount: total_grn_amount,
-            items_processed: processedItems.length,
-            foc_items: processedItems.filter(i => i.is_foc).length
-        });
-        
-    } catch (err) {
-        await connection.rollback();
-        console.error('GRN receive error:', err);
-        res.status(500).json({ 
-            success: false, 
-            message: err.message || 'Internal error processing GRN' 
-        });
-    } finally {
-        connection.release();
-    }
-});
-
 // UTILITY: Fix existing GRN #7 data
 app.post('/api/debug/fix-grn-7', async (req, res) => {
     const connection = await popool.promise().getConnection();
@@ -5910,173 +6232,154 @@ app.put('/api/purchase-orders/:poId/update', async (req, res) => {
     }
 });
 
-// REPLACE the existing /api/goods-receipt-notes/from-po endpoint in server.js with this:
+// MAIN GRN CREATION AND RECEIVING ENDPOINT
 app.post('/api/goods-receipt-notes/from-po', async (req, res) => {
-  const connection = await popool.promise().getConnection();
-  
-  try {
-    await connection.beginTransaction();
+    const connection = await popool.promise().getConnection();
     
-    const { po_id, received_by, remarks, items } = req.body;
-    
-    if (!po_id || !items || !Array.isArray(items) || items.length === 0) {
-      return res.status(400).json({ success: false, message: 'PO and at least one item required' });
-    }
-
-    // ✅ FIXED: Use actual user ID from session if received_by is not provided
-    const actualReceivedBy = received_by || (req.session.user ? req.session.user.userId : null);
-    
-    if (!actualReceivedBy) {
-      return res.status(401).json({ success: false, message: 'User not authenticated' });
-    }
-
-    // Generate GRN code
-    const now = new Date();
-    const ddmmyy = String(now.getDate()).padStart(2, '0') +
-                   String(now.getMonth() + 1).padStart(2, '0') +
-                   String(now.getFullYear()).slice(-2);
-    
-    const [maxGrn] = await connection.query(
-      `SELECT grn_code FROM goods_receipt_notes WHERE grn_code LIKE ? ORDER BY grn_code DESC LIMIT 1`,
-      [`GRN-${ddmmyy}%`]
-    );
-    
-    let seq = 1;
-    if (maxGrn.length && maxGrn[0].grn_code) {
-      const match = maxGrn[0].grn_code.match(/(\d{4})$/);
-      if (match) seq = parseInt(match[1], 10) + 1;
-    }
-    const grn_code = `GRN-${ddmmyy}${String(seq).padStart(4, '0')}`;
-
-    // Process items with FOC handling
-    let total_grn_amount = 0;
-    const processedItems = [];
-    
-    for (const item of items) {
-      // Get PO item details
-      const [poiRows] = await connection.query(
-        `SELECT poi_id, wholesale_price, is_foc FROM purchase_order_items 
-         WHERE po_id = ? AND medicine_id = ? LIMIT 1`,
-        [po_id, item.medicine_id]
-      );
-      
-      if (!poiRows.length) {
-        console.warn(`No PO item found for medicine_id ${item.medicine_id} in PO ${po_id}`);
-        continue;
-      }
-      
-      const poi_id = poiRows[0].poi_id;
-      const po_wholesale_price = Number(poiRows[0].wholesale_price) || 0;
-      const po_is_foc = Boolean(poiRows[0].is_foc);
-      
-      // Use FOC status from PO item (most reliable source)
-      const is_foc = po_is_foc;
-      const quantity = Number(item.quantity) || 0;
-      
-      // CORRECT FOC HANDLING
-      let received_price, received_subtotal;
-      if (is_foc) {
-        received_price = 0;
-        received_subtotal = 0;
-        console.log(`[GRN CREATE] Item ${item.medicine_id} is FOC - setting price/subtotal to 0`);
-      } else {
-        received_price = Number(item.received_price) || po_wholesale_price;
-        received_subtotal = quantity * received_price;
-        total_grn_amount += received_subtotal;
-        console.log(`[GRN CREATE] Item ${item.medicine_id} non-FOC - subtotal: ${received_subtotal}`);
-      }
-      
-      processedItems.push({
-        poi_id,
-        batch_number: item.batch_number,
-        expirydate: item.expirydate,
-        quantity,
-        received_price,
-        received_subtotal,
-        is_foc
-      });
-    }
-
-    console.log(`[GRN CREATE] Total amount (excluding FOC): ${total_grn_amount}`);
-    console.log(`[GRN CREATE] FOC items count: ${processedItems.filter(i => i.is_foc).length}`);
-
-    // Insert GRN header with correct total (excluding FOC)
-    const [grnResult] = await connection.query(
-      `INSERT INTO goods_receipt_notes (grn_code, po_id, received_by, remarks, received_at, total_amount)
-       VALUES (?, ?, ?, ?, NOW(), ?)`,
-      [grn_code, po_id, actualReceivedBy, remarks || '', total_grn_amount]
-    );
-    const grn_id = grnResult.insertId;
-
-    // Insert GRN items
-    for (const item of processedItems) {
-      await connection.query(
-        `INSERT INTO grn_items (grn_id, poi_id, batch_number, expirydate, quantity, received_price, received_subtotal)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [grn_id, item.poi_id, item.batch_number, item.expirydate, item.quantity, item.received_price, item.received_subtotal]
-      );
-      
-      // Update batch inventory (both FOC and non-FOC items get added to stock)
-      try {
-        // Get medicine_id from poi_id
-        const [medIdRows] = await connection.query(
-          'SELECT medicine_id FROM purchase_order_items WHERE poi_id = ?',
-          [item.poi_id]
-        );
+    try {
+        await connection.beginTransaction();
         
-        if (medIdRows.length) {
-          const medicine_id = medIdRows[0].medicine_id;
-          
-          const [existingBatch] = await medicinesPool.promise().query(
-            `SELECT batch_id FROM batches WHERE medicine_id = ? AND batch_number = ? AND expiry = ?`,
-            [medicine_id, item.batch_number, item.expirydate]
-          );
-          
-          if (existingBatch.length) {
-            await medicinesPool.promise().query(
-              `UPDATE batches SET quantity = quantity + ? WHERE batch_id = ?`,
-              [item.quantity, existingBatch[0].batch_id]
-            );
-          } else {
-            await medicinesPool.promise().query(
-              `INSERT INTO batches (medicine_id, batch_number, expiry, quantity, received_date)
-               VALUES (?, ?, ?, ?, CURDATE())`,
-              [medicine_id, item.batch_number, item.expirydate, item.quantity]
-            );
-          }
+        // Step 1: Destructure 'branch' from the request body
+        const { po_id, received_by, remarks, items, branch } = req.body;
+        
+        // Step 2: Add validation for the branch
+        if (!po_id || !items || !Array.isArray(items) || items.length === 0 || !branch) {
+            return res.status(400).json({ success: false, message: 'PO, items, and branch are required' });
         }
-      } catch (batchError) {
-        console.error('Batch update error:', batchError);
-      }
+
+        const actualReceivedBy = received_by || (req.session.user ? req.session.user.userId : null);
+        
+        if (!actualReceivedBy) {
+            return res.status(401).json({ success: false, message: 'User not authenticated' });
+        }
+
+        // Generate GRN code (your existing logic is fine)
+        const now = new Date();
+        const ddmmyy = String(now.getDate()).padStart(2, '0') +
+                       String(now.getMonth() + 1).padStart(2, '0') +
+                       String(now.getFullYear()).slice(-2);
+        const [maxGrn] = await connection.query(
+            `SELECT grn_code FROM goods_receipt_notes WHERE grn_code LIKE ? ORDER BY grn_code DESC LIMIT 1`,
+            [`GRN-${ddmmyy}%`]
+        );
+        let seq = 1;
+        if (maxGrn.length && maxGrn[0].grn_code) {
+            const match = maxGrn[0].grn_code.match(/(\d{4})$/);
+            if (match) seq = parseInt(match[1], 10) + 1;
+        }
+        const grn_code = `GRN-${ddmmyy}${String(seq).padStart(4, '0')}`;
+
+        // ... (your logic for processing items and calculating total_grn_amount)
+        let total_grn_amount = 0;
+        const processedItems = [];
+        for (const item of items) {
+            const [poiRows] = await connection.query(
+                `SELECT poi_id, wholesale_price, is_foc FROM purchase_order_items WHERE po_id = ? AND medicine_id = ? LIMIT 1`,
+                [po_id, item.medicine_id]
+            );
+            if (!poiRows.length) continue;
+            
+            const poi_id = poiRows[0].poi_id;
+            const po_wholesale_price = Number(poiRows[0].wholesale_price) || 0;
+            const is_foc = Boolean(item.is_foc);
+            const quantity = Number(item.quantity) || 0;
+            
+            let received_price, received_subtotal;
+            if (is_foc) {
+                received_price = 0;
+                received_subtotal = 0;
+            } else {
+                received_price = Number(item.received_price) || po_wholesale_price;
+                received_subtotal = quantity * received_price;
+                total_grn_amount += received_subtotal;
+            }
+            
+            processedItems.push({
+                poi_id, batch_number: item.batch_number, expirydate: item.expirydate, quantity, 
+                received_price, received_subtotal, is_foc
+            });
+        }
+        
+        // Insert GRN header
+        const [grnResult] = await connection.query(
+            `INSERT INTO goods_receipt_notes (grn_code, po_id, received_by, remarks, received_at, total_amount)
+             VALUES (?, ?, ?, ?, NOW(), ?)`,
+            [grn_code, po_id, actualReceivedBy, remarks || '', total_grn_amount]
+        );
+        const grn_id = grnResult.insertId;
+
+        // Insert GRN items and update batch inventory
+        for (const item of processedItems) {
+            await connection.query(
+                `INSERT INTO grn_items (grn_id, poi_id, batch_number, expirydate, quantity, received_price, received_subtotal)
+                 VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                [grn_id, item.poi_id, item.batch_number, item.expirydate, item.quantity, item.received_price, item.received_subtotal]
+            );
+            
+            // Step 3: Update batch inventory WITH the branch
+            try {
+                const [medIdRows] = await connection.query(
+                    'SELECT medicine_id FROM purchase_order_items WHERE poi_id = ?',
+                    [item.poi_id]
+                );
+                
+                if (medIdRows.length) {
+                    const medicine_id = medIdRows[0].medicine_id;
+                    
+                    // MODIFIED: Check for an existing batch in the SPECIFIC branch
+                    const [existingBatch] = await medicinesPool.promise().query(
+                        `SELECT batch_id FROM batches WHERE medicine_id = ? AND batch_number = ? AND expiry = ? AND branch = ?`,
+                        [medicine_id, item.batch_number, item.expirydate, branch] // <-- Pass branch to query
+                    );
+                    
+                    if (existingBatch.length) {
+                        // If found, update the quantity of that branch-specific batch
+                        await medicinesPool.promise().query(
+                            `UPDATE batches SET quantity = quantity + ? WHERE batch_id = ?`,
+                            [item.quantity, existingBatch[0].batch_id]
+                        );
+                    } else {
+                        // If not found, create a NEW batch record FOR THIS branch
+                        await medicinesPool.promise().query(
+                            `INSERT INTO batches (medicine_id, batch_number, expiry, quantity, received_date, branch)
+                             VALUES (?, ?, ?, ?, CURDATE(), ?)`, // <-- Added 'branch' column
+                            [medicine_id, item.batch_number, item.expirydate, item.quantity, branch] // <-- Added branch value
+                        );
+                    }
+                }
+            } catch (batchError) {
+                console.error('Batch update error during GRN:', batchError);
+                // Decide if you want to throw an error and rollback, or just log it
+            }
+        }
+
+        // Update PO status
+        await connection.query(
+            `UPDATE purchase_orders SET status = 'Received', updated_at = NOW() WHERE po_id = ?`,
+            [po_id]
+        );
+
+        await connection.commit();
+        
+        res.json({ 
+            success: true, 
+            grn_code, 
+            grn_id, 
+            total_amount: total_grn_amount,
+            items_processed: processedItems.length,
+            foc_items: processedItems.filter(i => i.is_foc).length
+        });
+        
+    } catch (err) {
+        await connection.rollback();
+        console.error('GRN receive error:', err);
+        res.status(500).json({ 
+            success: false, 
+            message: err.message || 'Internal error processing GRN' 
+        });
+    } finally {
+        connection.release();
     }
-
-    // Update PO status
-    await connection.query(
-      `UPDATE purchase_orders SET status = 'Received', updated_at = NOW() WHERE po_id = ?`,
-      [po_id]
-    );
-
-    await connection.commit();
-    
-    res.json({ 
-      success: true, 
-      grn_code, 
-      grn_id, 
-      total_amount: total_grn_amount,
-      items_processed: processedItems.length,
-      foc_items: processedItems.filter(i => i.is_foc).length
-    });
-    
-  } catch (err) {
-    await connection.rollback();
-    console.error('GRN receive error:', err);
-    res.status(500).json({ 
-      success: false, 
-      message: err.message || 'Internal error processing GRN' 
-    });
-  } finally {
-    connection.release();
-  }
 });
 // Get items for a purchase order
 app.get('/api/purchase-orders/:poId/items', (req, res) => {
@@ -7007,6 +7310,348 @@ app.post('/api/medicines/packet-sizes', (req, res) => {
     res.json({ packetSizes });
   });
 });
+// UPDATE MEDICINE barcode via pos
+app.post('/update-medicine-pos', upload.single('item_pic'), (req, res) => {
+  const { id } = req.body;
+
+  if (!id) {
+    return res.status(400).json({ error: "Medicine ID is required for an update." });
+  }
+
+  // List of fields that are allowed to be updated via this endpoint
+  const allowedFields = [
+    "item_name", "price", "barcode", "expiry", "stock", "packet_size",
+    "active_name_1", "active_name_2", "cross_selling",
+    "significant_side_effects", "significant_interactions",
+    "uses", "dosage", "location", "arabic_name", "active_name_3", "supplier"
+  ];
+
+  const queryParts = [];
+  const values = [];
+
+  // Dynamically build the SET part of the query based on what's provided
+  for (const field of allowedFields) {
+    if (req.body[field] !== undefined) {
+      queryParts.push(`${field} = ?`);
+      values.push(req.body[field]);
+    }
+  }
+
+  // Handle image upload separately
+  if (req.file) {
+    try {
+        const imageData = fs.readFileSync(req.file.path);
+        fs.unlinkSync(req.file.path); // Clean up the uploaded file
+        queryParts.push("item_pic = ?");
+        values.push(imageData);
+    } catch (fileError) {
+        console.error("Error processing uploaded file:", fileError);
+        return res.status(500).json({ error: "Error processing image file." });
+    }
+  }
+
+  if (queryParts.length === 0) {
+    return res.status(400).json({ error: "No valid fields provided for update." });
+  }
+
+  values.push(id); // Add the ID for the WHERE clause at the end
+
+  const sql = `UPDATE medicines_table SET ${queryParts.join(", ")} WHERE id = ?`;
+
+  medicinesPool.query(sql, values, (err, result) => {
+    if (err) {
+      console.error("Error updating medicine:", err);
+      return res.status(500).json({ error: "Database error during medicine update" });
+    }
+    if (result.affectedRows === 0) {
+        return res.status(404).json({ error: "Medicine with the given ID not found" });
+    }
+    res.json({ message: "Medicine updated successfully" });
+  });
+});
+
+// ================================== SALES ANALYTICS API ==================================
+
+// Helper function for date ranges
+const getPeriodRange = (period) => {
+    const now = new Date();
+    let start, end = now.toISOString().slice(0, 10);
+
+    switch (period) {
+        case 'weekly':
+            const firstDayOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
+            start = firstDayOfWeek.toISOString().slice(0, 10);
+            break;
+        case 'monthly':
+            start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
+            break;
+        case 'quarterly':
+            const quarter = Math.floor(now.getMonth() / 3);
+            start = new Date(now.getFullYear(), quarter * 3, 1).toISOString().slice(0, 10);
+            break;
+        case 'yearly':
+            start = new Date(now.getFullYear(), 0, 1).toISOString().slice(0, 10);
+            break;
+        default:
+             const pastDate = new Date();
+             pastDate.setDate(now.getDate() - 7);
+             start = pastDate.toISOString().slice(0, 10);
+    }
+    return { start, end };
+};
+
+// Endpoint for Top Sellers Overview
+app.get('/api/analytics/top-seller', async (req, res) => {
+    const { period } = req.query; // weekly, monthly, quarterly, yearly
+    if (!period) return res.status(400).json({ error: 'Period is required' });
+
+    const { start, end } = getPeriodRange(period);
+
+    const query = `
+        SELECT
+            item_name,
+            SUM(quantity) AS total_units,
+            SUM(subtotal) AS total_sales
+        FROM bills
+        WHERE bill_date BETWEEN ? AND ? AND quantity > 0
+        GROUP BY item_name
+        ORDER BY total_sales DESC
+        LIMIT 1;
+    `;
+
+    try {
+        const [rows] = await billsPool.promise().query(query, [start, end]);
+        res.json(rows[0] || {});
+    } catch (err) {
+        console.error(`Error fetching top seller for period ${period}:`, err);
+        res.status(500).json({ error: 'Database query failed' });
+    }
+});
+
+
+// Endpoint for Single Item Sales Trend
+app.get('/api/analytics/item-trend', async (req, res) => {
+    const { itemName, groupBy = 'daily', branch = 'all' } = req.query;
+    if (!itemName) return res.status(400).json({ error: 'Item name is required' });
+
+    let dateGroupFormat;
+    switch (groupBy) {
+        case 'weekly':
+            dateGroupFormat = `DATE_FORMAT(bill_date, '%Y-%u')`; // Year and week number
+            break;
+        case 'monthly':
+            dateGroupFormat = `DATE_FORMAT(bill_date, '%Y-%m')`; // Year and month
+            break;
+        default: // daily
+            dateGroupFormat = `DATE_FORMAT(bill_date, '%Y-%m-%d')`;
+            break;
+    }
+    
+    let whereClauses = ['item_name = ?', 'quantity > 0'];
+    let params = [itemName];
+    
+    if (branch && branch !== 'all') {
+        // Use LOWER and TRIM to match inconsistent data (e.g., "Ghu1" or "ghu1 ")
+        whereClauses.push('LOWER(TRIM(branch)) = ?'); 
+        params.push(branch.toLowerCase().trim()); // Ensure the param is also clean
+    }
+
+    // *** FIX ***
+    // Removed 'branch' from SELECT and GROUP BY.
+    // The WHERE clause already handles filtering, so we just need to group by period.
+    const query = `
+        SELECT
+            ${dateGroupFormat} AS period,
+            SUM(quantity) AS total_units,
+            SUM(subtotal) AS total_sales
+        FROM bills
+        WHERE ${whereClauses.join(' AND ')}
+        GROUP BY period
+        ORDER BY period;
+    `;
+
+    try {
+        const [rows] = await billsPool.promise().query(query, params);
+        res.json(rows);
+    } catch (err) {
+        console.error(`Error fetching item trend for ${itemName}:`, err);
+        res.status(500).json({ error: 'Database query failed' });
+    }
+});
+
+// Endpoint for comparing multiple items
+app.post('/api/analytics/compare-items', async (req, res) => {
+    const { itemNames, branch = 'all' } = req.body;
+    if (!Array.isArray(itemNames) || itemNames.length === 0) {
+        return res.status(400).json({ error: 'Item names array is required.' });
+    }
+
+    let whereClauses = ['item_name IN (?)', 'quantity > 0'];
+    let params = [itemNames];
+    
+    if (branch && branch !== 'all') {
+        // Use LOWER and TRIM to match inconsistent data (e.g., "Ghu1" or "ghu1 ")
+        whereClauses.push('LOWER(TRIM(branch)) = ?');
+        params.push(branch); // 'branch' is already lowercase from your dropdown
+    }
+
+    const query = `
+        SELECT
+            item_name,
+            DATE_FORMAT(bill_date, '%Y-%m') AS period,
+            SUM(quantity) AS total_units,
+            SUM(subtotal) AS total_sales
+        FROM bills
+        WHERE ${whereClauses.join(' AND ')}
+        GROUP BY item_name, period
+        ORDER BY period, item_name;
+    `;
+
+    try {
+        const [rows] = await billsPool.promise().query(query, params);
+        res.json(rows);
+    } catch (err) {
+        console.error('Error comparing items:', err);
+        res.status(500).json({ error: 'Database query failed' });
+    }
+});
+// ==================================
+// NEW: PURCHASE ORDER ANALYTICS API (Corrected)
+// ==================================
+app.post('/api/analytics/purchase-suggestion', async (req, res) => {
+    const { itemNames, branch } = req.body;
+
+    if (!Array.isArray(itemNames) || itemNames.length === 0) {
+        return res.status(400).json({ message: 'Item names array is required.' });
+    }
+    if (!branch || branch === 'all') {
+        return res.status(400).json({ message: 'A specific branch is required.' });
+    }
+
+    const lowerCaseBranch = branch.toLowerCase().trim();
+
+    try {
+        // --- Step 1: Get Date Range (Last 90 days) ---
+        const endDate = new Date();
+        const startDate = new Date();
+        startDate.setDate(endDate.getDate() - 90);
+        
+        const sqlStartDate = startDate.toISOString().slice(0, 10);
+        const sqlEndDate = endDate.toISOString().slice(0, 10);
+
+        // --- Step 2: Fetch Sales Data (in UNITS/PACKETS) ---
+        // 'total_units_sold' is the total number of individual packets sold.
+        const salesQuery = `
+            SELECT
+                item_name,
+                SUM(quantity) AS total_units_sold
+            FROM bills
+            WHERE
+                item_name IN (?)
+                AND LOWER(TRIM(branch)) = ?
+                AND bill_date BETWEEN ? AND ?
+                AND quantity > 0
+            GROUP BY item_name;
+        `;
+        const [salesRows] = await billsPool.promise().query(salesQuery, [
+            itemNames,
+            lowerCaseBranch,
+            sqlStartDate,
+            sqlEndDate
+        ]);
+        
+        // --- Step 3: Fetch Current Stock (in PACKAGES) & Packet Size ---
+        // 'current_stock_packages' is the SUM of 'batches.quantity', which is stock in packages.
+        const stockQuery = `
+            SELECT
+                m.item_name,
+                m.packet_size,
+                IFNULL(SUM(b.quantity), 0) AS current_stock_packages
+            FROM medicines.medicines_table m
+            LEFT JOIN medicines.batches b
+                ON m.id = b.medicine_id AND LOWER(TRIM(b.branch)) = ?
+            WHERE
+                m.item_name IN (?)
+            GROUP BY m.item_name, m.packet_size;
+        `;
+        const [stockRows] = await medicinesPool.promise().query(stockQuery, [
+            lowerCaseBranch,
+            itemNames
+        ]);
+
+        // --- Step 4: Combine and Analyze ---
+        const suggestions = [];
+        const REVIEW_PERIOD_DAYS = 30;
+        const LEAD_TIME_DAYS = 7;
+        const SAFETY_STOCK_DAYS = 14;
+        const TOTAL_COVERAGE_DAYS = REVIEW_PERIOD_DAYS + LEAD_TIME_DAYS + SAFETY_STOCK_DAYS; // 51 days
+
+        for (const itemName of itemNames) {
+            const sale = salesRows.find(s => s.item_name === itemName);
+            const stock = stockRows.find(s => s.item_name === itemName);
+
+            if (!stock) {
+                suggestions.push({
+                    item_name: itemName,
+                    branch: branch,
+                    current_stock_packets: 0, // This is 'packages'
+                    avg_daily_packets_sold: 0,
+                    suggested_purchase_quantity: 0,
+                    analysis: "Item not found in stock database or branch. Cannot calculate."
+                });
+                continue;
+            }
+
+            const packet_size = Number(stock.packet_size) || 1;
+            const current_stock_packages = Number(stock.current_stock_packages) || 0; // Stock in Packages
+            const total_packets_sold_90_days = Number(sale?.total_units_sold) || 0; // Sales in Packets
+            
+            // *** FIX 1: Correctly calculate average daily PACKETS sold ***
+            const avg_daily_packets_sold = total_packets_sold_90_days / 90;
+            
+            // *** FIX 2: Convert daily packets sold to daily PACKAGES sold for stocking logic ***
+            const avg_daily_packages_sold = avg_daily_packets_sold / packet_size;
+
+            // Order-Up-To Level (Max Stock) in PACKAGES
+            const order_up_to_level_packages = avg_daily_packages_sold * TOTAL_COVERAGE_DAYS;
+            
+            // Suggested Quantity (in PACKAGES)
+            let suggested_quantity_packages = order_up_to_level_packages - current_stock_packages;
+
+            if (suggested_quantity_packages < 0) {
+                suggested_quantity_packages = 0;
+            }
+
+            const finalSuggestion = Math.ceil(suggested_quantity_packages); // Final suggestion in PACKAGES
+            
+            let analysis = `Avg. ${avg_daily_packets_sold.toFixed(2)} packets/day. 
+                Recommending stock for ${TOTAL_COVERAGE_DAYS} days. 
+                (Max: ${order_up_to_level_packages.toFixed(1)} packages, Stock: ${current_stock_packages.toFixed(1)} packages)`;
+            
+            if (finalSuggestion === 0 && avg_daily_packets_sold > 0) {
+                 analysis += ". Current stock is sufficient.";
+            } else if (avg_daily_packets_sold === 0) {
+                analysis = "No sales in the last 90 days in this branch. Suggesting 0.";
+            }
+
+            suggestions.push({
+                item_name: itemName,
+                branch: branch,
+                current_stock_packets: current_stock_packages, // This is PACKAGES
+                avg_daily_packets_sold: avg_daily_packets_sold, // This is PACKETS
+                suggested_purchase_quantity: finalSuggestion, // This is PACKAGES
+                analysis: analysis
+            });
+        }
+
+        res.json(suggestions);
+
+    } catch (err) {
+        console.error('Error fetching purchase suggestions:', err);
+        res.status(500).json({ message: 'Server error while calculating suggestions.' });
+    }
+});
+
 // Serve user management page
 app.get('/user-management', isAdmin, (req, res) => {
   res.sendFile(path.join(__dirname, 'user-management.html'));

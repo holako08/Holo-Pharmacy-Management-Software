@@ -64,6 +64,7 @@ function getFilters() {
     patientPhone: document.getElementById('bills-report-filter-patient-phone').value.trim(),
     user: document.getElementById('bills-report-filter-user').value.trim(),
     paymentMethod: document.getElementById('bills-report-filter-payment-method').value.trim(),
+    branch: document.getElementById('bills-report-filter-branch').value.trim(),
     cardInvoice: document.getElementById('bills-report-filter-card-invoice').value.trim(),
     ecomInvoice: document.getElementById('bills-report-filter-ecom-invoice').value.trim(),
     priceMin: document.getElementById('bills-report-filter-price-min').value.trim(),
@@ -80,6 +81,7 @@ function setFilters(filters) {
   document.getElementById('bills-report-filter-patient-phone').value = filters.patientPhone || '';
   document.getElementById('bills-report-filter-user').value = filters.user || '';
   document.getElementById('bills-report-filter-payment-method').value = filters.paymentMethod || '';
+  document.getElementById('bills-report-filter-branch').value = filters.branch || '';
   document.getElementById('bills-report-filter-card-invoice').value = filters.cardInvoice || '';
   document.getElementById('bills-report-filter-ecom-invoice').value = filters.ecomInvoice || '';
   document.getElementById('bills-report-filter-price-min').value = filters.priceMin || '';
@@ -136,6 +138,7 @@ function renderTable(rows) {
         <td>${row.patient_name || ''}</td>
         <td>${row.patient_phone || ''}</td>
         <td>${row.user || ''}</td>
+        <td>${row.branch || ''}</td>
       </tr>
     `;
   });
@@ -180,6 +183,7 @@ function setupFilters() {
     'bills-report-filter-patient-phone',
     'bills-report-filter-user',
     'bills-report-filter-payment-method',
+    'bills-report-filter-branch',
     'bills-report-filter-card-invoice',
     'bills-report-filter-ecom-invoice',
     'bills-report-filter-price-min',

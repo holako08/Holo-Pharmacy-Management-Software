@@ -12,12 +12,12 @@ $(document).ready(function () {
             document.getElementById('userInfo').textContent =
                 `${userInfo.jobTitle || 'Staff'} ${userInfo.fullName || userInfo.username} is logged-in`;
                 const userPhoto = document.getElementById('user-photo');
-if (userPhoto && userInfo.userId) {
-    userPhoto.onerror = function() {
-        userPhoto.src = 'images/default-profile.png';
-    };
-    userPhoto.src = `/api/user-photo/${userInfo.userId}`;
-}
+            if (userPhoto && userInfo.userId) {
+                userPhoto.onerror = function() {
+                    userPhoto.src = 'images/default-profile.png';
+                };
+                userPhoto.src = `/api/user-photo/${userInfo.userId}`;
+            }
 
         } catch (error) {
             console.error('Error parsing userInfo:', error);
@@ -41,6 +41,14 @@ if (userPhoto && userInfo.userId) {
         event.preventDefault();
         const fromDate = $('#fromDate').val();
         const toDate = $('#toDate').val();
+        // Get the selected branch value
+        const branch = $('#branchSelect').val();
+
+        // Check if a branch is selected
+        if (!branch) {
+            alert('Please select a branch.');
+            return;
+        }
 
         $('#reportData').html('');
         $('#reportNote').text('Fetching report data...');
@@ -48,24 +56,27 @@ if (userPhoto && userInfo.userId) {
         $.ajax({
             url: '/generate-report',
             method: 'POST',
-            data: JSON.stringify({ fromDate, toDate }),
+            // Pass the branch in the request body
+            data: JSON.stringify({ fromDate, toDate, branch }), // <-- Added branch
             contentType: 'application/json',
             success: function (response) {
-                fetchEcommerceAndInsuranceSales(fromDate, toDate, function (eCommerceSales, insuranceSales) {
+                // Pass the branch to the next function
+                fetchEcommerceAndInsuranceSales(fromDate, toDate, branch, function (eCommerceSales, insuranceSales) { // <-- Added branch
                     const totalSales = response.cashSales + response.cardSales + eCommerceSales + insuranceSales;
-
+                    
+                    // Add branch to the report table
+                    const branchName = $('#branchSelect option:selected').text(); // Get friendly name
                     const reportRows = `
-    <tr><td>From Date</td><td>${fromDate}</td></tr>
-    <tr><td>To Date</td><td>${toDate}</td></tr>
-    <tr><td>Cash Sales</td><td>$${response.cashSales.toFixed(2)}</td></tr>
-    <tr><td>Card Sales</td><td>$${response.cardSales.toFixed(2)}</td></tr>
-    <tr><td>E-commerce Sales</td><td>$${eCommerceSales.toFixed(2)}</td></tr>
-    <tr><td>Insurance Sales</td><td>$${insuranceSales.toFixed(2)}</td></tr>
-    <tr><td>Total Sales</td><td>$${totalSales.toFixed(2)}</td></tr>
-`;
-$('#reportData').html(reportRows);
+                        <tr><td>From Date</td><td>${fromDate}</td></tr>
+                        <tr><td>To Date</td><td>${toDate}</td></tr>
+                        <tr><td>Branch</td><td>${branchName}</td></tr> <tr><td>Cash Sales</td><td>${response.cashSales.toFixed(3)} OMR</td></tr>
+                        <tr><td>Card Sales</td><td>${response.cardSales.toFixed(3)} OMR</td></tr>
+                        <tr><td>E-commerce Sales</td><td>${eCommerceSales.toFixed(3)} OMR</td></tr>
+                        <tr><td>Insurance Sales</td><td>${insuranceSales.toFixed(3)} OMR</td></tr>
+                        <tr style="font-weight: bold; background-color: #f0f0f0;"><td>Total Sales</td><td>${totalSales.toFixed(3)} OMR</td></tr>
+                    `;
+                    $('#reportData').html(reportRows);
 
-$('#reportData').html(reportRows);
                     $('#reportNote').text('Report generated successfully for the selected date range.');
                 });
             },
@@ -81,11 +92,13 @@ $('#reportData').html(reportRows);
         });
     });
 
-    function fetchEcommerceAndInsuranceSales(fromDate, toDate, callback) {
+    // Modified function to accept and send branch
+    function fetchEcommerceAndInsuranceSales(fromDate, toDate, branch, callback) { // <-- Added branch
         $.ajax({
             url: '/fetch-extended-sales',
             method: 'POST',
-            data: JSON.stringify({ fromDate, toDate }),
+            // Pass the branch in the request body
+            data: JSON.stringify({ fromDate, toDate, branch }), // <-- Added branch
             contentType: 'application/json',
             success: function (response) {
                 const eCommerceSales = response.eCommerceSales || 0;
@@ -99,27 +112,54 @@ $('#reportData').html(reportRows);
     }
 
     // Download Excel report
+    // REPLACED broken logic with a call to the correct backend endpoint
     $('#downloadButton').on('click', function () {
+        const fromDate = $('#fromDate').val();
+        const toDate = $('#toDate').val();
+        const branch = $('#branchSelect').val();
+
         if ($('#reportData').html() === '') {
             alert('No data to download. Please generate a report first.');
             return;
         }
-    
-        const wb = XLSX.utils.book_new();
-        const ws_data = [];
-        
-        $('#salesTable tr').each(function () {
-            const row = [];
-            $(this).find('th, td').each(function () {
-                row.push($(this).text().trim());
-            });
-            ws_data.push(row);
+
+        if (!branch) {
+            alert('Please select a branch.');
+            return;
+        }
+
+        // Use fetch to call the new endpoint and handle the file download
+        fetch('/api/download-sales-xlsx', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ fromDate, toDate, branch }) // <-- Added branch
+        })
+        .then(response => {
+            if (!response.ok) {
+                if (response.status === 404) {
+                    throw new Error('No sales data found for the selected criteria.');
+                }
+                throw new Error('Network response was not ok.');
+            }
+            return response.blob();
+        })
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = `sales_report_${branch.replace(/ /g, '_')}_${fromDate}_to_${toDate}.xlsx`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        })
+        .catch(err => {
+            console.error('Error downloading Excel report:', err);
+            alert(`Error downloading report: ${err.message}`);
         });
-    
-        const ws = XLSX.utils.aoa_to_sheet(ws_data);
-        XLSX.utils.book_append_sheet(wb, ws, 'Sales Report');
-        
-        XLSX.writeFile(wb, `sales_report_${$('#fromDate').val()}_to_${$('#toDate').val()}.xlsx`);
     });
     
     

@@ -1,204 +1,313 @@
+/*
+ * ===============================================
+ * Enterprise Gold Theme - Modernization (Report)
+ * ===============================================
+ */
+
+/* ---------- Tokens / Variables ---------- */
+:root {
+    /* Brand Colors */
+    --color-brand-primary: #C5A550; /* Refined Gold */
+    --color-brand-primary-dark: #A18E44; /* Gold (Hover) */
+    --color-brand-primary-light: #F9F6ED; /* Light Gold (Accent BG) */
+
+    /* Neutral Colors */
+    --color-text-primary: #212529; /* Deep Gray */
+    --color-text-secondary: #6C757D; /* Medium Gray */
+    --color-text-heading: #343A40; /* Slightly lighter than primary text */
+    --color-bg-body: #F8F9FA; /* Lightest Gray */
+    --color-bg-surface: #FFFFFF; /* White */
+    --color-border: #DEE2E6; /* Light Border */
+    --color-focus: #C5A550;
+
+    /* Status Colors */
+    --color-highlight-bg: var(--color-brand-primary-light);
+    --color-highlight-text: #B48500; /* Darker, more readable gold */
+    --color-highlight-border: var(--color-brand-primary);
+
+    /* Typography */
+    --font-family-base: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --font-size-base: 1rem; /* 16px */
+    --font-size-sm: 0.875rem;
+    --font-size-lg: 1.25rem;
+    --font-size-xl: 1.75rem;
+    --line-height-base: 1.6;
+    --font-weight-regular: 400;
+    --font-weight-medium: 500;
+    --font-weight-bold: 600;
+
+    /* Spacing */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+
+    /* Polish */
+    --border-radius: 6px;
+    --border-radius-lg: 10px; /* For larger panels/tables */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+    --transition-base: 0.2s ease-in-out;
+}
+
+/* ---------- Base Styles ---------- */
 body {
-  margin: 0;
-  font-family: 'Segoe UI', Arial, sans-serif;
-  background: #f4f4f4;
-  color: #222;
+    margin: 0;
+    font-family: var(--font-family-base);
+    background: var(--color-bg-body);
+    color: var(--color-text-primary);
+    line-height: var(--line-height-base);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
-/* Navigation bar and dropdowns: Use your system's classes as is */
+/* ---------- Layout & Components ---------- */
 
+/* ----- Report Header ----- */
+.report-header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-lg) var(--spacing-xl);
+    background: var(--color-bg-surface);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.title {
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-bold);
+    margin: 0;
+    text-align: left;
+    color: var(--color-text-heading);
+}
+
+.user-info-bills-report {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    margin-left: var(--spacing-md);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    background: transparent;
+    float: none; /* Override legacy float */
+}
+
+.user-info-bills-report .avatar-container {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-weight: var(--font-weight-medium);
+}
+
+/* ----- Filter Bar ----- */
 .filter-container-bills-report {
-  padding: 1.2em 2em 1em 2em;
-  background: #f7f7f7;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 1.5em;
-  border-bottom: 1px solid #e0e0e0;
-}
-
-.filter-container-bills-report input[type="text"],
-.filter-container-bills-report input[type="number"] {
-  padding: 7px 13px;
-  border: 1px solid #bbb;
-  border-radius: 4px;
-  font-size: 1em;
-  margin-right: 0.7em;
+    padding: var(--spacing-md) var(--spacing-xl);
+    background: var(--color-bg-surface);
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: var(--spacing-lg);
+    border-bottom: 1px solid var(--color-border);
+    box-shadow: var(--shadow-sm);
 }
 
 .filter-container-bills-report label {
-  font-weight: 500;
-  margin-right: 0.4em;
+    font-weight: var(--font-weight-medium);
+    margin-right: var(--spacing-sm);
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
 }
 
+/* ----- Forms (Scoped to filter) ----- */
+.filter-container-bills-report input[type="text"],
+.filter-container-bills-report input[type="number"] {
+    padding: var(--spacing-sm) 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    font-size: 0.95rem;
+    margin-right: var(--spacing-sm);
+    transition: border-color var(--transition-base), box-shadow var(--transition-base);
+}
+
+.filter-container-bills-report input[type="text"]:focus,
+.filter-container-bills-report input[type="number"]:focus {
+    border-color: var(--color-brand-primary);
+    box-shadow: 0 0 0 3px var(--color-brand-primary-light);
+    outline: none;
+}
+
+/* ----- Buttons ----- */
 .btn-gold-bills-report {
-  background: #FFD700;
-  color: #222;
-  border: none;
-  padding: 7px 18px;
-  font-weight: 600;
-  border-radius: 4px;
-  cursor: pointer;
-  margin-left: 0.3em;
-  transition: background 0.2s, color 0.2s;
+    background: var(--color-brand-primary);
+    color: var(--color-text-primary);
+    border: 1px solid var(--color-brand-primary);
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-weight: var(--font-weight-medium);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    margin-left: var(--spacing-xs);
+    font-size: 0.95rem;
+    text-decoration: none;
+    transition: all var(--transition-base);
+    box-shadow: var(--shadow-sm);
 }
 
 .btn-gold-bills-report:hover {
-  background: #bfa104;
-  color: #fff;
+    background: var(--color-brand-primary-dark);
+    border-color: var(--color-brand-primary-dark);
+    color: var(--color-bg-surface);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
 }
 
+/* ----- Data Table ----- */
 .data-table-bills-report {
-  width: 96%;
-  margin: 2em auto 1em auto;
-  border-collapse: collapse;
-  font-size: 1.03em;
-  background: #fff;
-  border-radius: 10px 10px 0 0;
-  overflow: hidden;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+    width: 96%;
+    margin: var(--spacing-xl) auto var(--spacing-md) auto;
+    border-collapse: collapse;
+    font-size: 0.98rem;
+    background: var(--color-bg-surface);
+    border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--color-border);
+    border-bottom: none; /* Handled by summary */
 }
 
-.data-table-bills-report th, .data-table-bills-report td {
-  padding: 12px 18px;
-  text-align: left;
+.data-table-bills-report th, 
+.data-table-bills-report td {
+    padding: 14px 20px;
+    text-align: left;
 }
 
 .data-table-bills-report th {
-  background: #FFD700;
-  color: #222;
-  font-weight: bold;
-  border-bottom: 2px solid #e1e1e1;
+    background: var(--color-brand-primary);
+    color: var(--color-text-primary);
+    font-weight: var(--font-weight-bold);
+    border-bottom: 1px solid var(--color-brand-primary-dark);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .data-table-bills-report tr {
-  border-bottom: 1px solid #ececec;
+    border-bottom: 1px solid var(--color-border);
 }
 
 .data-table-bills-report tbody tr:nth-child(even) {
-  background: #f8f7f3;
+    background: var(--color-bg-body);
+}
+
+.data-table-bills-report tbody tr:hover {
+    background-color: var(--color-brand-primary-light);
 }
 
 /* Highlight low stock */
 .data-table-bills-report tr.low-stock-row {
-  background: #fffbe0 !important;
-  color: #c17c00;
-  font-weight: bold;
-  border-left: 6px solid #FFD700;
+    background: var(--color-highlight-bg) !important;
+    color: var(--color-highlight-text);
+    font-weight: var(--font-weight-medium);
+    border-left: 5px solid var(--color-highlight-border);
 }
 
-.loading-bills-report {
-  font-size: 1.1em;
-  text-align: center;
-  color: #444;
-}
-
+/* ----- Table Summary ----- */
 .summary-bills-report {
-  margin: 1.5em auto 0 auto;
-  padding: 0.7em 2em;
-  background: #fafafa;
-  border-top: 1px solid #ececec;
-  font-size: 1.11em;
-  color: #555;
-  font-weight: 500;
-  width: 96%;
-  border-radius: 0 0 10px 10px;
+    margin: 0 auto;
+    padding: var(--spacing-md) var(--spacing-xl);
+    background: var(--color-bg-surface);
+    border-top: 1px solid var(--color-border);
+    border: 1px solid var(--color-border);
+    border-top: 2px solid var(--color-border);
+    font-size: 1rem;
+    color: var(--color-text-heading);
+    font-weight: var(--font-weight-medium);
+    width: 96%;
+    border-radius: 0 0 var(--border-radius-lg) var(--border-radius-lg);
+    box-shadow: 0 4px 6px -4px rgba(0,0,0,0.06); /* Subtle shadow connect */
 }
 
+/* ----- Utilities ----- */
+.loading-bills-report {
+    font-size: var(--font-size-lg);
+    text-align: center;
+    color: var(--color-text-secondary);
+    padding: var(--spacing-xl);
+}
+
+/* ----- Footer ----- */
 .dashboard-footer {
-  background: #2c2c2c;
-  color: #FFD700;
-  padding: 1rem 0;
-  text-align: center;
-  font-size: 1em;
-  margin-top: 40px;
+    background: var(--color-text-primary);
+    color: var(--color-brand-primary);
+    padding: var(--spacing-lg) 0;
+    text-align: center;
+    font-size: var(--font-size-sm);
+    margin-top: var(--spacing-xl);
 }
 
 .dashboard-footer a {
-  color: #FFD700;
-  text-decoration: underline;
+    color: var(--color-brand-primary);
+    text-decoration: none;
+    font-weight: var(--font-weight-medium);
 }
 
-/* Responsive */
+.dashboard-footer a:hover {
+    color: var(--color-bg-surface);
+    text-decoration: underline;
+}
+
+/* ---------- Responsive Design ---------- */
 @media (max-width: 900px) {
-  .data-table-bills-report, .summary-bills-report {
-    width: 99%;
-    font-size: 0.97em;
-    padding: 0.5em 0.6em;
-  }
-  .filter-container-bills-report {
-    padding: 0.7em 0.5em;
-    flex-wrap: wrap;
-    gap: 0.7em;
-    font-size: 0.99em;
-  }
-  .dashboard-footer {
-    font-size: 0.95em;
-  }
-}
-.title {
-  font-size: 1.5em;
-  font-weight: bold;
-  margin: 0.5em 0;
-  text-align: center;
-  color: #333;
-  float: left;
-}
-.user-info-bills-report {
-  font-size: 0.95em;
-  color: #666;
-  margin-left: 1em;
-  float: right;
-}
-.report-header-flex {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.2em 2em 0.6em 2em;
-  background: #fff;
-  border-bottom: 1px solid #e0e0e0;
-}
+    .data-table-bills-report, .summary-bills-report {
+        width: 100%;
+        margin-left: 0;
+        margin-right: 0;
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+        font-size: 0.95rem;
+    }
 
-.title {
-  font-size: 1.7em;
-  font-weight: bold;
-  margin: 0;
-  text-align: left;
-  color: #333;
-}
+    .data-table-bills-report {
+        margin-top: var(--spacing-lg);
+    }
+    
+    .data-table-bills-report th, 
+    .data-table-bills-report td {
+        padding: 12px 14px;
+    }
 
-.user-info-bills-report {
-  font-size: 0.97em;
-  color: #555;
-  margin-left: 1em;
-  display: flex;
-  align-items: center;
-  gap: 0.7em;
-  float: none !important;
-  background: transparent;
-}
+    .summary-bills-report {
+        padding: var(--spacing-md) 14px;
+    }
 
-.user-info-bills-report .avatar-container {
-  display: flex;
-  align-items: center;
-  gap: 0.3em;
-}
+    .filter-container-bills-report {
+        padding: var(--spacing-md);
+        flex-wrap: wrap;
+        gap: var(--spacing-md);
+        font-size: 0.98rem;
+    }
 
-@media (max-width: 900px) {
-  .report-header-flex {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.7em;
-    padding: 0.8em 0.6em 0.3em 0.6em;
-  }
-  .title {
-    font-size: 1.22em;
-    text-align: left;
-    margin-bottom: 0.3em;
-  }
-  .user-info-bills-report {
-    justify-content: flex-end;
-    margin-left: 0;
-    font-size: 0.94em;
-  }
+    .report-header-flex {
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--spacing-sm);
+        padding: var(--spacing-md);
+    }
+
+    .title {
+        font-size: 1.4rem;
+        margin-bottom: var(--spacing-xs);
+    }
+
+    .user-info-bills-report {
+        justify-content: flex-start;
+        margin-left: 0;
+        font-size: 0.9rem;
+    }
+    
+    .dashboard-footer {
+        font-size: 0.9rem;
+        padding: var(--spacing-md);
+    }
 }

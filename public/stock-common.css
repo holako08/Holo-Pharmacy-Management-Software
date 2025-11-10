@@ -1,54 +1,243 @@
+/*
+ * ===============================================
+ * Enterprise Gold Theme - Modernization
+ * ===============================================
+ */
+
+/* ---------- Tokens / Variables ---------- */
+:root {
+    /* Brand Colors */
+    --color-brand-primary: #C5A550; /* Refined Gold */
+    --color-brand-primary-dark: #A18E44; /* Gold (Hover) */
+    --color-brand-primary-light: #F9F6ED; /* Light Gold (Accent) */
+
+    /* Neutral Colors */
+    --color-text-primary: #212529; /* Deep Gray */
+    --color-text-secondary: #6C757D; /* Medium Gray */
+    --color-bg-body: #F8F9FA; /* Lightest Gray */
+    --color-bg-surface: #FFFFFF; /* White */
+    --color-border: #DEE2E6; /* Light Border */
+    --color-focus: #C5A550;
+
+    /* Typography */
+    --font-family-base: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --font-size-base: 1rem; /* 16px */
+    --line-height-base: 1.6;
+    --font-weight-regular: 400;
+    --font-weight-medium: 500;
+    --font-weight-bold: 600;
+
+    /* Spacing */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+
+    /* Polish */
+    --border-radius: 6px;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+    --transition-base: 0.2s ease-in-out;
+}
+
 /* ---------- Base Styles ---------- */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
 body {
     margin: 0;
-    background: #f5f5f7;
-    color: #222;
-    font-family: 'Segoe UI', Arial, sans-serif;
-    font-size: 1.03em;
+    background: var(--color-bg-body);
+    color: var(--color-text-primary);
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-base);
     min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
-
-
-/* ---------- Utility Classes ---------- */
-.btn-link {
-    display: inline-block;
-    margin: 0 6px;
-    padding: 6px 18px;
-    background: #d1b464;
-    color: #23232b;
-    border-radius: 7px;
-    text-decoration: none;
-    font-weight: 600;
-    box-shadow: 0 1px 4px #d1b46422;
-    transition: background .16s, color .16s;
-}
-.btn-link:hover {
-    background: #a18e44;
-    color: #fff;
+/* ---------- Typography ---------- */
+h1, h2, h3, h4, h5, h6 {
+    margin-top: 0;
+    margin-bottom: var(--spacing-md);
+    font-weight: var(--font-weight-bold);
+    line-height: 1.3;
 }
 
 h2, h3, h4 {
-    color: #c1a95e;
-    font-weight: 600;
+    color: var(--color-brand-primary-dark);
 }
 
+p {
+    margin-top: 0;
+    margin-bottom: var(--spacing-md);
+}
+
+a {
+    color: var(--color-brand-primary-dark);
+    text-decoration: none;
+    transition: color var(--transition-base);
+}
+a:hover {
+    color: var(--color-text-primary);
+    text-decoration: underline;
+}
+
+/* ---------- Components ---------- */
+
+/* ----- Buttons ----- */
+.btn-link {
+    display: inline-block;
+    margin: 0 var(--spacing-xs);
+    padding: 10px 20px;
+    background: var(--color-brand-primary);
+    color: var(--color-text-primary);
+    border: 1px solid var(--color-brand-primary);
+    border-radius: var(--border-radius);
+    text-decoration: none;
+    font-weight: var(--font-weight-medium);
+    font-size: 0.95rem;
+    text-align: center;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    transition: all var(--transition-base);
+}
+
+.btn-link:hover {
+    background: var(--color-brand-primary-dark);
+    border-color: var(--color-brand-primary-dark);
+    color: var(--color-bg-surface);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+    text-decoration: none;
+}
+
+.btn-link:focus,
+.btn-link:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+    box-shadow: var(--shadow-md);
+}
+
+/* ----- Forms ----- */
 input, select, textarea, button {
     font-family: inherit;
+    font-size: 100%;
+    margin: 0;
 }
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="search"],
+input[type="tel"],
+select,
+textarea {
+    display: block;
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: var(--font-size-base);
+    color: var(--color-text-primary);
+    background-color: var(--color-bg-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    transition: border-color var(--transition-base), box-shadow var(--transition-base);
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="search"]:focus,
+input[type="tel"]:focus,
+select:focus,
+textarea:focus {
+    border-color: var(--color-brand-primary);
+    box-shadow: 0 0 0 3px var(--color-brand-primary-light);
+    outline: none;
+}
+
+/* ----- Cards / Panels ----- */
+.card,
+.panel {
+    background-color: var(--color-bg-surface);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--color-border);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+/* ----- Tables ----- */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+    background-color: var(--color-bg-surface);
+    box-shadow: var(--shadow-sm);
+    border-radius: var(--border-radius);
+    overflow: hidden; /* For border-radius */
+}
+
+th, td {
+    padding: var(--spacing-md);
+    text-align: left;
+    border-bottom: 1px solid var(--color-border);
+}
+
+th {
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-secondary);
+    background-color: var(--color-bg-body);
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+}
+
+tbody tr {
+    transition: background-color var(--transition-base);
+}
+
+tbody tr:nth-child(even) {
+    background-color: var(--color-bg-body);
+}
+
+tbody tr:hover {
+    background-color: var(--color-brand-primary-light);
+}
+
+tbody tr:last-child th,
+tbody tr:last-child td {
+    border-bottom: 0;
+}
+
 
 /* ---------- Responsive Design ---------- */
 @media (max-width: 850px) {
-    .main-transfer, .main-receipt, .main-dashboard {
-        padding: 10px 2vw;
-        margin: 22px 0 18px 0;
+    .main-transfer,
+    .main-receipt,
+    .main-dashboard {
+        padding: 48px 32px;
+        margin: 32px 0;
     }
+
+    #transfer-id-search {
+        width: 100%;
+        margin-bottom: var(--spacing-md);
+    }
+
+
+    
     .nav-bar-unique, .user-info {
         flex-direction: column;
         align-items: flex-start;
-        gap: 10px;
-        padding: 10px 12px;
+        gap: var(--spacing-md);
+        padding: var(--spacing-md);
     }
+    
     .logo-unique img {
         height: 36px;
     }
@@ -56,7 +245,14 @@ input, select, textarea, button {
 
 @media (max-width: 500px) {
     .dashboard-footer {
-        font-size: 0.96em;
-        padding: 14px 0 12px 0;
+        font-size: 0.9rem;
+        padding: var(--spacing-md) 0;
+    }
+    
+    .btn-link {
+        /* Make buttons more mobile-friendly */
+        padding: 12px 18px;
+        width: 100%;
+        margin: var(--spacing-sm) 0;
     }
 }

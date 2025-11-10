@@ -9,7 +9,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
-  <!-- Navigation Bar -->
   <nav class="nav-bar-unique">
     <div class="logo-unique">
       <img src="images/logo.png" alt="Logo">
@@ -24,11 +23,8 @@
         <ul class="dropdown-unique">
           <li><a href="sales report.html">Sales Report</a></li>
           <li><a href="item-wise sale report.html">Item-wise Sales Report</a></li>
-
-<li><a href="near-expiry-report.html">Near Expiry Report</a></li>
-<li><a href="stock-report.html">Stock Report</a></li>
-
-          <li><a href="stock-report.html">Stock Report</a></li> <!-- ADDED -->
+          <li><a href="near-expiry-report.html">Near Expiry Report</a></li>
+          <li><a href="stock-report.html">Stock Report</a></li>
         </ul>
       </li>
       <li>
@@ -57,20 +53,18 @@
   </nav>
 
   <div class="report-header-flex">
-  <div class="title"><h1>Stock Report</h1></div>
-  <div class="user-info-bills-report">
-    <span id="user-job-title">jobTitle</span>
-    <span id="user-name">full name is logged-in</span>
-    <div class="avatar-container">
-      <div class="profile-pic">
-        <img id="user-photo" src="images/default-profile.png" alt="Profile" style="width:60px; height:60px; border-radius:50%; object-fit:cover; object-position:center;">
+    <div class="title"><h1>Stock Report (Batch Details)</h1></div> <div class="user-info-bills-report">
+      <span id="user-job-title">jobTitle</span>
+      <span id="user-name">full name is logged-in</span>
+      <div class="avatar-container">
+        <div class="profile-pic">
+          <img id="user-photo" src="images/default-profile.png" alt="Profile" style="width:60px; height:60px; border-radius:50%; object-fit:cover; object-position:center;">
+        </div>
+        <button id="logout-btn" class="logout-btn">Log-out</button>
       </div>
-      <button id="logout-btn" class="logout-btn">Log-out</button>
     </div>
   </div>
-</div>
 
-  <!-- Filters & Controls -->
   <section class="filter-container-bills-report">
     <div>
       <input type="text" id="stock-search" placeholder="Search by item name or barcode...">
@@ -81,7 +75,6 @@
     </div>
   </section>
 
-  <!-- Stock Data Table -->
   <section>
     <div class="loading-bills-report" id="stock-report-loading" style="display:none;">Loading data...</div>
     <table class="data-table-bills-report" id="stock-table">
@@ -89,22 +82,21 @@
         <tr>
           <th>Item Name</th>
           <th>Barcode</th>
-          <th>Price</th>
+          <th>Batch Number</th>
+          <th>Branch</th>
           <th>Expiry</th>
-          <th>Stock</th>
+          <th>Received Date</th>
+          <th>Quantity</th>
         </tr>
       </thead>
       <tbody>
-        <!-- JS will fill -->
-      </tbody>
+        </tbody>
     </table>
     <div class="pagination-bills-report" id="stock-report-pagination"></div>
   </section>
 
-  <!-- Summary Statistics -->
   <section class="summary-bills-report" id="stock-summary"></section>
 
-  <!-- Footer -->
   <div class="dashboard-footer">
     © 2025 Pharmacy Management System | Designed by Pharmacist: MOHAMED HAMID | <a href="mailto:mhm.hamid@gmail.com">mhm.hamid@gmail.com</a> | All Rights Reserved
   </div>

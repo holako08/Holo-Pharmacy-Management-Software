@@ -21,20 +21,29 @@ document.addEventListener('DOMContentLoaded', () => {
     })
       .then(res => res.json())
       .then(data => {
-        if (data.success) {
-          const u = data.user;
-          document.getElementById('userIdUnique').value = u.UserID;
-          document.getElementById('usernameUnique').value = u.Username;
-          document.getElementById('fullNameUnique').value = u.FullName || '';
-          document.getElementById('emailUnique').value = u.Email || ''; // Ensure DB has email field
-          document.getElementById('jobTitleUnique').value = u.JobTitle || '';
-          document.getElementById('genderUnique').value = u.Gender || 'Other';
-          document.getElementById('birthdateUnique').value = u.Birthdate?.split('T')[0] || '';
-          photoPreview.src = u.Photo || 'default.png';
-        } else {
-          status.textContent = data.message || 'Failed to load user profile.';
-        }
-      })
+  if (data.success) {
+    const u = data.user;
+    document.getElementById('userIdUnique').value = u.UserID;
+    document.getElementById('usernameUnique').value = u.Username;
+    document.getElementById('fullNameUnique').value = u.FullName || '';
+    document.getElementById('emailUnique').value = u.Email || '';
+    document.getElementById('jobTitleUnique').value = u.JobTitle || '';
+    document.getElementById('genderUnique').value = u.Gender || 'Other';
+    document.getElementById('birthdateUnique').value = u.Birthdate?.split('T')[0] || '';
+
+    // ✅ FIX: Build a URL to the dedicated photo endpoint
+    // The u.Photo property itself is now just a flag to see if a photo exists.
+    if (u.Photo) {
+      // We add a timestamp to prevent the browser from showing a cached (old) image
+      // after the user uploads a new one.
+      photoPreview.src = `/api/user-photo/${u.UserID}?timestamp=${new Date().getTime()}`;
+    } else {
+      photoPreview.src = 'default.png';
+    }
+  } else {
+    status.textContent = data.message || 'Failed to load user profile.';
+  }
+})
       .catch(() => status.textContent = 'Error loading profile');
   
     // Preview photo

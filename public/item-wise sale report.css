@@ -1,296 +1,536 @@
-body {
-  font-family: 'Segoe UI', Arial, sans-serif;
-  background: #f6f7f9;
-  margin: 0;
-  padding: 0;
-  color: #222;
+/*
+ * ========================================================================
+ * Enterprise Corporate Theme (Gold)
+ *
+ * 1. Design Tokens (Variables)
+ * 2. Base & Typography
+ * 3. Layout & Containers
+ * 4. Component: Navigation
+ * 5. Component: Report Header & User Info
+ * 6. Component: Filters & Forms
+ * 7. Component: Data Table
+ * 8. Component: Pagination
+ * 9. Component: Summary & Footer
+ * 10. Utilities & Media Queries
+ * ========================================================================
+ */
+
+/*
+ * ------------------------------------------------------------------------
+ * 1. Design Tokens (Variables)
+ * ------------------------------------------------------------------------
+ */
+:root {
+  /* Color System */
+  --color-primary-dark: #2c2c2c;
+  --color-primary-medium: #393939;
+  --color-primary-light: #666;
+  --color-accent-gold: #f1c40f;
+  --color-accent-gold-light: #f9d56e;
+  --color-accent-gold-pale: #f9f7ea;
+
+  --color-text-primary: #222;
+  --color-text-secondary: #555;
+  --color-text-on-dark: #ffffff;
+  --color-text-on-gold: #2c2c2c;
+
+  --color-background-body: #f8f9fa;
+  --color-background-container: #ffffff;
+  --color-border-light: #e0e0e0;
+  --color-border-dark: #d2d2d2;
+
+  /* Typography */
+  --font-family-sans: 'Inter', 'Segoe UI', Arial, sans-serif;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-bold: 600;
+
+  /* Spacing */
+  --spacing-xs: 0.25rem;  /* 4px */
+  --spacing-sm: 0.5rem;   /* 8px */
+  --spacing-md: 0.75rem;  /* 12px */
+  --spacing-lg: 1.25rem;  /* 20px */
+  --spacing-xl: 1.75rem;  /* 28px */
+  --spacing-xxl: 2.25rem; /* 36px */
+
+  /* Borders & Shadows */
+  --border-radius-sm: 4px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 16px;
+  --box-shadow-subtle: 0 2px 4px rgba(0, 0, 0, 0.05);
+  --box-shadow-medium: 0 4px 12px rgba(44, 62, 80, 0.08);
+  --transition-speed: 0.2s ease;
 }
 
+/*
+ * ------------------------------------------------------------------------
+ * 2. Base & Typography
+ * ------------------------------------------------------------------------
+ */
+body {
+  font-family: var(--font-family-sans);
+  background: var(--color-background-body);
+  margin: 0;
+  padding: 0;
+  color: var(--color-text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.title {
+  font-size: 1.75rem;
+  font-weight: var(--font-weight-bold);
+  margin: 0;
+  text-align: left;
+  color: var(--color-text-primary);
+}
+
+/*
+ * ------------------------------------------------------------------------
+ * 3. Layout & Containers
+ * ------------------------------------------------------------------------
+ */
+.report-header-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-lg) var(--spacing-xl);
+  background: var(--color-background-container);
+  border-bottom: 1px solid var(--color-border-light);
+  margin-bottom: 0;
+}
+
+.filter-container-bills-report {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-lg);
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: var(--spacing-lg) var(--spacing-xl);
+  background: var(--color-background-container);
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+/*
+ * ------------------------------------------------------------------------
+ * 4. Component: Navigation
+ * ------------------------------------------------------------------------
+ */
 .nav-bar-unique {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #2c2c2c;
-  color: #fff;
-  padding: 0.45rem 2rem;
-  min-height: 54px;
-  font-family: 'Segoe UI', Arial, sans-serif;
+  background: var(--color-primary-dark);
+  color: var(--color-text-on-dark);
+  padding: var(--spacing-md) var(--spacing-xl);
+  min-height: 60px;
+  font-family: var(--font-family-sans);
   position: sticky;
   top: 0;
   z-index: 999;
-  box-shadow: 0 3px 13px rgba(44,62,80,0.10);
+  box-shadow: 0 3px 13px rgba(44, 62, 80, 0.1);
 }
-.logo-unique img { height: 34px; }
-.nav-links-unique { list-style: none; display: flex; align-items: center; gap: 1.2em; margin: 0; padding: 0;}
-.nav-links-unique li { position: relative; }
+
+.logo-unique img {
+  height: 34px;
+  vertical-align: middle;
+}
+
+.nav-links-unique {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 1.2em;
+  margin: 0;
+  padding: 0;
+}
+.nav-links-unique li {
+  position: relative;
+}
+
 .nav-links-unique > li > a {
-  color: #f9d56e;
+  color: var(--color-accent-gold-light);
   text-decoration: none;
-  padding: 0.5em 0.8em;
-  border-radius: 4px;
-  transition: background 0.2s;
+  padding: 0.6em 1em;
+  border-radius: var(--border-radius-sm);
+  transition: background var(--transition-speed), color var(--transition-speed);
+  font-weight: var(--font-weight-medium);
 }
-.nav-links-unique > li > a:hover { background: #393939; color: #f1c40f; }
+.nav-links-unique > li > a:hover {
+  background: var(--color-primary-medium);
+  color: var(--color-accent-gold);
+}
+
 .dropdown-unique {
   display: none;
   position: absolute;
   left: 0;
   top: 100%;
-  background: #393939;
+  background: var(--color-primary-medium);
   min-width: 210px;
-  box-shadow: 0 6px 14px rgba(0,0,0,0.13);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
   z-index: 10;
-  border-radius: 0 0 7px 7px;
+  border-radius: 0 0 var(--border-radius-md) var(--border-radius-md);
+  overflow: hidden; /* Ensures border-radius clips children */
 }
-.nav-links-unique li:hover .dropdown-unique { display: block; }
+.nav-links-unique li:hover .dropdown-unique {
+  display: block;
+}
+
 .dropdown-unique li a {
-  color: #fff;
+  color: var(--color-text-on-dark);
   text-decoration: none;
   display: block;
-  padding: 0.75em 1.1em;
-  border-bottom: 1px solid #393939;
-  transition: background 0.2s;
+  padding: 0.8em 1.2em;
+  border-bottom: 1px solid var(--color-primary-medium); /* Use solid color for subtle separation */
+  transition: background var(--transition-speed), color var(--transition-speed);
 }
-.dropdown-unique li:last-child a { border-bottom: none; }
-.dropdown-unique li a:hover { background: #f1c40f; color: #2c2c2c; }
-.search-unique {
-  display: flex;
-  align-items: center;
-  gap: 0.5em;
+.dropdown-unique li:last-child a {
+  border-bottom: none;
 }
-.search-unique input {
-  border-radius: 6px;
-  border: none;
-  padding: 0.33em 0.7em;
-  min-width: 120px;
+.dropdown-unique li a:hover {
+  background: var(--color-accent-gold);
+  color: var(--color-text-on-gold);
 }
-.search-unique button {
-  background: #f1c40f;
-  color: #2c2c2c;
-  border: none;
-  border-radius: 6px;
-  padding: 0.4em 1.1em;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.18s;
-}
-.search-unique button:hover { background: #f9d56e; }
 
+/*
+ * ------------------------------------------------------------------------
+ * 5. Component: Report Header & User Info
+ * ------------------------------------------------------------------------
+ */
 .user-info-bills-report {
   display: flex;
   align-items: center;
   gap: 1.4em;
   justify-content: flex-end;
-  padding: 0.7em 2.3em 0.7em 0;
-  background: #f7f7fa;
-  border-bottom: 1px solid #e3e3e3;
   font-size: 1.02em;
+  /* Base styles for when NOT in .report-header-flex */
+  padding: 0.7em 2.3em 0.7em 0;
+  background: #f7f7fa; /* Original kept for context */
+  border-bottom: 1px solid #e3e3e3; /* Original kept for context */
 }
+
+/* Style overrides for when .user-info-bills-report is inside the new header */
+.report-header-flex .user-info-bills-report {
+  font-size: 0.97em;
+  color: var(--color-text-secondary);
+  margin-left: var(--spacing-md);
+  gap: 0.7em;
+  background: transparent;
+  padding: 0;
+  border-bottom: none;
+}
+
 .avatar-container {
   display: flex;
   align-items: center;
   gap: 0.7em;
 }
+
+.report-header-flex .user-info-bills-report .avatar-container {
+  gap: 0.3em;
+}
+
 .logout-btn {
-  background: #666;
-  color: #fff;
+  background: var(--color-primary-light);
+  color: var(--color-text-on-dark);
   border: none;
-  border-radius: 5px;
-  padding: 0.38em 1.2em;
+  border-radius: var(--border-radius-sm);
+  padding: 0.4em 1.2em;
   cursor: pointer;
   font-size: 1em;
-  transition: background 0.2s;
+  font-weight: var(--font-weight-medium);
+  transition: background var(--transition-speed), color var(--transition-speed);
 }
-.logout-btn:hover { background: #f1c40f; color: #222; }
+.logout-btn:hover {
+  background: var(--color-accent-gold);
+  color: var(--color-text-on-gold);
+}
 
-.filter-container-bills-report {
+/*
+ * ------------------------------------------------------------------------
+ * 6. Component: Filters & Forms
+ * ------------------------------------------------------------------------
+ */
+.search-unique {
   display: flex;
-  flex-wrap: wrap;
-  gap: 1.4em;
-  align-items: flex-end;
-  justify-content: space-between;
-  padding: 1.3em 2.2em 0.5em 2.2em;
-  background: #fff;
-  border-bottom: 1px solid #e0e0e0;
+  align-items: center;
+  gap: 0.5em;
 }
+
+.search-unique input,
+.advanced-filters-bills-report input {
+  border-radius: var(--border-radius-sm);
+  border: 1px solid var(--color-border-dark);
+  padding: 0.5em 0.8em;
+  font-size: 0.95em;
+  min-width: 120px;
+  transition: border-color var(--transition-speed), box-shadow var(--transition-speed);
+}
+.search-unique input:focus,
+.advanced-filters-bills-report input:focus {
+  outline: none;
+  border-color: var(--color-accent-gold);
+  box-shadow: 0 0 0 3px rgba(241, 196, 15, 0.25);
+}
+
+.search-unique button {
+  background: var(--color-accent-gold);
+  color: var(--color-text-on-gold);
+  border: none;
+  border-radius: var(--border-radius-sm);
+  padding: 0.5em 1.1em;
+  font-weight: var(--font-weight-bold);
+  cursor: pointer;
+  transition: background var(--transition-speed);
+}
+.search-unique button:hover {
+  background: var(--color-accent-gold-light);
+}
+
 .advanced-filters-bills-report {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.7em;
+  gap: 0.8em;
   align-items: center;
 }
-.advanced-filters-bills-report input {
-  padding: 0.3em 0.75em;
-  border-radius: 6px;
-  border: 1px solid #bbb;
-  font-size: 1em;
-}
-.btn-gold-bills-report {
-  background: #f1c40f;
-  color: #222;
-  border: none;
-  border-radius: 6px;
-  padding: 0.48em 1.2em;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.16s;
-}
-.btn-gold-bills-report:hover { background: #f9d56e; }
-.btn-gray-bills-report {
-  background: #666;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  padding: 0.48em 1.2em;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.16s;
-}
-.btn-gray-bills-report:hover { background: #393939; color: #f1c40f; }
 
-.data-table-bills-report {
-  width: 97%;
-  margin: 2em auto 0.7em auto;
-  border-collapse: collapse;
-  background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 2px 10px rgba(80,80,90,0.08);
-  overflow: hidden;
+/* Buttons */
+.btn-gold-bills-report {
+  background: var(--color-accent-gold);
+  color: var(--color-text-on-gold);
+  border: 1px solid var(--color-accent-gold);
+  border-radius: var(--border-radius-sm);
+  padding: 0.55em 1.2em;
+  font-weight: var(--font-weight-bold);
+  cursor: pointer;
+  transition: background var(--transition-speed), border-color var(--transition-speed);
 }
-.data-table-bills-report th, .data-table-bills-report td {
-  padding: 0.85em 0.6em;
-  border-bottom: 1px solid #f1c40f33;
+.btn-gold-bills-report:hover {
+  background: var(--color-accent-gold-light);
+  border-color: var(--color-accent-gold-light);
+}
+
+.btn-gray-bills-report {
+  background: var(--color-primary-light);
+  color: var(--color-text-on-dark);
+  border: 1px solid var(--color-primary-light);
+  border-radius: var(--border-radius-sm);
+  padding: 0.55em 1.2em;
+  font-weight: var(--font-weight-bold);
+  cursor: pointer;
+  transition: background var(--transition-speed), color var(--transition-speed), border-color var(--transition-speed);
+}
+.btn-gray-bills-report:hover {
+  background: var(--color-primary-medium);
+  color: var(--color-accent-gold-light);
+  border-color: var(--color-primary-medium);
+}
+
+/*
+ * ------------------------------------------------------------------------
+ * 7. Component: Data Table
+ * ------------------------------------------------------------------------
+ */
+.data-table-bills-report {
+  width: 98%;
+  margin: var(--spacing-xl) auto 0.7em auto;
+  border-collapse: collapse;
+  background: var(--color-background-container);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--box-shadow-subtle);
+  overflow: hidden; /* For border-radius */
+}
+
+.data-table-bills-report th,
+.data-table-bills-report td {
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-bottom: 1px solid var(--color-border-light);
   text-align: left;
   font-size: 0.97em;
+  color: var(--color-text-secondary);
 }
-.data-table-bills-report th {
-  background: #2c2c2c;
-  color: #f1c40f;
-  font-weight: 600;
-  border-bottom: 2px solid #f1c40f;
-}
-.data-table-bills-report tr:last-child td { border-bottom: none; }
-.data-table-bills-report tbody tr:hover { background: #f9f7ea; }
 
+.data-table-bills-report th {
+  background: var(--color-primary-dark);
+  color: var(--color-accent-gold);
+  font-weight: var(--font-weight-bold);
+  border-bottom: 2px solid var(--color-accent-gold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.9em;
+}
+
+.data-table-bills-report tr:last-child td {
+  border-bottom: none;
+}
+
+.data-table-bills-report tbody tr:nth-child(even) {
+  background: var(--color-background-body);
+}
+
+.data-table-bills-report tbody tr:hover {
+  background: var(--color-accent-gold-pale);
+}
+
+/*
+ * ------------------------------------------------------------------------
+ * 8. Component: Pagination
+ * ------------------------------------------------------------------------
+ */
 .pagination-bills-report {
   display: flex;
   justify-content: center;
   gap: 0.3em;
-  margin: 1.1em 0;
-}
-.pagination-bills-report button {
-  background: #fff;
-  border: 1px solid #d2d2d2;
-  color: #2c2c2c;
-  padding: 0.38em 1em;
-  border-radius: 5px;
-  margin: 0 2px;
-  font-size: 1em;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-}
-.pagination-bills-report button.active,
-.pagination-bills-report button:hover {
-  background: #f1c40f;
-  color: #222;
-  border-color: #f1c40f;
+  margin: var(--spacing-lg) 0;
 }
 
+.pagination-bills-report button {
+  background: var(--color-background-container);
+  border: 1px solid var(--color-border-dark);
+  color: var(--color-primary-dark);
+  padding: 0.5em 1em;
+  border-radius: var(--border-radius-sm);
+  margin: 0 2px;
+  font-size: 0.95em;
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: background var(--transition-speed), color var(--transition-speed), border-color var(--transition-speed);
+}
+
+.pagination-bills-report button:hover {
+  background: var(--color-accent-gold-light);
+  color: var(--color-text-on-gold);
+  border-color: var(--color-accent-gold-light);
+}
+
+.pagination-bills-report button.active {
+  background: var(--color-accent-gold);
+  color: var(--color-text-on-gold);
+  border-color: var(--color-accent-gold);
+  font-weight: var(--font-weight-bold);
+}
+
+/*
+ * ------------------------------------------------------------------------
+ * 9. Component: Summary & Footer
+ * ------------------------------------------------------------------------
+ */
 .loading-bills-report {
   text-align: center;
-  color: #f1c40f;
+  color: var(--color-accent-gold);
   font-size: 1.12em;
   padding: 2.5em 0 1em 0;
 }
 
 .summary-bills-report {
-  width: 97%;
-  margin: 0 auto 2em auto;
-  background: #f7f7fa;
-  border: 1px solid #e8e8e8;
-  border-radius: 13px;
-  padding: 1em 1.4em;
-  color: #666;
+  width: 98%;
+  margin: 0 auto var(--spacing-xl) auto;
+  background: var(--color-background-container);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-lg) var(--spacing-xl);
+  color: var(--color-text-secondary);
   font-size: 1.04em;
   display: flex;
   gap: 1.7em;
   align-items: center;
   justify-content: flex-start;
+  box-shadow: var(--box-shadow-subtle);
 }
-.summary-bills-report strong { color: #2c2c2c; }
+.summary-bills-report strong {
+  color: var(--color-primary-dark);
+  font-weight: var(--font-weight-bold);
+}
 
 .dashboard-footer {
-  background: #2c2c2c;
-  color: #f1c40f;
+  background: var(--color-primary-dark);
+  color: var(--color-accent-gold-light);
   text-align: center;
-  padding: 1.2em 0;
-  font-size: 1em;
-  margin-top: 2em;
+  padding: 1.5em 0;
+  font-size: 0.95em;
+  margin-top: var(--spacing-xxl);
 }
-.dashboard-footer a { color: #f1c40f; text-decoration: underline; }
-.dashboard-footer a:hover { color: #fff; }
+.dashboard-footer a {
+  color: var(--color-accent-gold);
+  text-decoration: underline;
+  font-weight: var(--font-weight-medium);
+}
+.dashboard-footer a:hover {
+  color: var(--color-text-on-dark);
+  text-decoration: none;
+}
 
+/*
+ * ------------------------------------------------------------------------
+ * 10. Utilities & Media Queries
+ * ------------------------------------------------------------------------
+ */
 @media (max-width: 950px) {
-  .filter-container-bills-report { flex-direction: column; gap: 1em;}
-  .advanced-filters-bills-report { flex-direction: column; gap: 0.5em; }
-  .user-info-bills-report { flex-direction: column; align-items: flex-end; gap: 0.5em; }
-  .data-table-bills-report th, .data-table-bills-report td { padding: 0.6em 0.35em; font-size: 0.9em; }
-  .summary-bills-report { flex-direction: column; gap: 0.7em; align-items: flex-start; }
+  .filter-container-bills-report {
+    flex-direction: column;
+    gap: var(--spacing-md);
+    align-items: stretch;
+  }
+  .advanced-filters-bills-report {
+    flex-direction: column;
+    gap: 0.5em;
+    align-items: stretch;
+  }
+  /* Original user-info-bills-report responsive styles */
+  .user-info-bills-report {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5em;
+  }
+  .data-table-bills-report th,
+  .data-table-bills-report td {
+    padding: 0.7em 0.5em;
+    font-size: 0.9em;
+  }
+  .summary-bills-report {
+    flex-direction: column;
+    gap: 0.7em;
+    align-items: flex-start;
+  }
 }
-@media (max-width: 600px) {
-  .nav-bar-unique { flex-direction: column; gap: 0.8em; padding: 0.7em 1em;}
-  .user-info-bills-report { padding: 0.6em 1em 0.6em 0; }
-  .data-table-bills-report { font-size: 0.9em; }
-}
-.report-header-flex {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.2em 2em 0.6em 2em;
-  background: #fff;
-  border-bottom: 1px solid #e0e0e0;
-  margin-bottom: 0; /* No space between header and filters */
-}
-.title {
-  font-size: 1.7em;
-  font-weight: bold;
-  margin: 0;
-  text-align: left;
-  color: #333;
-}
-.user-info-bills-report {
-  font-size: 0.97em;
-  color: #555;
-  margin-left: 1em;
-  display: flex;
-  align-items: center;
-  gap: 0.7em;
-  float: none !important;
-  background: transparent;
-  padding: 0;
-  border-bottom: none;
-  justify-content: flex-end;
-}
-.user-info-bills-report .avatar-container {
-  display: flex;
-  align-items: center;
-  gap: 0.3em;
-}
+
 @media (max-width: 900px) {
   .report-header-flex {
     flex-direction: column;
     align-items: stretch;
-    gap: 0.7em;
-    padding: 0.8em 0.6em 0.3em 0.6em;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md) var(--spacing-lg);
   }
   .title {
-    font-size: 1.22em;
+    font-size: 1.4rem;
     text-align: left;
     margin-bottom: 0.3em;
   }
-  .user-info-bills-report {
+  /* Modified user-info-bills-report responsive styles */
+  .report-header-flex .user-info-bills-report {
     justify-content: flex-end;
     margin-left: 0;
     font-size: 0.94em;
+    align-items: flex-end; /* Match the other media query */
+  }
+}
+
+@media (max-width: 600px) {
+  .nav-bar-unique {
+    flex-direction: column;
+    gap: 0.8em;
+    padding: 0.7em 1em;
+  }
+  .user-info-bills-report {
+    padding: 0.6em 1em 0.6em 0;
+  }
+  .data-table-bills-report {
+    font-size: 0.9em;
+    width: 96%;
+  }
+  .summary-bills-report,
+  .data-table-bills-report {
+     width: 96%;
   }
 }

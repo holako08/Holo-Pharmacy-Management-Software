@@ -13,6 +13,20 @@ logs
 *.log
 logs/*.log
 
+# === SENSITIVE DATA & GENERATED FILES ===
+# Database backups and dumps
+*.sql
+/db_backups/
+scripts/update batches/new/db_backups/
+
+# User-uploaded content
+/uploads/
+
+# Generated Documents (Excel, Word, PDF)
+*.xlsx
+*.pdf
+*.docx
+
 # OS files
 .DS_Store
 Thumbs.db

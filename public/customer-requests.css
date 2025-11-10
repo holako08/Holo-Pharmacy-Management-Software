@@ -1,135 +1,301 @@
+/*=============================================
+  TOKENS / VARIABLES
+  Defines the core "Enterprise Gold" theme
+=============================================*/
+:root {
+  /* Color System */
+  --color-brand-primary: #b1965b;
+  --color-brand-primary-hover: #9a804e;
+  --color-brand-wash: #f4ecd5;
+  --color-text-primary: #222222;
+  --color-text-secondary: #555555;
+  --color-text-on-brand: #ffffff;
+  --color-text-on-dark: #f0f0f0;
+  --color-surface-body: #f8f9fa;
+  --color-surface-panel: #ffffff;
+  --color-surface-dark: #222222;
+  --color-border: #e0e0e0;
+  --color-border-subtle: #eaeaea;
+  --color-success: #28a745;
+  --color-pending: var(--color-brand-primary);
+
+  /* Typography */
+  --font-family-base: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-size-base: 1rem; /* 16px */
+  --line-height-base: 1.6;
+
+  /* Spacing Scale */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-xxl: 48px;
+
+  /* Borders & Shadows */
+  --border-radius-sm: 4px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+  --shadow-md: 0 4px 12px rgba(44, 44, 44, 0.08);
+
+  /* Transitions */
+  --transition-base: all 0.2s ease-in-out;
+}
+
+/*=============================================
+  BASE & TYPOGRAPHY
+=============================================*/
 body {
-  background: #f5f5f5;
-  font-family: 'Segoe UI', Arial, sans-serif;
-  color: #222;
+  background: var(--color-surface-body);
+  font-family: var(--font-family-base);
+  color: var(--color-text-primary);
+  line-height: var(--line-height-base);
+  font-size: var(--font-size-base);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
-.requests-container {
-  background: #fff;
-  margin: 30px auto;
-  padding: 32px;
-  max-width: 900px;
-  border-radius: 12px;
-  box-shadow: 0 3px 14px rgba(44,44,44,0.08);
-}
+
 h2 {
-  color: #b1965b;
-  border-bottom: 1px solid #eaeaea;
-  padding-bottom: 12px;
+  color: var(--color-brand-primary);
+  border-bottom: 1px solid var(--color-border-subtle);
+  padding-bottom: var(--space-md);
+  font-weight: 600;
+  margin-top: 0;
 }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: var(--space-lg);
+}
+
+th,
+td {
+  padding: var(--space-md);
+  border-bottom: 1px solid var(--color-border-subtle);
+  text-align: left;
+  vertical-align: middle;
+}
+
+th {
+  background: var(--color-brand-wash);
+  color: var(--color-text-primary);
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Add alternating row color for readability */
+tbody tr:nth-child(even) {
+  background-color: var(--color-surface-body);
+}
+
+/*=============================================
+  LAYOUT
+=============================================*/
+.requests-container {
+  background: var(--color-surface-panel);
+  margin: var(--space-xl) auto;
+  padding: var(--space-xl);
+  max-width: 900px;
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.dashboard-footer {
+  background: var(--color-surface-dark);
+  color: var(--color-text-on-dark);
+  text-align: center;
+  padding: var(--space-lg) 0;
+  font-size: 0.95rem;
+  margin-top: var(--space-xxl);
+  /* Removed position/bottom/left/width for cleaner component flow */
+}
+
+.dashboard-footer a {
+  color: var(--color-brand-primary);
+  text-decoration: none;
+  font-weight: 600;
+  transition: var(--transition-base);
+}
+
+.dashboard-footer a:hover {
+  color: var(--color-brand-wash);
+  text-decoration: underline;
+}
+
+/*=============================================
+  COMPONENTS
+=============================================*/
+
+/* --- Forms --- */
 form#request-form {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-  margin-bottom: 24px;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
 }
+
 form#request-form input {
   flex: 1 1 210px;
-  padding: 8px 12px;
-  border: 1px solid #bbb;
-  border-radius: 6px;
+  padding: 10px 14px; /* Increased padding */
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-base);
+  transition: var(--transition-base);
 }
-#selected-medicines .selected-medicine {
-  background: #eee;
-  color: #444;
-  border-radius: 8px;
-  padding: 4px 8px;
-  margin: 2px;
-  display: inline-block;
+
+form#request-form input:hover {
+  border-color: #a0a0a0;
 }
-#selected-medicines button {
-  margin-left: 4px;
-  background: #b1965b;
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
+
+form#request-form input:focus {
+  outline: none;
+  border-color: var(--color-brand-primary);
+  box-shadow: 0 0 0 3px rgba(177, 150, 91, 0.2);
 }
+
+/* --- Autocomplete --- */
 .autocomplete-group {
   position: relative;
   flex: 2 1 340px;
 }
+
 #autocomplete-list {
   position: absolute;
-  top: 38px;
+  top: 46px; /* Adjusted for larger input */
   left: 0;
   right: 0;
-  background: #fff;
-  border: 1px solid #bbb;
-  border-radius: 0 0 8px 8px;
+  background: var(--color-surface-panel);
+  border: 1px solid var(--color-border);
+  border-top: none; /* Cleaner look */
+  border-radius: 0 0 var(--border-radius-md) var(--border-radius-md);
   max-height: 160px;
   overflow-y: auto;
   z-index: 9;
+  box-shadow: var(--shadow-md);
 }
+
 .autocomplete-item {
-  padding: 8px 12px;
+  padding: 10px 14px;
   cursor: pointer;
+  transition: var(--transition-base);
 }
+
 .autocomplete-item:hover {
-  background: #f4ecd5;
+  background: var(--color-brand-wash);
+  color: var(--color-brand-primary);
 }
+
+/* --- Selected Pills/Tags --- */
+#selected-medicines .selected-medicine {
+  background: var(--color-brand-wash);
+  color: var(--color-text-secondary);
+  border-radius: var(--border-radius-md);
+  padding: var(--space-xs) var(--space-sm);
+  margin: var(--space-xs);
+  display: inline-flex; /* Use flex for alignment */
+  align-items: center;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+#selected-medicines button {
+  margin-left: 6px;
+  background: var(--color-border);
+  color: var(--color-text-secondary);
+  border: none;
+  border-radius: 50%; /* Changed to circle */
+  cursor: pointer;
+  width: 18px;
+  height: 18px;
+  font-size: 10px;
+  line-height: 18px;
+  text-align: center;
+  transition: var(--transition-base);
+}
+
+#selected-medicines button:hover {
+  background: var(--color-brand-primary);
+  color: var(--color-text-on-brand);
+  transform: scale(1.1);
+}
+
+/* --- Status Indicators --- */
 .pending {
-  color: #b1965b;
-  font-weight: bold;
+  color: var(--color-pending);
+  font-weight: 600;
 }
+
 .completed {
-  color: #55ab64;
-  font-weight: bold;
+  color: var(--color-success);
+  font-weight: 600;
 }
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 16px;
-}
-th, td {
-  padding: 8px;
-  border-bottom: 1px solid #eee;
-  text-align: left;
-}
-th {
-  background: #f4ecd5;
-  color: #222;
-}
+
+/* --- User Panel --- */
 .user-info-panel {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin: 24px 0 0 36px;
+  gap: var(--space-md);
+  margin: var(--space-lg) 0 0 var(--space-xl); /* Original margin preserved */
 }
+
 .user-info-panel img {
   border-radius: 50%;
-  width: 50px; height: 50px;
+  width: 50px;
+  height: 50px;
   object-fit: cover;
-  border: 2px solid #b1965b;
+  border: 3px solid var(--color-brand-primary);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
+
+/* --- Buttons --- */
 .user-info-panel button {
-  background: #b1965b;
-  color: #fff;
+  background: var(--color-brand-primary);
+  color: var(--color-text-on-brand);
   border: none;
-  border-radius: 6px;
-  padding: 6px 16px;
+  border-radius: var(--border-radius-md);
+  padding: var(--space-sm) var(--space-lg);
   cursor: pointer;
-}
-.dashboard-footer {
-  background: #222;
-  color: #fff;
-  text-align: center;
-  padding: 16px 0;
+  font-family: var(--font-family-base);
   font-size: 0.95rem;
-  margin-top: 48px;
-  position: relative;
-  bottom: 0;
-  left: 0;
-  width: 100%;
+  font-weight: 600;
+  transition: var(--transition-base);
 }
-.dashboard-footer a {
-  color: #b1965b;
+
+.user-info-panel button:hover {
+  background: var(--color-brand-primary-hover);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
 }
+
+/*=============================================
+  RESPONSIVE
+=============================================*/
 @media (max-width: 700px) {
   .requests-container {
-    padding: 12px;
+    padding: var(--space-md);
+    margin: var(--space-sm) auto;
     max-width: 98vw;
   }
-  form#request-form input, .autocomplete-group {
+
+  form#request-form input,
+  .autocomplete-group {
     flex: 1 1 100%;
+  }
+
+  /* Stack user info panel on mobile */
+  .user-info-panel {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-left: var(--space-sm);
+  }
+
+  th,
+  td {
+    padding: var(--space-sm);
   }
 }

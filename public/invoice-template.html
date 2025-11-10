@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <title>Tax Invoice</title>
+    <style>
+        /* ---------- Print / Page setup ---------- */
+        /* Use A4 portrait by default. For landscape use: `@page { size: A4 landscape; margin: 10mm; }` */
+        @page {
+            size: A4 portrait;
+            margin: 10mm;
+        }
+
+        /* Ensure print colors render and box sizing behaves predictably */
+        html, body {
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            direction: rtl; /* default direction */
+            font-family: 'Roboto', sans-serif;
+            font-size: 9pt;
+            color: #000;
+            background: #fff;
+        }
+
+        /* Page content wrapper that fits inside the @page margins */
+        .page {
+            width: calc(210mm - 20mm);      /* A4 width minus left+right margins */
+            min-height: calc(297mm - 20mm); /* A4 height minus top+bottom margins */
+            margin: 0;
+            padding: 8mm; /* inner cushion */
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Roboto:wght@400;700&display=swap');
+
+        /* Helpers */
+        .ltr { direction: ltr; text-align: left; }
+        .rtl { direction: rtl; text-align: right; }
+        .center { text-align: center; }
+        .bold { font-weight: 700; }
+        .ar-font { font-family: 'Amiri', serif; }
+
+        /* Layout */
+        .header, .meta-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 6mm;
+            padding-bottom: 4px;
+        }
+        .header { align-items: center; }
+
+        .logo {
+            flex: 0 0 auto;
+            max-width: 40mm;
+            direction: ltr; /* logo should remain LTR */
+        }
+        .logo img { max-width: 100%; height: auto; display: block; }
+
+        .pharmacy-details {
+            text-align: right;
+            padding-right: 4mm;
+            flex: 1 1 auto;
+        }
+        .pharmacy-details .en { font-size: 13pt; font-weight: 700; direction: ltr; text-align: left; }
+        .pharmacy-details .ar { font-size: 13pt; font-weight: 700; }
+        .pharmacy-details .meta { font-size: 9pt; margin-top: 2px; }
+
+        .divider {
+            border-bottom: 1px solid #000;
+            margin: 6px 0 6px 0;
+        }
+
+        .title {
+            font-size: 14pt;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 6px;
+        }
+
+        /* Meta Info */
+        .meta-section .meta-left,
+        .meta-section .meta-right {
+            flex-basis: 50%;
+        }
+        .meta-section .meta-right { text-align: left; direction: ltr; }
+        .meta-section p { margin: 2px 0; font-size: 9pt; }
+
+        /* Items Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 6px;
+            margin-bottom: 6px;
+            table-layout: fixed; /* important for consistent column widths */
+            word-wrap: break-word;
+        }
+        th, td {
+            border: 0.5px solid #cccccc;
+            padding: 4px;
+            font-size: 9pt;
+            vertical-align: top;
+            box-sizing: border-box;
+        }
+        th {
+            background-color: #f5f5f5;
+            font-weight: 700;
+            font-size: 9pt;
+        }
+
+        /* Ensure item column can wrap long Arabic names and not be clipped */
+        th:first-child, td:first-child {
+            width: 50%;
+            white-space: normal; /* allow wrapping */
+        }
+        th:nth-child(2), td:nth-child(2) { width: 15%; white-space: nowrap; }
+        th:nth-child(3), td:nth-child(3) { width: 17%; white-space: nowrap; }
+        th:nth-child(4), td:nth-child(4) { width: 18%; white-space: nowrap; }
+
+        /* Totals Table */
+        .totals-container {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 5px;
+        }
+        .totals-table {
+            width: 220px;
+            border-collapse: collapse;
+        }
+        .totals-table td {
+            border: none;
+            padding: 2px 4px;
+            font-size: 9pt;
+        }
+        .totals-table .label { text-align: right; }
+        .totals-table .value { text-align: right; font-weight: 700; }
+        .totals-table .grand-total .label { font-size: 10pt; font-weight: 700; }
+        .totals-table .grand-total .value { font-size: 10pt; font-weight: 700; }
+
+        /* Footer: fixed but inside page margins so it won't be clipped */
+        .footer-section {
+            font-size: 9pt;
+            border-top: 1px solid #ccc;
+            padding-top: 6px;
+            margin-top: 8px;
+            position: fixed;
+            bottom: 10mm; /* respect @page bottom margin */
+            left: 10mm;   /* respect @page left margin */
+            right: 10mm;  /* respect @page right margin */
+            background: transparent;
+            box-sizing: border-box;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        .footer-left { text-align: right; }
+        .footer-right { text-align: left; direction: ltr; }
+        .footer-right p { margin: 0; }
+
+        /* Avoid page breaks inside the header or the totals */
+        .header, .meta-section, table, .totals-container {
+            page-break-inside: avoid;
+        }
+
+        /* If this template is longer than a single page, allow safe page breaks for rows */
+        tbody tr { page-break-inside: avoid; break-inside: avoid; }
+
+        /* Small helpers for printing */
+        img { max-width: 100%; height: auto; }
+    </style>
+</head>
+<body dir="rtl">
+    <div class="page">
+
+        <div class="header">
+            <div class="logo">
+                <!-- Replace with: <img src="/public/images/logo.png" alt="logo"> -->
+                {{logoImage}}
+            </div>
+            <div class="pharmacy-details">
+                <div class="en ltr">{{pharmacyNameEn}}</div>
+                <div class="ar ar-font">{{pharmacyNameAr}}</div>
+                <div class="meta ar-font">{{addressAr}} / <span class="ltr">{{addressEn}}</span></div>
+                <div class="meta ar-font">هاتف: {{phone}} / الفرع: {{branch}} / <span class="ltr">Tel: {{phone}}</span></div>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="title">
+            <span class="ar-font">{{titleAr}}</span> / <span class="ltr">{{titleEn}}</span>
+        </div>
+
+        <div class="meta-section">
+            <div class="meta-left">
+                <p><span class="ar-font">رقم الفاتورة:</span> <span class="ltr">{{billId}}</span> / <span class="ltr">Invoice ID: {{billId}}</span></p>
+                <p><span class="ar-font">المريض:</span> <span>{{patientName}}</span> / <span class="ltr">Patient: {{patientName}}</span></p>
+                <p><span class="ar-font">الهاتف:</span> <span class="ltr">{{patientPhone}}</span> / <span class="ltr">Phone: {{patientPhone}}</span></p>
+            </div>
+            <div class="meta-right ltr">
+                <p><span class="ltr">Date: {{date}}</span> / <span class="ar-font">التاريخ: {{date}}</span></p>
+                <p><span class="ltr">Time: {{time}}</span> / <span class="ar-font">الوقت: {{time}}</span></p>
+                <p><span class="ltr">Processed By: {{pharmacist}}</span> / <span class="ar-font">الصيدلي: {{pharmacist}}</span></p>
+            </div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th class="ar-font">الصنف / <span class="ltr">Item</span></th>
+                    <th class="ar-font">الكمية / <span class="ltr">Qty</span></th>
+                    <th class="ar-font">السعر (OMR) / <span class="ltr">Price</span></th>
+                    <th class="ar-font">الإجمالي (OMR) / <span class="ltr">Subtotal</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {{itemsHtml}}
+            </tbody>
+        </table>
+
+        <div class="totals-container">
+            <table class="totals-table">
+                <tr>
+                    <td class="label"><span class="ar-font">المجموع الفرعي</span> / <span class="ltr">Subtotal</span></td>
+                    <td class="value ltr">{{subtotal}}</td>
+                </tr>
+                <tr>
+                    <td class="label"><span class="ar-font">الخصم ({{discountPercent}}%)</span> / <span class="ltr">Discount</span></td>
+                    <td class="value ltr">{{discount}}</td>
+                </tr>
+                <tr class="grand-total">
+                    <td class="label"><span class="ar-font">المجموع النهائي</span> / <span class="ltr">TOTAL</span></td>
+                    <td class="value ltr">{{total}} OMR</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="footer-section">
+            <div class="footer-left">
+                <p><span class="ar-font">طريقة الدفع:</span> <span>{{paymentMethod}}</span> / <span class="ltr">Payment: {{paymentMethod}}</span></p>
+                <p><span class="ar-font">شكراً لزيارتكم، نتمنى لكم دوام الصحة</span></p>
+            </div>
+            <div class="footer-right ltr">
+                <p>Phone (store): {{phone}}</p>
+                <p>Thank you for your purchase.</p>
+                <p style="font-size: 8pt; margin-top: 4px;">Powered by Pharmacy Management System</p>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>

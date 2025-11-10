@@ -1,88 +1,207 @@
+/*
+ * ===================================
+ * Enterprise Corporate Theme (Gold)
+ * UI/UX Refactor - Stock Requests
+ * ===================================
+ */
+
+/*
+ * -----------------
+ * 1. Tokens / Variables
+ * -----------------
+ * Defines the core color palette, typography, spacing, and polish.
+ * (This root definition is provided for context on the variables used below)
+ */
+:root {
+    /* Brand & Accent Colors */
+    --color-brand-primary: #cda434; /* Premium Gold */
+    --color-brand-hover: #a87d2a;   /* Darker Gold */
+    --color-brand-light: #faf7ee;   /* Light Gold Background */
+
+    /* Neutral Colors */
+    --color-surface: #ffffff;         /* Main panel/card background */
+    --color-background: #f8f9fa;       /* Page background */
+    --color-border: #dee2e6;         /* Subtle borders */
+    --color-shadow: rgba(0, 0, 0, 0.08); /* Soft shadow color */
+
+    /* Text Colors */
+    --color-text-primary: #212529;   /* Dark gray for body */
+    --color-text-secondary: #6c757d; /* Medium gray for labels/subs */
+    --color-text-on-brand: #ffffff;  /* White text on gold buttons */
+
+    /* System & Action Colors */
+    --color-action-negative: #dc3545;
+    --color-action-negative-hover: #b02a37;
+
+    /* Typography */
+    --font-family-base: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-size-base: 1rem;       /* 16px */
+    --font-size-small: 0.9rem;
+
+    /* Spacing */
+    --spacing-sm: 0.5rem;   /* 8px  */
+    --spacing-md: 0.75rem;  /* 12px */
+    --spacing-lg: 1rem;     /* 16px */
+    --spacing-xl: 1.5rem;   /* 24px */
+
+    /* Polish */
+    --border-radius-medium: 8px;
+    --border-radius-large: 16px;
+    --shadow-small: 0 2px 4px var(--color-shadow);
+    --transition-base: 0.2s ease-in-out;
+}
+
+/*
+ * -----------------
+ * 2. Base
+ * -----------------
+ */
+body {
+    /* Apply base styles if not present */
+    font-family: var(--font-family-base);
+    background-color: var(--color-background);
+    color: var(--color-text-primary);
+    line-height: 1.5;
+}
+
+/*
+ * -----------------
+ * 3. Components
+ * -----------------
+ */
+
 /* --- User Info Panel --- */
 .user-info-panel {
     display: flex;
     align-items: center;
-    gap: 18px;
-    background: #f4f8fb;
-    border-radius: 18px;
-    padding: 10px 20px;
-    margin: 25px auto 18px auto;
+    gap: var(--spacing-xl);
+    background: var(--color-surface);
+    border-radius: var(--border-radius-large);
+    padding: var(--spacing-lg) var(--spacing-xl);
+    margin: var(--spacing-xl) auto;
     width: fit-content;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    box-shadow: var(--shadow-small);
+    border: 1px solid var(--color-border);
 }
+
 .user-info-panel img#user-photo {
     width: 50px;
     height: 50px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid #b6d2f2;
+    border: 2px solid var(--color-brand-primary);
 }
+
 .user-info-panel div {
     display: flex;
     flex-direction: column;
     font-size: 1.04em;
     line-height: 1.2;
 }
+
 .user-info-panel #user-name {
-    font-weight: bold;
-    color: #13518f;
+    font-weight: 600;
+    color: var(--color-text-primary);
 }
+
 .user-info-panel #user-job-title {
-    color: #666;
-    font-size: 0.95em;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-small);
 }
+
 .user-info-panel #logout-btn {
-    margin-left: 12px;
-    background: #ef475b;
+    margin-left: var(--spacing-xl);
+    background: var(--color-action-negative);
     color: #fff;
     border: none;
-    padding: 8px 18px;
-    border-radius: 8px;
+    padding: var(--spacing-sm) var(--spacing-lg);
+    border-radius: var(--border-radius-medium);
     cursor: pointer;
     font-weight: 500;
+    transition: background-color var(--transition-base);
 }
+
 .user-info-panel #logout-btn:hover {
-    background: #cc3442;
+    background: var(--color-action-negative-hover);
 }
+
+/*
+ * -----------------
+ * 4. Tables
+ * -----------------
+ */
 
 /* --- Stock Request Table --- */
 #request-table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 20px;
-    font-size: 1.03em;
-    background: #fdfdff;
-    border-radius: 12px;
+    margin-top: var(--spacing-xl);
+    font-size: 1rem; /* Normalized to base */
+    background: var(--color-surface);
+    border-radius: var(--border-radius-medium); /* Tables often look better with slightly smaller radius */
     overflow: hidden;
-    box-shadow: 0 2px 8px rgba(100,120,170,0.06);
+    box-shadow: var(--shadow-small);
 }
-#request-table th, #request-table td {
-    border: 1px solid #d3e0ee;
-    padding: 10px 12px;
+
+#request-table th, 
+#request-table td {
+    /* Replaced grid borders with modern horizontal dividers */
+    border: none;
+    border-bottom: 1px solid var(--color-border);
+    padding: var(--spacing-md) var(--spacing-lg);
     text-align: left;
+    vertical-align: middle;
 }
+
 #request-table th {
-    background: #e6f0fa;
-    color: #1a4977;
+    background: var(--color-background);
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-small);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
+
+/* Zebra-striping for readability */
 #request-table tr:nth-child(even) {
-    background: #f7fbff;
+    background: var(--color-background);
 }
+
+#request-table tr:last-child td {
+    border-bottom: none;
+}
+
+/*
+ * -----------------
+ * 5. In-Table Forms & Buttons
+ * -----------------
+ */
 #request-table td input[type="number"] {
     width: 75px;
-    padding: 5px 7px;
-    border-radius: 7px;
-    border: 1px solid #b6d2f2;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--border-radius-medium);
+    border: 1px solid var(--color-border);
     font-size: 1em;
+    transition: border-color var(--transition-base), box-shadow var(--transition-base);
 }
+
+#request-table td input[type="number"]:focus {
+    border-color: var(--color-brand-primary);
+    box-shadow: 0 0 0 3px rgba(205, 164, 52, 0.2);
+    outline: none;
+}
+
 #request-table td button {
-    background: #ef475b;
+    background: var(--color-action-negative);
     color: #fff;
     border: none;
-    padding: 6px 15px;
-    border-radius: 8px;
+    padding: var(--spacing-sm) var(--spacing-lg);
+    border-radius: var(--border-radius-medium);
     cursor: pointer;
+    font-weight: 500;
+    transition: background-color var(--transition-base);
 }
+
 #request-table td button:hover {
-    background: #cc3442;
+    background: var(--color-action-negative-hover);
 }

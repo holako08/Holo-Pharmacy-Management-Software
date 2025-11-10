@@ -1,0 +1,4 @@
+1. in sheet1, duplicate each row with quantities from 10 and up
+2. in the duplicated, if the quantity is between 10-24 edit the quantity to 1. if between 25-49 edit to 3. if more than 49 edit to 8
+3. in all of the duplicated rows, edit the price to 0 (zero) and FOC to yes
+4. the duplicated rows should be arranged imediately after the original rows

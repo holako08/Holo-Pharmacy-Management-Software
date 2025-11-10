@@ -1,6 +1,7 @@
 let transferList = [];
 let srrModalData = [];
 let currentSRRID = null; // To track for STN
+let currentUserBranch = '';
 
 function updateProfilePicture() {
     // Fetch user info and photo and update the DOM
@@ -10,6 +11,10 @@ function updateProfilePicture() {
             if (data && data.user) {
                 document.getElementById('user-name').textContent = data.user.fullName || data.user.username;
                 document.getElementById('user-job-title').textContent = data.user.jobTitle || '';
+                // MODIFIED: Store the user's branch from session
+                currentUserBranch = data.user.branch || '';
+                const fromBranchSelect = document.getElementById('branch-from');
+                if(fromBranchSelect) fromBranchSelect.value = currentUserBranch;
                 // If a photo path exists, set it, else use default
                 if (data.user.photo && data.user.photo !== '') {
                     document.getElementById('user-photo').src = data.user.photo.startsWith('uploads/')
@@ -78,15 +83,30 @@ document.addEventListener('DOMContentLoaded', function () {
     // SRR Parse Handler
     document.getElementById('parse-srr-btn').onclick = function() {
         const fileInput = document.getElementById('srr-file');
-        if (!fileInput.files.length) return alert('Choose SRR file');
+        if (!fileInput.files.length) return alert('Choose an SRR file to parse.');
         const fd = new FormData();
         fd.append('srrfile', fileInput.files[0]);
         fetch('/api/stock-mgmt-x9z/parse-srr-file', { method: 'POST', body: fd })
             .then(r => r.json())
             .then(resp => {
-                if (!resp.items) return alert('Could not parse SRR');
-                showSRRModal(resp.items, resp.srr_id || null); // You must pass the srr_id from your backend parse response!
+                if (resp.success === false) return alert(resp.message); // Handles "already transferred" error
+                if (!resp.items) return alert('Could not parse SRR file.');
+                showSRRModal(resp.items, resp.srr_id || null);
             });
+    };
+    // NEW: SRR ID Search Handler
+    document.getElementById('srr-id-search-btn').onclick = function() {
+        const srrId = document.getElementById('srr-id-search').value.trim();
+        if (!srrId) return alert('Please enter an SRR ID to search.');
+        
+        fetch(`/api/stock-mgmt-x9z/request/${srrId}`)
+            .then(r => r.json())
+            .then(resp => {
+                if (resp.success === false) return alert(resp.message); // Handles "already transferred" error
+                if (!resp.items) return alert('Could not find or load this SRR ID.');
+                showSRRModal(resp.items, srrId);
+            })
+            .catch(err => alert(`Error: ${err.message}`));
     };
 
     // PDF/TXT download with SRR reference if present
@@ -145,35 +165,63 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 // =========== Modal logic for SRR: let user pick batch! ===========
+// MODIFIED FUNCTION
 function showSRRModal(items, srr_id = null) {
-    currentSRRID = srr_id; // Store for STN
+    currentSRRID = srr_id;
     srrModalData = items.map(it => ({
         item_name: it.item_name,
         qty: it.qty,
         batch: null,
         expiry: null,
+        stock: null, // This will be the stock of the chosen batch
         availableBatches: [],
-        stock: null,
         done: false
     }));
+    
     // Fetch batches for all items and render
     Promise.all(
-        srrModalData.map((it, idx) =>
+        srrModalData.map(it =>
             fetch('/api/pos/medicines/get-by-name/' + encodeURIComponent(it.item_name))
-                .then(r => r.json())
+                .then(r => {
+                    if (!r.ok) { // Check for HTTP errors like 404
+                        throw new Error(`HTTP error! status: ${r.status}`);
+                    }
+                    return r.json();
+                })
                 .then(data => {
                     if (data.batches && data.batches.length) {
-                        it.availableBatches = data.batches;
-                    } else {
+                        // Filter batches to only include those from the current user's branch
+                        it.availableBatches = data.batches.filter(b => b.branch === currentUserBranch);
+                    } else if (data.stock !== null && data.stock !== undefined) {
+                        // Fallback for legacy items with no batch records
                         it.availableBatches = [{
-                            batch_number: 'BTC111',
+                            batch_number: 'BTC111', // Default batch name
                             expiry: data.expiry ? data.expiry.split('T')[0] : '2099-12-31',
-                            quantity: data.stock !== null && data.stock !== undefined ? data.stock : 100
+                            quantity: data.stock,
+                            branch: currentUserBranch // Assume it's in the current branch
                         }];
+                    } else {
+                        it.availableBatches = [];
                     }
                 })
+                .catch(err => {
+                    // **THE FIX IS HERE**
+                    // If a fetch fails for one item, log it and continue with the others.
+                    console.error(`Failed to fetch batches for "${it.item_name}":`, err.message);
+                    it.availableBatches = []; // Ensure it has an empty array so it doesn't break later
+                })
         )
-    ).then(renderSRRModal);
+    )
+    .then(() => {
+        // This .then() will now always execute.
+        renderSRRModal();
+    })
+    .catch(err => {
+        // General catch block for unexpected errors in Promise.all itself
+        console.error("A critical error occurred while processing SRR items:", err);
+        alert("An error occurred. Check the console for details.");
+    });
+
     document.getElementById('import-srr-modal').style.display = 'flex';
 }
 
@@ -206,6 +254,10 @@ function renderSRRModal() {
 // Let user select batch for a row in modal
 window.chooseBatchSRR = function(idx) {
     const it = srrModalData[idx];
+    if (!it.availableBatches || it.availableBatches.length === 0) {
+        alert(`No stock available for "${it.item_name}" in your branch (${currentUserBranch}).`);
+        return;
+    }
     // Simple browser prompt, you can make this a nicer modal if you want!
     let batchOptions = it.availableBatches.map((b, i) =>
         `${i + 1}. ${b.batch_number} (Exp: ${b.expiry ? b.expiry.split('T')[0] : '-'}, Stock: ${b.quantity})`
@@ -230,7 +282,8 @@ window.chooseBatchSRR = function(idx) {
 }
     it.batch = batch.batch_number;
     it.expiry = batch.expiry ? batch.expiry.split('T')[0] : '-';
-    it.qty = qty;
+    it.stock = batch.quantity; // Store the original stock of the batch
+    it.qty = qty; // Update with the actually assigned quantity
     it.done = true;
     renderSRRModal();
 }
@@ -243,8 +296,8 @@ function closeSRRModal() {
                 item_name: it.item_name,
                 batch: it.batch,
                 expiry: it.expiry,
-                quantity: it.qty,
-                stock: it.qty // For requests, stock = assigned qty
+                quantity: it.qty, // The assigned quantity
+                stock: it.stock  // The original stock of the chosen batch
             });
         }
     });
@@ -421,53 +474,4 @@ function handleSubmitTransfer() {
         alert('Error processing transfer');
     });
 }
-
-// ========== USER PHOTO & LOGOUT ===========
-document.addEventListener('DOMContentLoaded', function () {
-    fetchUserInfo();
-    document.getElementById('logout-btn').onclick = logout;
-    // ...existing code...
-});
-
-// Fetch user info from backend and update the user-info-panel
-function fetchUserInfo() {
-    fetch('/api/user-info')
-      .then(r => r.json())
-      .then(data => {
-        if (!data.user) return;
-        const user = data.user;
-
-        // Set the global variable!
-        requestingUserName = user.fullName || user.username || '';
-
-        const userName = document.getElementById('user-name');
-        if (userName) userName.textContent = user.fullName;
-
-        const userJob = document.getElementById('user-job-title');
-        if (userJob) userJob.textContent = user.jobTitle;
-
-        // Set user photo only if the element exists
-        const userPhoto = document.getElementById('user-photo');
-        if (userPhoto) {
-            userPhoto.onerror = function() {
-                userPhoto.src = 'images/default-profile.png';
-            };
-            userPhoto.src = `/api/user-photo/${user.userId}`;
-        }
-
-        // Only set 'requested-by' if the element exists
-        const reqBy = document.getElementById('requested-by');
-        if (reqBy) reqBy.textContent = user.fullName;
-      });
-}
-
-
-
-function logout() {
-    fetch('/logout').finally(() => {
-        window.location.href = 'index.html';
-    });
-}
-
-
 window.closeSRRModal = closeSRRModal;

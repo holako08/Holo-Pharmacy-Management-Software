@@ -1,252 +1,422 @@
+/*
+ * ========================================================================
+ * Enterprise Corporate Theme (Gold Accent)
+ * ========================================================================
+ */
+
+/*
+ * === :root (Design Tokens) ===
+ * Defines the core visual system for the enterprise theme.
+ * ========================================================================
+ */
+:root {
+  /* Brand Colors */
+  --color-brand-primary: #c0a060; /* A sophisticated, premium gold */
+  --color-brand-dark: #a18040; /* For hover/active states */
+  --color-brand-light: #f5f0e6; /* For subtle backgrounds/hovers */
+
+  /* Neutral Grayscale */
+  --color-neutral-900: #222529; /* Primary dark bg, heavy text */
+  --color-neutral-800: #343a40;
+  --color-neutral-700: #495057; /* Sub-headings, secondary text */
+  --color-neutral-500: #adb5bd; /* Borders, disabled text */
+  --color-neutral-300: #dee2e6; /* Dividers, light borders */
+  --color-neutral-100: #f8f9fa; /* Lightest gray background */
+  --color-neutral-000: #ffffff; /* Pure white */
+
+  /* Semantic Colors */
+  --color-text-primary: var(--color-neutral-900);
+  --color-text-secondary: var(--color-neutral-700);
+  --color-bg-body: var(--color-neutral-100);
+  --color-bg-card: var(--color-neutral-000);
+  --color-border-primary: var(--color-neutral-300);
+  --color-danger: #b00020;
+
+  /* Typography */
+  --font-family-base: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto',
+    'Helvetica Neue', Arial, sans-serif;
+  --font-size-sm: 0.875rem; /* 14px */
+  --font-size-base: 1rem; /* 16px */
+  --font-size-md: 1.125rem; /* 18px */
+  --font-size-lg: 1.5rem; /* 24px */
+  --font-size-xl: 2rem; /* 32px */
+
+  /* Spacing Scale (based on 8px) */
+  --space-1: 0.25rem; /* 4px */
+  --space-2: 0.5rem; /* 8px */
+  --space-3: 0.75rem; /* 12px */
+  --space-4: 1rem; /* 16px */
+  --space-5: 1.5rem; /* 24px */
+  --space-6: 2rem; /* 32px */
+
+  /* Borders & Shadows */
+  --border-radius-small: 4px;
+  --border-radius-medium: 8px;
+  --border-radius-large: 12px;
+  --shadow-small: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-large: 0 10px 30px rgba(0, 0, 0, 0.1);
+
+  /* Transitions */
+  --transition-base: all 0.2s ease-in-out;
+}
+
+/*
+ * === Base & Typography ===
+ * ========================================================================
+ */
 body {
   margin: 0;
-  font-family: 'Segoe UI', Arial, sans-serif;
-  background: #f4f4f4;
-  color: #222;
+  font-family: var(--font-family-base);
+  background: var(--color-bg-body);
+  color: var(--color-text-primary);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
+
+h2 {
+  color: var(--color-text-primary);
+  margin-top: 0;
+  margin-bottom: var(--space-5);
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+}
+
+main {
+  max-width: 1100px; /* Increased max-width for enterprise feel */
+  margin: var(--space-6) auto;
+  padding: 0 var(--space-5);
+}
+
+/*
+ * === Components: Navigation Bar ===
+ * ========================================================================
+ */
 .nav-bar-unique {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #2c2c2c;
-  color: #fff;
-  padding: 0.5rem 2rem;
-  min-height: 56px;
+  background: var(--color-neutral-900);
+  color: var(--color-neutral-000);
+  padding: var(--space-3) var(--space-6);
+  min-height: 60px; /* Slightly taller */
   position: sticky;
   top: 0;
   z-index: 99;
-  box-shadow: 0 3px 13px rgba(44,62,80,0.10);
+  box-shadow: var(--shadow-medium);
 }
+
 .logo-unique img {
   height: 40px;
+  vertical-align: middle;
 }
+
 .nav-links-unique {
   display: flex;
   list-style: none;
-  gap: 1.5rem;
+  gap: var(--space-4);
   margin: 0;
   padding: 0;
 }
+
 .nav-links-unique li {
   position: relative;
 }
+
 .nav-links-unique a {
-  color: #FFD700;
+  color: var(--color-neutral-100); /* Cleaner white for links */
   text-decoration: none;
   font-weight: 500;
-  transition: color 0.2s;
-  padding: 8px 12px;
+  transition: var(--transition-base);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--border-radius-small);
 }
+
+/* Gold accent on hover/active */
 .nav-links-unique a:hover,
 .nav-links-unique li:hover > a {
-  color: #fff;
-  background: #FFD700;
-  border-radius: 4px;
-  transition: 0.15s;
-  cursor: pointer;
+  color: var(--color-brand-primary);
+  background: rgba(255, 255, 255, 0.05);
 }
+
 .dropdown-unique {
   display: none;
   position: absolute;
   left: 0;
-  background: #222;
-  min-width: 180px;
-  border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  background: var(--color-neutral-800);
+  min-width: 200px;
+  border-radius: var(--border-radius-medium);
+  box-shadow: var(--shadow-large);
   z-index: 100;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
+
 .nav-links-unique li:hover .dropdown-unique {
   display: block;
 }
+
 .dropdown-unique li {
   width: 100%;
 }
+
 .dropdown-unique a {
   display: block;
-  color: #FFD700;
-  padding: 10px 16px;
+  color: var(--color-brand-primary); /* Gold links in dropdown */
+  padding: var(--space-3) var(--space-4);
 }
+
 .dropdown-unique a:hover {
-  color: #222;
-  background: #FFD700;
+  color: var(--color-neutral-900);
+  background: var(--color-brand-primary);
 }
 
-.search-unique {
-  display: flex;
-  gap: 0.5em;
-}
-.search-unique input {
-  border: 1px solid #bbb;
-  border-radius: 4px;
-  padding: 6px 12px;
-  font-size: 1rem;
-}
-.search-unique button {
-  background: #FFD700;
-  color: #222;
-  border: none;
-  padding: 6px 14px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: background 0.2s;
-}
-.search-unique button:hover {
-  background: #ffb300;
-  color: #fff;
-}
-
+/*
+ * === Components: User Info Bar ===
+ * ========================================================================
+ */
 .user-info {
   display: flex;
   align-items: center;
-  gap: 1.5em;
-  background: #f6f7fb;
-  border-bottom: 1px solid #d6d6d6;
-  padding: 12px 2rem;
+  gap: var(--space-5);
+  background: var(--color-bg-card); /* Clean white */
+  border-bottom: 1px solid var(--color-border-primary);
+  padding: var(--space-3) var(--space-6);
   justify-content: flex-end;
 }
-#user-job-title, #user-name {
-  margin: 0 8px;
-  color: #444;
+
+#user-job-title,
+#user-name {
+  margin: 0 var(--space-2);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
 }
+
+#user-name {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
 .avatar-container {
   display: flex;
   align-items: center;
-  gap: 0.5em;
-}
-.logout-btn {
-  background: #FFD700;
-  color: #222;
-  border: none;
-  padding: 8px 16px;
-  font-weight: 600;
-  border-radius: 4px;
-  cursor: pointer;
-  margin-left: 10px;
-  transition: background 0.2s;
-}
-.logout-btn:hover {
-  background: #c4a300;
-  color: #fff;
+  gap: var(--space-2);
 }
 
-main {
-  max-width: 1000px;
-  margin: 2rem auto;
-  padding: 0 1rem;
+/*
+ * === Components: Forms & Buttons ===
+ * ========================================================================
+ */
+
+/* Base Input Styling */
+.search-unique input,
+.filter-form input[type='date'] {
+  border: 1px solid var(--color-neutral-500);
+  border-radius: var(--border-radius-small);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--font-size-base);
+  background: var(--color-bg-card);
+  color: var(--color-text-primary);
+  transition: var(--transition-base);
 }
 
-.report-container {
-  background: #fff;
-  border-radius: 18px;
-  box-shadow: 0 2px 16px rgba(34,34,34,0.07);
-  padding: 2rem;
-  margin-bottom: 2rem;
-}
-h2 {
-  color: #2c2c2c;
-  margin-top: 0;
-  margin-bottom: 1.5rem;
-  font-size: 2rem;
+.search-unique input:focus,
+.filter-form input[type='date']:focus {
+  outline: none;
+  border-color: var(--color-brand-primary);
+  box-shadow: 0 0 0 3px var(--color-brand-light);
 }
 
 .filter-form {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 1.2em;
-  margin-bottom: 1.7em;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
 }
+
 .filter-form label {
-  color: #333;
-  font-size: 1.08rem;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-md);
+  font-weight: 500;
 }
-.filter-form input[type="date"] {
-  padding: 6px 8px;
-  border-radius: 5px;
-  border: 1px solid #bbb;
-  font-size: 1.08rem;
-}
-.filter-form button, .gold-btn {
-  background: #FFD700;
-  color: #222;
+
+/* Gold Button Theme (Shared) */
+.search-unique button,
+.logout-btn,
+.filter-form button,
+.gold-btn {
+  background: var(--color-brand-primary);
+  color: var(--color-neutral-900); /* Dark text for better contrast on gold */
   border: none;
-  padding: 8px 18px;
+  padding: var(--space-2) var(--space-4);
   font-weight: 600;
-  border-radius: 4px;
+  border-radius: var(--border-radius-small);
   cursor: pointer;
-  margin-left: 4px;
-  transition: background 0.2s, color 0.2s;
+  transition: var(--transition-base);
+  font-size: var(--font-size-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
-.filter-form button:hover, .gold-btn:hover {
-  background: #bfa104;
-  color: #fff;
+
+.search-unique button:hover,
+.logout-btn:hover,
+.filter-form button:hover,
+.gold-btn:hover {
+  background: var(--color-brand-dark);
+  color: var(--color-neutral-000);
+  box-shadow: var(--shadow-small);
+}
+
+/* Specific overrides */
+.search-unique {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.search-unique button {
+  padding: var(--space-2) var(--space-3);
+}
+
+.logout-btn {
+  margin-left: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+}
+
+/*
+ * === Components: Report & Table ===
+ * ========================================================================
+ */
+.report-container {
+  background: var(--color-bg-card);
+  border-radius: var(--border-radius-large);
+  box-shadow: var(--shadow-medium);
+  padding: var(--space-6);
+  margin-bottom: var(--space-6);
 }
 
 .styled-table {
   width: 100%;
-  border-collapse: collapse;
-  font-size: 1.05em;
-  background: #f8f8f8;
-  border-radius: 10px 10px 0 0;
-  overflow: hidden;
-  margin-bottom: 1em;
-}
-.styled-table th, .styled-table td {
-  padding: 14px 16px;
-  text-align: left;
-}
-.styled-table th {
-  background: #FFD700;
-  color: #222;
-  font-weight: bold;
-  border-bottom: 2px solid #e1e1e1;
-}
-.styled-table tr {
-  border-bottom: 1px solid #e7e7e7;
-}
-.styled-table tbody tr:nth-child(even) {
-  background: #f3f3f3;
-}
-.styled-table tr:hover {
-  background: #fff8e1;
-}
-.table-feedback {
-  color: #b00020;
-  font-size: 1.1em;
-  margin-top: 0.7em;
+  border-collapse: separate; /* Allows for border-radius on table */
+  border-spacing: 0;
+  font-size: var(--font-size-base);
+  border-radius: var(--border-radius-medium);
+  overflow: hidden; /* Clips children to the radius */
+  box-shadow: var(--shadow-small);
+  border: 1px solid var(--color-border-primary);
 }
 
-.dashboard-footer {
-  background: #2c2c2c;
-  color: #FFD700;
-  padding: 1rem 0;
-  text-align: center;
-  font-size: 1em;
-  margin-top: 40px;
+.styled-table th,
+.styled-table td {
+  padding: var(--space-4) var(--space-5);
+  text-align: left;
 }
+
+.styled-table th {
+  background: var(
+    --color-neutral-100
+  ); /* Subtle, professional header */
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  border-bottom: 2px solid var(--color-border-primary);
+  font-size: var(--font-size-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.styled-table tr {
+  border-bottom: 1px solid var(--color-border-primary);
+}
+
+.styled-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.styled-table tbody tr:nth-child(even) {
+  background: var(--color-neutral-100);
+}
+
+.styled-table tr:hover {
+  background: var(--color-brand-light); /* Use light gold for hover */
+}
+
+.table-feedback {
+  color: var(--color-danger);
+  font-size: var(--font-size-md);
+  margin-top: var(--space-3);
+}
+
+/*
+ * === Components: Footer ===
+ * ========================================================================
+ */
+.dashboard-footer {
+  background: var(--color-neutral-900);
+  color: var(
+    --color-neutral-500
+  ); /* Muted text for secondary info */
+  padding: var(--space-5) 0;
+  text-align: center;
+  font-size: var(--font-size-sm);
+  margin-top: var(--space-6);
+}
+
 .dashboard-footer a {
-  color: #FFD700;
+  color: var(--color-brand-primary); /* Gold accent for links */
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.dashboard-footer a:hover {
   text-decoration: underline;
 }
 
+/*
+ * === Responsive ===
+ * ========================================================================
+ */
 @media (max-width: 800px) {
-  main, .report-container {
-    padding: 0.5rem;
-    border-radius: 0;
+  body {
+    background: var(--color-bg-card); /* Full white on mobile */
   }
+  
+  main {
+    padding: 0;
+    margin: var(--space-4) 0;
+  }
+  
+  .report-container {
+    padding: var(--space-4);
+    border-radius: 0;
+    box-shadow: none;
+    margin-bottom: var(--space-4);
+  }
+
   .nav-bar-unique {
     flex-direction: column;
     align-items: flex-start;
-    padding: 0.6rem 1rem;
+    padding: var(--space-3) var(--space-4);
+    gap: var(--space-3);
   }
+
   .user-info {
     flex-direction: column;
     align-items: flex-end;
-    gap: 0.6em;
-    padding: 8px 1rem;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4);
   }
-  .styled-table th, .styled-table td {
-    padding: 8px 4px;
+
+  .filter-form {
+    gap: var(--space-3);
+  }
+
+  .styled-table th,
+  .styled-table td {
+    padding: var(--space-3) var(--space-2);
+    font-size: var(--font-size-sm);
+  }
+  
+  h2 {
+    font-size: var(--font-size-md);
   }
 }

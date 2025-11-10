@@ -1,264 +1,360 @@
+/* === CSS TOKENS / THEME VARIABLES === */
+:root {
+  /* Brand Colors */
+  --color-brand-gold: #DAA520; /* Primary premium gold */
+  --color-brand-gold-hover: #EAC14D; /* Lighter gold for hover */
+  --color-brand-text-on-dark: var(--color-brand-gold);
+
+  /* Neutral Palette */
+  --color-dark-primary: #111111; /* For nav, footer, primary buttons */
+  --color-dark-secondary: #222222; /* For dropdowns */
+  --color-text-primary: #1A1A1A; /* Main body text */
+  --color-text-secondary: #555555; /* Labels, subtext */
+  --color-text-on-dark: #EEEEEE;
+  --color-text-on-gold: #111111;
+  --color-background-body: #F8F9FA; /* Cleaner, modern light gray */
+  --color-background-panel: #FFFFFF; /* Cards, forms */
+  --color-border-primary: #DDE2E6; /* Modern, soft border */
+  --color-border-dark: #333333;
+
+  /* Status Colors */
+  --color-success: #155724;
+
+  /* Typography */
+  --font-family-base: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-size-base: 1rem; /* 16px */
+  --font-size-sm: 0.875rem; /* 14px */
+  --font-weight-regular: 400;
+  --font-weight-bold: 600; /* 600 often looks more premium */
+  --line-height-base: 1.6;
+
+  /* Spacing (8px Grid) */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+
+  /* Borders & Shadows */
+  --border-radius-sm: 4px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 16px; /* For main panels */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.1);
+  --transition-base: all 0.25s ease-in-out;
+}
+
 /* === RESET & BASE === */
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
-  
-  body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #f4f4f4;
-    color: #222;
-  }
-  
-  /* === NAVBAR === */
-  .nav-bar-unique {
-    background-color: #000;
-    color: gold;
-    height: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 20px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
-    position: fixed;
-    width: 100%;
-    top: 0;
-    z-index: 999;
-  }
-  
-  .logo-unique img {
-    height: 40px;
-  }
-  
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-family-base);
+  background-color: var(--color-background-body);
+  color: var(--color-text-primary);
+  line-height: var(--line-height-base);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* === NAVBAR COMPONENT === */
+.nav-bar-unique {
+  background-color: var(--color-dark-primary);
+  color: var(--color-brand-text-on-dark);
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--spacing-lg);
+  box-shadow: var(--shadow-lg);
+  position: fixed;
+  width: 100%;
+  top: 0;
+  z-index: 999;
+}
+
+.logo-unique img {
+  height: 36px; /* Slightly smaller for better padding */
+  vertical-align: middle;
+}
+
+.nav-links-unique {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+}
+
+.nav-links-unique li {
+  position: relative;
+}
+
+.nav-links-unique > li > a {
+  text-decoration: none;
+  color: var(--color-brand-text-on-dark);
+  font-weight: var(--font-weight-bold);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--border-radius-sm);
+  transition: var(--transition-base);
+}
+
+.nav-links-unique > li > a:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+/* Dropdown Menu */
+.dropdown-unique {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: var(--color-dark-secondary);
+  min-width: 220px;
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-md);
+  overflow: hidden; /* Ensures border-radius clips children */
+}
+
+.dropdown-unique li {
+  border-bottom: 1px solid var(--color-border-dark);
+}
+
+.dropdown-unique li:last-child {
+  border-bottom: none;
+}
+
+.dropdown-unique a {
+  display: block;
+  padding: var(--spacing-md) var(--spacing-lg);
+  color: var(--color-text-on-dark);
+  text-decoration: none;
+  transition: var(--transition-base);
+}
+
+.dropdown-unique a:hover {
+  background-color: var(--color-brand-gold);
+  color: var(--color-text-on-gold);
+}
+
+.nav-links-unique li:hover .dropdown-unique {
+  display: block;
+}
+
+/* Nav Search */
+.search-unique {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.search-unique input {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--border-radius-sm);
+  border: 1px solid var(--color-border-dark);
+  background-color: #333; /* Slightly lighter than nav */
+  color: white;
+  transition: var(--transition-base);
+}
+
+.search-unique input::placeholder {
+  color: #aaa;
+}
+
+.search-unique input:focus {
+  outline: none;
+  border-color: var(--color-brand-gold);
+  box-shadow: 0 0 0 2px rgba(218, 165, 32, 0.5);
+}
+
+.search-unique button {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--color-brand-gold);
+  color: var(--color-text-on-gold);
+  border: none;
+  border-radius: var(--border-radius-sm);
+  font-weight: var(--font-weight-bold);
+  cursor: pointer;
+  transition: var(--transition-base);
+}
+
+.search-unique button:hover {
+  background-color: var(--color-brand-gold-hover);
+}
+
+/* === MAIN LAYOUT === */
+.main-content-unique {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 100px; /* accounts for fixed nav */
+  padding-bottom: 60px;
+  padding-left: var(--spacing-lg);
+  padding-right: var(--spacing-lg);
+}
+
+/* === PROFILE CARD COMPONENT === */
+.profile-container-unique {
+  background: var(--color-background-panel);
+  padding: var(--spacing-xl);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-md);
+  width: 100%;
+  max-width: 450px;
+}
+
+/* === PROFILE FORM === */
+.profile-photo-section-unique {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: var(--spacing-lg);
+}
+
+#profilePhotoPreview {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--color-border-primary);
+  margin-bottom: var(--spacing-md);
+}
+
+#profilePhotoInput {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  /* Basic file input styling for modern browsers */
+  max-width: 100%;
+}
+
+/* Form Fields */
+form label {
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-top: var(--spacing-md);
+  display: block;
+}
+
+form input,
+form select {
+  width: 100%;
+  padding: var(--spacing-md);
+  margin-top: var(--spacing-sm);
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--color-border-primary);
+  font-size: var(--font-size-base);
+  transition: var(--transition-base);
+}
+
+form input:focus,
+form select:focus {
+  outline: none;
+  border-color: var(--color-brand-gold);
+  box-shadow: 0 0 0 3px rgba(218, 165, 32, 0.3);
+}
+
+/* Password Field */
+.password-field-wrapper {
+  position: relative;
+}
+
+.password-field-wrapper input {
+  padding-right: 40px; /* Space for eye icon */
+}
+
+.eye-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(calc(-50% + 4px)); /* Adjust for margin-top */
+  cursor: pointer;
+  user-select: none;
+  color: var(--color-text-secondary);
+}
+
+/* Form Buttons */
+.button-bar-unique {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--spacing-xl);
+  gap: var(--spacing-md);
+}
+
+form button {
+  flex: 1;
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--color-dark-primary);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-base);
+  transition: var(--transition-base), transform 0.1s ease;
+}
+
+form button:hover {
+  background: var(--color-brand-gold);
+  color: var(--color-text-on-gold);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+/* === STATUS MESSAGE === */
+#updateStatusUnique {
+  margin-top: var(--spacing-lg);
+  text-align: center;
+  font-weight: var(--font-weight-bold);
+  color: var(--color-success);
+}
+
+/* === FOOTER === */
+.footer-unique {
+  background-color: var(--color-dark-primary);
+  color: #ccc;
+  text-align: center;
+  padding: var(--spacing-lg) var(--spacing-md);
+  font-size: var(--font-size-sm);
+  margin-top: auto;
+}
+
+.footer-unique a {
+  color: var(--color-brand-gold);
+  text-decoration: none;
+  font-weight: var(--font-weight-bold);
+  transition: var(--transition-base);
+}
+
+.footer-unique a:hover {
+  color: white;
+  text-decoration: underline;
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 600px) {
   .nav-links-unique {
-    list-style: none;
-    display: flex;
-    align-items: center;
-    gap: 25px;
-  }
-  
-  .nav-links-unique li {
-    position: relative;
-  }
-  
-  .nav-links-unique > li > a {
-    text-decoration: none;
-    color: gold;
-    font-weight: bold;
-    padding: 8px 12px;
-    border-radius: 5px;
-  }
-  
-  .nav-links-unique > li > a:hover {
-    background-color: #444;
-    color: white;
-  }
-  
-  .dropdown-unique {
-    display: none;
-    position: absolute;
-    top: 100%;
-    background-color: #222;
-    min-width: 200px;
-    border-radius: 6px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-  }
-  
-  .dropdown-unique li {
-    border-bottom: 1px solid #333;
-  }
-  
-  .dropdown-unique li:last-child {
-    border-bottom: none;
-  }
-  
-  .dropdown-unique a {
-    display: block;
-    padding: 10px 15px;
-    color: #eee;
-    text-decoration: none;
-  }
-  
-  .dropdown-unique a:hover {
-    background-color: goldenrod;
-    color: black;
-  }
-  
-  .nav-links-unique li:hover .dropdown-unique {
-    display: block;
-  }
-  
-  .search-unique {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  
-  .search-unique input {
-    padding: 6px 10px;
-    border-radius: 4px;
-    border: 1px solid #555;
-    background-color: #111;
-    color: white;
-  }
-  
-  .search-unique input::placeholder {
-    color: #aaa;
-  }
-  
-  .search-unique button {
-    padding: 6px 12px;
-    background-color: goldenrod;
-    color: black;
-    border: none;
-    border-radius: 4px;
-    font-weight: bold;
-    cursor: pointer;
-  }
-  
-  .search-unique button:hover {
-    background-color: #ffd700;
-  }
-  
-  /* === MAIN LAYOUT === */
-  .main-content-unique {
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    padding-top: 100px; /* accounts for fixed nav */
-    padding-bottom: 60px;
-  }
-  
-  /* === PROFILE BOX === */
-  .profile-container-unique {
-    background: #fff;
-    padding: 30px;
-    border-radius: 16px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    width: 100%;
-    max-width: 420px;
-  }
-  
-  /* === PROFILE IMAGE === */
-  .profile-photo-section-unique {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-bottom: 20px;
-  }
-  
-  #profilePhotoPreview {
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid #999;
-    margin-bottom: 10px;
-  }
-  
-  #profilePhotoInput {
-    font-size: 0.9em;
-  }
-  
-  /* === FORM FIELDS === */
-  form label {
-    font-weight: bold;
-    margin-top: 12px;
-    display: block;
-  }
-  
-  form input,
-  form select {
-    width: 100%;
-    padding: 10px;
-    margin-top: 5px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-    font-size: 0.95em;
-  }
-  
-  /* === PASSWORD FIELD === */
-  .password-field-wrapper {
-    position: relative;
-  }
-  
-  .eye-icon {
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    cursor: pointer;
-    user-select: none;
-  }
-  
-  /* === BUTTONS === */
-  .button-bar-unique {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 20px;
-    gap: 10px;
-  }
-  
-  form button {
-    flex: 1;
-    padding: 10px;
-    background: #111;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: background 0.3s ease;
-  }
-  
-  form button:hover {
-    background: goldenrod;
-    color: black;
-  }
-  
-  /* === STATUS MESSAGE === */
-  #updateStatusUnique {
-    margin-top: 15px;
-    text-align: center;
-    font-weight: bold;
-    color: green;
-  }
-  
-  /* === RESPONSIVE === */
-  @media (max-width: 600px) {
-    .nav-links-unique {
-      flex-wrap: wrap;
-      gap: 15px;
-    }
-  
-    .main-content-unique {
-      padding: 90px 10px 60px;
-    }
-  
-    .search-unique input {
-      max-width: 120px;
-    }
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
   }
 
-    /* === FOOTER === */
-    .footer-unique {
-        background-color: #000;
-        color: #ccc;
-        text-align: center;
-        padding: 15px 10px;
-        font-size: 0.9em;
-        margin-top: auto;
-      }
-      
-      .footer-unique a {
-        color: goldenrod;
-        text-decoration: none;
-        font-weight: bold;
-      }
-      
-      .footer-unique a:hover {
-        color: white;
-        text-decoration: underline;
-      }
-      
+  .main-content-unique {
+    padding: 90px var(--spacing-md) 60px;
+  }
+  
+  .profile-container-unique {
+    padding: var(--spacing-lg);
+  }
+
+  .search-unique {
+    display: none; /* Often hidden in mobile for space */
+  }
+  
+  .button-bar-unique {
+    flex-direction: column;
+  }
+}

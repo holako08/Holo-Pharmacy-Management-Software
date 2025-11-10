@@ -36,23 +36,37 @@ function fetchBills() {
       bills.forEach(bill => {
         originalRows[bill.bill_id] = { ...bill };
         const row = tbody.insertRow();
+        
+        // Define the exact order of columns to match the HTML table header
+        const columns = [
+          'bill_id', 'bill_date', 'bill_time', 'item_name', 'quantity', 'price',
+          'subtotal', 'payment_method', 'card_invoice_number', 'E-commerce Invoice Number',
+          'patient_name', 'patient_phone', 'user', 'branch'
+        ];
+        
+        // Define which columns are editable
+        const editableFields = [
+          'quantity', 'subtotal', 'payment_method', 'card_invoice_number', 
+          'E-commerce Invoice Number', 'patient_name', 'patient_phone', 'user', 'branch'
+        ];
 
-       Object.entries(bill).forEach(([key, val]) => {
-  const cell = row.insertCell();
-  let displayVal = val;
-  if (key === 'bill_date') {
-    displayVal = formatDate(val);
-  }
-  if (key === 'bill_time') {
-    displayVal = formatTime(val);
-  }
-  if (['quantity', 'subtotal', 'payment_method', 'card_invoice_number', 'E-commerce Invoice Number', 'patient_name', 'patient_phone', 'user'].includes(key)) {
-    cell.innerHTML = `<input type="text" class="bm-editable" data-field="${key}" value="${displayVal || ''}" disabled />`;
-  } else {
-    cell.textContent = displayVal;
-  }
-});
+        columns.forEach(key => {
+          const cell = row.insertCell();
+          let displayVal = bill[key];
 
+          if (key === 'bill_date') {
+            displayVal = formatDate(displayVal);
+          }
+          if (key === 'bill_time') {
+            displayVal = formatTime(displayVal);
+          }
+          
+          if (editableFields.includes(key)) {
+            cell.innerHTML = `<input type="text" class="bm-editable" data-field="${key}" value="${displayVal || ''}" disabled />`;
+          } else {
+            cell.textContent = displayVal !== null && displayVal !== undefined ? displayVal : '';
+          }
+        });
 
         const actionCell = row.insertCell();
         actionCell.innerHTML = `

@@ -1,217 +1,213 @@
+/* @import 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap'; */
+
+/*
+   ========================================
+   Tokens / Variables
+   ========================================
+*/
+:root {
+    /* Color System */
+    --color-brand-gold: #b48c2e;
+    --color-brand-gold-hover: #a07b29;
+    --color-brand-gold-light: #f9f5e9;
+
+    --color-background: #f8f9fa; /* Very light neutral gray */
+    --color-surface: #ffffff;
+    --color-border: #e4e6e8;
+    
+    --color-text-primary: #2d333a; /* Deep gray */
+    --color-text-secondary: #6a737d; /* Lighter gray */
+    
+    --color-success: #f0f8f2;
+    --color-success-strong: #28a745;
+    --color-danger: #fcf1f2;
+    --color-danger-strong: #721c24;
+
+    --color-shadow-light: rgba(45, 51, 58, 0.08);
+    --color-focus-ring: rgba(180, 140, 46, 0.2);
+
+    /* Typography */
+    --font-family: 'Inter', Arial, sans-serif;
+    --font-weight-regular: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --line-height-base: 1.6;
+
+    /* Spacing Scale */
+    --space-xs: 4px;
+    --space-sm: 8px;
+    --space-md: 16px;
+    --space-lg: 24px;
+    --space-xl: 32px;
+
+    /* Borders & Shadows */
+    --border-radius: 6px;
+    --border-width: 1px;
+    --shadow-sm: 0 2px 4px var(--color-shadow-light);
+    --shadow-md: 0 4px 12px var(--color-shadow-light);
+    
+    /* Transitions */
+    --transition-speed: 0.3s;
+    --transition-ease: ease;
+}
+
+/*
+   ========================================
+   Base & Typography
+   ========================================
+*/
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: Arial, sans-serif;
+    font-family: var(--font-family);
 }
 
 body {
-    background-color: #e6e6e6;
+    background-color: var(--color-background);
+    color: var(--color-text-primary);
+    line-height: var(--line-height-base);
 }
 
+/*
+   ========================================
+   Layout
+   ========================================
+*/
+.container {
+    max-width: 1200px;
+    margin: var(--space-xl) auto;
+    padding: 0 var(--space-lg);
+}
+
+/*
+   ========================================
+   Components
+   ========================================
+*/
+
+/* --- Header --- */
 .header {
-    background-color: #333;
-    color: white;
-    padding: 15px 20px;
+    background-color: var(--color-surface);
+    color: var(--color-text-primary);
+    padding: var(--space-md) var(--space-lg);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border-bottom: var(--border-width) solid var(--color-border);
+    box-shadow: var(--shadow-sm);
 }
 
 .header-title h1 {
-    font-size: 24px;
-    font-weight: bold;
+    font-size: 1.5rem; /* 24px */
+    font-weight: var(--font-weight-semibold);
 }
 
 .user-info {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: var(--space-md);
 }
 
 .avatar-container {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 5px;
+    gap: var(--space-xs);
 }
 
 .avatar-placeholder {
     width: 50px;
     height: 50px;
     border-radius: 50%;
-    background-color: #f0f0f0;
-    border: 2px solid #ddd;
+    background-color: var(--color-background);
+    border: var(--border-width) solid var(--color-border);
     display: flex;
     justify-content: center;
     align-items: center;
+    color: var(--color-text-secondary);
+    font-weight: var(--font-weight-medium);
 }
 
 .logout-btn {
-    background-color: #e67e22;
-    color: white;
+    background-color: transparent;
+    color: var(--color-text-secondary);
     border: none;
-    padding: 5px 10px;
-    border-radius: 4px;
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--border-radius);
     cursor: pointer;
+    font-weight: var(--font-weight-medium);
+    transition: all var(--transition-speed) var(--transition-ease);
 }
 
-.container {
-    max-width: 1200px;
-    margin: 20px auto;
-    padding: 0 20px;
+.logout-btn:hover {
+    background-color: var(--color-background);
+    color: var(--color-text-primary);
 }
 
+/* --- Search --- */
 .search-container {
     position: relative;
-    margin-bottom: 20px;
-}
-
-.search-bar {
-    width: 80%;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-}
-
-.search-btn {
-    background-color: #5cb85c;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-.search-results {
-    position: absolute;
-    width: 80%;
-    max-height: 200px;
-    overflow-y: auto;
-    background-color: white;
-    border: 1px solid #ddd;
-    border-top: none;
-    z-index: 100;
-    display: none;
-}
-
-.search-results div {
-    padding: 10px;
-    border-bottom: 1px solid #eee;
-    cursor: pointer;
-}
-
-.search-results div:hover, .search-results div.active {
-    background-color: #f0f0f0;
-}
-
-.table-container {
-    margin-bottom: 20px;
-    overflow-x: auto;
-}
-
-.data-table {
-    width: 100%;
-    border-collapse: collapse;
-    background-color: white;
-}
-
-.data-table th, .data-table td {
-    border: 1px solid #ddd;
-    padding: 12px;
-    text-align: left;
-}
-
-.data-table th {
-    background-color: #f2f2f2;
-}
-
-.data-table input[type="number"] {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-}
-
-.empty-row td {
-    color: #777;
-    font-style: italic;
-}
-
-.item-placeholder, .empty-placeholder, .input-placeholder {
-    color: #777;
-    font-style: italic;
-}
-
-.action-buttons {
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-}
-
-.btn {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: bold;
-}
-
-.download-btn {
-    background-color: #5cb85c;
-    color: white;
-}
-
-.clear-btn {
-    background-color: #e67e22;
-    color: white;
-}
-
-/* Add these styles to your existing CSS file */
-
-.search-container {
-    position: relative;
-    margin-bottom: 20px;
+    margin-bottom: var(--space-lg);
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--space-md);
+}
+
+/* Base styles for text inputs and selects */
+.search-bar,
+.data-table input[type="number"],
+.agent-select {
+    width: 100%;
+    padding: 12px;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    background-color: var(--color-surface);
+    color: var(--color-text-primary);
+    transition: all var(--transition-speed) var(--transition-ease);
+}
+
+.search-bar:focus,
+.data-table input[type="number"]:focus,
+.agent-select:focus {
+    outline: none;
+    border-color: var(--color-brand-gold);
+    box-shadow: 0 0 0 3px var(--color-focus-ring);
 }
 
 .search-bar {
     flex: 1;
-    padding: 12px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 16px;
 }
 
 .search-results {
     position: absolute;
-    top: 100%;
+    top: calc(100% + var(--space-sm));
     left: 0;
-    width: 80%;
+    width: 80%; /* Preserving original width logic */
     max-height: 300px;
     overflow-y: auto;
-    background-color: white;
-    border: 1px solid #ddd;
-    border-radius: 0 0 4px 4px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background-color: var(--color-surface);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-md);
     z-index: 100;
     display: none;
 }
 
 .search-result-item {
     padding: 12px 15px;
-    border-bottom: 1px solid #eee;
+    border-bottom: var(--border-width) solid var(--color-border);
     cursor: pointer;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    transition: background-color var(--transition-speed) var(--transition-ease);
 }
 
 .search-result-item:hover, 
 .search-result-item.active {
-    background-color: #f0f8ff;
+    background-color: var(--color-brand-gold-light);
 }
 
 .search-result-item:last-child {
@@ -219,108 +215,150 @@ body {
 }
 
 .medicine-name {
-    font-weight: 500;
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-primary);
 }
 
 .medicine-price {
-    color: #555;
-    font-size: 14px;
+    color: var(--color-text-secondary);
+    font-size: 0.9rem;
 }
 
-.data-table input[type="number"] {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    text-align: center;
-}
 
-/* Styling for placeholder message */
-.empty-row td {
-    padding: 20px;
-    text-align: center;
-    color: #999;
-}
-
-/* Improved button styles */
+/* --- Buttons --- */
 .btn {
     padding: 12px 20px;
-    border: none;
-    border-radius: 4px;
+    border: var(--border-width) solid transparent;
+    border-radius: var(--border-radius);
     cursor: pointer;
-    font-weight: 500;
-    transition: all 0.3s ease;
+    font-weight: var(--font-weight-semibold);
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all var(--transition-speed) var(--transition-ease);
+    text-align: center;
 }
 
-.search-btn {
-    background-color: #5cb85c;
-    color: white;
-}
-
-.search-btn:hover {
-    background-color: #4cae4c;
-}
-
+/* Primary Button (Gold) */
+.search-btn,
 .download-btn {
-    background-color: #5cb85c;
+    background-color: var(--color-brand-gold);
     color: white;
 }
 
+.search-btn:hover,
 .download-btn:hover {
-    background-color: #4cae4c;
+    background-color: var(--color-brand-gold-hover);
+    border-color: var(--color-brand-gold-hover);
 }
 
+/* Secondary/Warning Button (Outline) */
 .clear-btn {
-    background-color: #e67e22;
-    color: white;
+    background-color: var(--color-surface);
+    color: var(--color-text-secondary);
+    border-color: var(--color-border);
 }
 
 .clear-btn:hover {
-    background-color: #d35400;
+    background-color: var(--color-background);
+    border-color: var(--color-text-secondary);
+    color: var(--color-text-primary);
 }
 
-/* Table improvements */
+/* Success Button */
+.btn.done-btn {
+    background-color: var(--color-success-strong);
+    color: white;
+    margin-left: var(--space-sm);
+}
+
+.btn.done-btn:hover {
+    background-color: #218838; /* Darker green */
+}
+
+
+/* --- Table --- */
 .table-container {
-    margin: 25px 0;
-    border-radius: 8px;
+    margin: var(--space-lg) 0;
+    border-radius: var(--border-radius);
     overflow: hidden;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+    border: var(--border-width) solid var(--color-border);
+    box-shadow: var(--shadow-sm);
+    overflow-x: auto;
 }
 
 .data-table {
     width: 100%;
     border-collapse: collapse;
-    background-color: white;
+    background-color: var(--color-surface);
+}
+
+.data-table th, 
+.data-table td {
+    border: none; /* Removed internal borders for a cleaner look */
+    padding: var(--space-md);
+    text-align: left;
+    vertical-align: middle;
+    border-bottom: var(--border-width) solid var(--color-border);
 }
 
 .data-table th {
-    background-color: #f6f6f6;
-    color: #333;
-    font-weight: 600;
-    padding: 15px;
-    text-align: left;
-    border: 1px solid #ddd;
-}
-
-.data-table td {
-    padding: 12px 15px;
-    border: 1px solid #ddd;
+    background-color: var(--color-background);
+    color: var(--color-text-secondary);
+    font-weight: var(--font-weight-semibold);
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
 }
 
 .data-table tr:hover {
-    background-color: #f9f9f9;
+    background-color: #fcfcfd; /* A very subtle hover */
 }
 
+.data-table tr:last-child td {
+    border-bottom: none;
+}
+
+.data-table input[type="number"] {
+    padding: var(--space-sm);
+    text-align: center;
+}
+
+.agent-select {
+    padding: var(--space-sm) 12px;
+    font-size: 1rem;
+}
+
+.empty-row td {
+    padding: var(--space-xl);
+    text-align: center;
+    color: var(--color-text-secondary);
+    font-style: italic;
+}
+
+/* Placeholders (re-using empty row style) */
+.item-placeholder, 
+.empty-placeholder, 
+.input-placeholder {
+    color: var(--color-text-secondary);
+    font-style: italic;
+}
+
+/* Row Statuses */
 .done-row {
-    background-color: #d4edda !important; /* Light green */
+    background-color: var(--color-success) !important;
 }
 
-.btn.done-btn {
-    background-color: #28a745;
-    color: white;
-    margin-left: 8px;
+.danger-row {
+    background-color: var(--color-danger) !important;
+    color: var(--color-danger-strong);
 }
 
-.btn.done-btn:hover {
-    background-color: #218838;
+
+/* --- Action Buttons --- */
+.action-buttons {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-lg);
+    margin-top: var(--space-lg);
 }

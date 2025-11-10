@@ -59,7 +59,6 @@
     <button>Search</button>
   </div>
 </nav>
-
 <br>
 <br>
 <br>
@@ -82,6 +81,20 @@
             <span class="date-label">to date:</span>
             <input type="date" id="toDate" class="date-input" required>
             
+            <span class="date-label">Branch:</span>
+            <select id="branchSelect" class="date-input" required>
+                <option value="" disabled>Select a branch</option>
+                <option value="all branches" selected>All Branches</option>
+                <option value="ghu1">Ghu1</option>
+                <option value="ghu2">Ghu2</option>
+                <option value="aziba">Aziba</option>
+                <option value="qurom">Qurom</option>
+                <option value="mab">Mab</option>
+                <option value="maw">Maw</option>
+                <option value="central store">Central Store</option>
+                <option value="exp">Exp</option>
+            </select>
+            
             <button type="submit" id="fetchReportButton" class="fetch-button">fetch sales report</button>
         </form>
         
@@ -94,8 +107,7 @@
                     </tr>
                 </thead>
                 <tbody id="reportData">
-                    <!-- Dynamic rows will be inserted here -->
-                </tbody>
+                    </tbody>
             </table>            
             <div id="reportNote" class="note"></div>
 
@@ -115,29 +127,5 @@
     </div>
     
     <script src="sales report.js"></script>
-    <script>
-        $(document).ready(function() {
-            // Set current date as default for date inputs
-            const today = new Date().toISOString().split('T')[0];
-            $('#fromDate').val(today);
-            $('#toDate').val(today);
-            
-            // Log out button functionality
-            $('#logOutButton').on('click', function() {
-                window.location.href = "login.html"; // Redirect to login page
-            });
-            
-            // Download button functionality
-            $('#downloadButton').on('click', function() {
-                // This would typically use a library like SheetJS to generate Excel
-                alert('Downloading report as Excel...');
-            });
-            
-            // Ignore button functionality
-            $('#ignoreButton').on('click', function() {
-                window.location.href = "dashboard.html"; // Redirect to dashboard
-            });
-        });
-    </script>
-</body>
+    </body>
 </html>

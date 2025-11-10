@@ -9,6 +9,7 @@ document.addEventListener("DOMContentLoaded", function () {
         event.preventDefault();
         const formData = new FormData();
         formData.append("item_name", document.getElementById("new-medicine-name").value);
+        formData.append("arabic_name", document.getElementById("new-arabic-name").value);
         formData.append("price", document.getElementById("new-medicine-price").value);
         formData.append("barcode", document.getElementById("new-medicine-barcode").value);
         formData.append("expiry", document.getElementById("new-medicine-expiry").value);
@@ -16,6 +17,8 @@ document.addEventListener("DOMContentLoaded", function () {
         formData.append("packet_size", document.getElementById("new-medicine-packet").value);
         formData.append("active_name_1", document.getElementById("new-active-name-1").value);
         formData.append("active_name_2", document.getElementById("new-active-name-2").value);
+        formData.append("active_name_3", document.getElementById("new-active-name-3").value);
+        formData.append("supplier", document.getElementById("new-supplier").value);
         formData.append("cross_selling", document.getElementById("new-cross-selling").value);
         formData.append("significant_side_effects", document.getElementById("new-side-effects").value);
         formData.append("significant_interactions", document.getElementById("new-interactions").value);
@@ -121,11 +124,11 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         return res.json();
     }
-
-    // Used throughout: now expects data in batch-aware format!
+    
     function populateEditForm(med) {
         document.getElementById("edit-medicine-id").value = med.id;
         document.getElementById("edit-medicine-name").value = med.item_name || "";
+        document.getElementById("edit-arabic-name").value = med.arabic_name || "";
         document.getElementById("edit-medicine-price").value = med.price || "";
         document.getElementById("edit-medicine-barcode").value = med.barcode || "";
         document.getElementById("edit-medicine-expiry").value = med.expiry
@@ -135,6 +138,8 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById("edit-medicine-packet").value = med.packet_size || "";
         document.getElementById("edit-active-name-1").value = med.active_name_1 || "";
         document.getElementById("edit-active-name-2").value = med.active_name_2 || "";
+        document.getElementById("edit-active-name-3").value = med.active_name_3 || "";
+        document.getElementById("edit-supplier").value = med.supplier || "";
         document.getElementById("edit-cross-selling").value = med.cross_selling || "";
         document.getElementById("edit-side-effects").value = med.significant_side_effects || "";
         document.getElementById("edit-interactions").value = med.significant_interactions || "";
@@ -142,7 +147,6 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById("edit-dosage").value = med.dosage || "";
         document.getElementById("edit-location").value = med.location || "";
 
-        // These two will be refreshed again after batch modal closes as well
         refreshStockAndExpiry(med.id);
     }
 
@@ -161,6 +165,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         formData.append("id", document.getElementById("edit-medicine-id").value);
         formData.append("item_name", document.getElementById("edit-medicine-name").value);
+        formData.append("arabic_name", document.getElementById("edit-arabic-name").value);
         formData.append("price", document.getElementById("edit-medicine-price").value);
         formData.append("barcode", document.getElementById("edit-medicine-barcode").value);
         formData.append("expiry", document.getElementById("edit-medicine-expiry").value);
@@ -168,6 +173,8 @@ document.addEventListener("DOMContentLoaded", function () {
         formData.append("packet_size", document.getElementById("edit-medicine-packet").value);
         formData.append("active_name_1", document.getElementById("edit-active-name-1").value);
         formData.append("active_name_2", document.getElementById("edit-active-name-2").value);
+        formData.append("active_name_3", document.getElementById("edit-active-name-3").value);
+        formData.append("supplier", document.getElementById("edit-supplier").value);
         formData.append("cross_selling", document.getElementById("edit-cross-selling").value);
         formData.append("significant_side_effects", document.getElementById("edit-side-effects").value);
         formData.append("significant_interactions", document.getElementById("edit-interactions").value);
@@ -188,7 +195,6 @@ document.addEventListener("DOMContentLoaded", function () {
             const result = await response.json();
             alert(result.message);
 
-            // Always refresh stock and expiry after update
             const medId = document.getElementById("edit-medicine-id").value;
             if (medId) {
                 const medWithBatch = await fetchMedicineWithBatch(medId);
@@ -225,6 +231,138 @@ document.addEventListener("DOMContentLoaded", function () {
             alert("Failed to delete medicine.");
         }
     });
+    
+    // --- MODIFIED DUPLICATE MEDICINE LOGIC ---
+    const duplicateButton = document.getElementById("duplicate-medicine-btn");
+    const duplicateModal = document.getElementById("duplicate-target-modal");
+    const closeDuplicateModalBtn = document.getElementById("close-duplicate-modal");
+    const duplicateSearchInput = document.getElementById("duplicate-target-search");
+    const duplicateResultsContainer = document.getElementById("duplicate-target-results");
+
+    // Show the modal to select a target
+    duplicateButton.addEventListener("click", () => {
+        const sourceMedicineId = document.getElementById("edit-medicine-id").value;
+        if (!sourceMedicineId) {
+            alert("Please load a source medicine in the form first.");
+            return;
+        }
+        
+        // --- NEW --- Set all checkboxes to checked by default
+        document.querySelectorAll('.duplicate-field-cb').forEach(cb => {
+            cb.checked = true;
+        });
+        // --- END NEW ---
+
+        duplicateModal.style.display = "block";
+        duplicateSearchInput.value = "";
+        duplicateResultsContainer.innerHTML = "";
+        duplicateSearchInput.focus();
+    });
+
+    // Handle typing in the target search input
+    duplicateSearchInput.addEventListener("input", async () => {
+        const query = duplicateSearchInput.value.trim();
+        if (query.length < 2) {
+            duplicateResultsContainer.innerHTML = "";
+            return;
+        }
+
+        try {
+            const response = await fetch(`/search-medicine?query=${encodeURIComponent(query)}`);
+            if (!response.ok) throw new Error("Search failed");
+            
+            const medicines = await response.json();
+            renderDuplicateTargetResults(medicines);
+        } catch (error) {
+            console.error("Error searching for duplicate target:", error);
+            duplicateResultsContainer.innerHTML = "<div>Error fetching results.</div>";
+        }
+    });
+
+    // Display the search results in the modal
+    function renderDuplicateTargetResults(medicines) {
+        duplicateResultsContainer.innerHTML = "";
+        if (medicines.length === 0) {
+            duplicateResultsContainer.innerHTML = "<div style='cursor: default;'>No results found.</div>";
+            return;
+        }
+
+        medicines.forEach(med => {
+            const div = document.createElement("div");
+            div.textContent = `${med.item_name} (Barcode: ${med.barcode || "N/A"})`;
+            
+            // When a result is clicked, proceed with duplication
+            div.addEventListener("click", () => {
+                duplicateModal.style.display = "none";
+                proceedWithDuplication(med);
+            });
+
+            duplicateResultsContainer.appendChild(div);
+        });
+    }
+
+    // After a target is selected, confirm and execute the duplication
+    async function proceedWithDuplication(targetMedicine) {
+        const sourceMedicineId = document.getElementById("edit-medicine-id").value;
+        const targetMedicineId = targetMedicine.id;
+        
+        if (String(sourceMedicineId) === String(targetMedicineId)) {
+            alert("Cannot duplicate a medicine's data onto itself.");
+            return;
+        }
+
+        // --- NEW DYNAMIC LOGIC ---
+        const dataToDuplicate = {};
+        const checkedFields = document.querySelectorAll('.duplicate-field-cb:checked');
+        
+        if (checkedFields.length === 0) {
+            alert("No fields were selected to duplicate. Operation cancelled.");
+            return;
+        }
+
+        // Build the data object based on checked boxes
+        checkedFields.forEach(checkbox => {
+            const fieldName = checkbox.value; // e.g., "active_name_1"
+            const formFieldId = checkbox.dataset.formId; // e.g., "edit-active-name-1"
+            const formField = document.getElementById(formFieldId);
+            
+            if (formField) {
+                // Add the value from the form field to our object
+                dataToDuplicate[fieldName] = formField.value;
+            }
+        });
+        // --- END NEW DYNAMIC LOGIC ---
+
+        if (!confirm(`Are you sure you want to copy the ${checkedFields.length} selected field(s) from the current form to "${targetMedicine.item_name}"? This will overwrite existing data on the target.`)) {
+            return;
+        }
+
+        try {
+            // The dataToDuplicate object is now built dynamically
+            const duplicateResponse = await fetch("/api/duplicate-medicine-data", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ targetMedicineId, data: dataToDuplicate }),
+            });
+
+            const result = await duplicateResponse.json();
+            alert(result.message);
+
+        } catch (error) {
+            console.error("Error during duplication process:", error);
+            alert("An error occurred during the duplication process.");
+        }
+    }
+
+    // Logic to close the duplicate modal
+    closeDuplicateModalBtn.onclick = () => { duplicateModal.style.display = "none"; };
+    window.addEventListener('click', (event) => {
+        if (event.target == duplicateModal) {
+            duplicateModal.style.display = "none";
+        }
+    });
+    // --- END MODIFIED DUPLICATE LOGIC ---
+
 
     // === BATCHES LOGIC ===
     const manageBatchesBtn = document.getElementById('manage-batches-btn');
@@ -262,7 +400,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     <td>${batch.expiry ? batch.expiry.split('T')[0] : ""}</td>
                     <td>${batch.quantity ?? ""}</td>
                     <td>${batch.received_date ? batch.received_date.split('T')[0] : ""}</td>
-                    <td></td>
+                    <td>${batch.branch || ""}</td> <td></td>
+                    
                 `;
                 // Create Edit Button
                 const editBtn = document.createElement("button");
@@ -274,10 +413,11 @@ document.addEventListener("DOMContentLoaded", function () {
                         batch.batch_number || "",
                         batch.expiry ? batch.expiry.split('T')[0] : "",
                         batch.quantity ?? "",
-                        batch.received_date ? batch.received_date.split('T')[0] : ""
+                        batch.received_date ? batch.received_date.split('T')[0] : "",
+                        batch.branch || ""
                     );
                 };
-                // Create Delete Button (optional, you can keep your existing delete logic)
+                // Create Delete Button
                 const delBtn = document.createElement("button");
                 delBtn.textContent = "Delete";
                 delBtn.onclick = function() { window.deleteBatch(batch.batch_id); };
@@ -288,17 +428,15 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 }
 
-
-
-    // Make batch edit/delete globally accessible
-    window.editBatch = (batch_id, batch_number, expiry, quantity, received_date) => {
-        editingBatchId = batch_id;
-        document.getElementById("batch-id").value = batch_id;
-        document.getElementById("batch-number").value = batch_number || "";
-        document.getElementById("batch-expiry").value = expiry ? expiry.split('T')[0] : "";
-        document.getElementById("batch-qty").value = quantity ?? "";
-        document.getElementById("batch-received").value = received_date ? received_date.split('T')[0] : "";
-    };
+    window.editBatch = (batch_id, batch_number, expiry, quantity, received_date, branch) => { // Added 'branch' here
+    editingBatchId = batch_id;
+    document.getElementById("batch-id").value = batch_id;
+    document.getElementById("batch-number").value = batch_number || "";
+    document.getElementById("batch-expiry").value = expiry ? expiry.split('T')[0] : "";
+    document.getElementById("batch-qty").value = quantity ?? "";
+    document.getElementById("batch-received").value = received_date ? received_date.split('T')[0] : "";
+    document.getElementById("batch-branch").value = branch || ""; // This line will now work correctly
+};
     window.deleteBatch = (batch_id) => {
         if (!confirm("Delete this batch?")) return;
         fetch('/api/batches/delete', {
@@ -313,28 +451,32 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     };
 
-    batchForm.onsubmit = function (e) {
-        e.preventDefault();
-        const batch_id = document.getElementById("batch-id").value;
-        const batch_number = document.getElementById("batch-number").value;
-        const expiry = document.getElementById("batch-expiry").value;
-        const quantity = document.getElementById("batch-qty").value;
-        const received_date = document.getElementById("batch-received").value;
+   batchForm.onsubmit = function (e) {
+    e.preventDefault();
+    const batch_id = document.getElementById("batch-id").value;
+    const batch_number = document.getElementById("batch-number").value;
+    const expiry = document.getElementById("batch-expiry").value;
+    const quantity = document.getElementById("batch-qty").value;
+    const received_date = document.getElementById("batch-received").value;
+    const branch = document.getElementById("batch-branch").value;
 
-        const url = batch_id ? '/api/batches/edit' : '/api/batches/add';
-        const data = batch_id ? { batch_id, batch_number, expiry, quantity, received_date }
-            : { medicine_id: currentMedicineId, batch_number, expiry, quantity, received_date };
+    const url = batch_id ? '/api/batches/edit' : '/api/batches/add';
+    
+    // Corrected data object to include 'branch' in both cases
+    const data = batch_id 
+        ? { batch_id, batch_number, expiry, quantity, received_date, branch }
+        : { medicine_id: currentMedicineId, batch_number, expiry, quantity, received_date, branch };
 
-        fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        }).then(r => r.json()).then(() => {
-            loadBatches(currentMedicineId);
-            resetBatchForm();
-            refreshStockAndExpiry(currentMedicineId);
-        });
-    };
+    fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    }).then(r => r.json()).then(() => {
+        loadBatches(currentMedicineId);
+        resetBatchForm();
+        refreshStockAndExpiry(currentMedicineId);
+    });
+};
 
     document.getElementById("reset-batch-form").onclick = resetBatchForm;
     function resetBatchForm() {
@@ -343,7 +485,6 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById("batch-id").value = "";
     }
 
-    // Refresh stock and expiry after batch modal closes or edits
     async function refreshStockAndExpiry(medicineId) {
         if (!medicineId) return;
         const res = await fetch(`/api/medicine-with-batch/${medicineId}`);
@@ -353,7 +494,6 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById("edit-medicine-expiry").value = med.expiry ? new Date(med.expiry).toISOString().split("T")[0] : "";
     }
 
-    // Check Admin
     (function checkAdmin() {
         const userInfoString = sessionStorage.getItem("userInfo");
         if (!userInfoString) {
@@ -383,7 +523,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     })();
 
-    // Trigger Save Edits on F2
     document.addEventListener("keydown", function (event) {
         if (event.key === "F2") {
             event.preventDefault();

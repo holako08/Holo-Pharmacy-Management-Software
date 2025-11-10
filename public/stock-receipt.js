@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Parse button
     document.getElementById('parse-btn').onclick = handleParseFile;
     document.getElementById('confirm-receipt-btn').onclick = handleConfirmReceipt;
+    document.getElementById('load-transfer-btn').onclick = handleLoadTransferById;
 });
 
 function handleParseFile() {
@@ -147,3 +148,30 @@ function logout() {
     });
 }
 
+function handleLoadTransferById() {
+    const transferIdInput = document.getElementById('transfer-id-search');
+    const transferId = transferIdInput.value.trim();
+
+    if (!transferId) {
+        alert('Please enter a Transfer ID to search.');
+        return;
+    }
+
+    fetch(`/api/stock-mgmt-x9z/get-transfer/${transferId}`)
+        .then(r => {
+            if (!r.ok) {
+                throw new Error('Transfer not found or server error.');
+            }
+            return r.json();
+        })
+        .then(resp => {
+            if (resp.success && resp.transfer) {
+                parsedTransfer = resp.transfer;
+                showParsedTransfer(parsedTransfer);
+                transferIdInput.value = ''; // Clear input on success
+            } else {
+                alert(resp.error || 'Failed to load transfer by ID.');
+            }
+        })
+        .catch((err) => alert(err.message || 'An error occurred while searching for the transfer.'));
+}

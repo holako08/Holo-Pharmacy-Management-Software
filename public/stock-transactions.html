@@ -2,16 +2,88 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Stock Transactions | Pharmacy Management System</title>
-    <link rel="stylesheet" href="stock-common.css">
-    <link rel="stylesheet" href="stock-transactions.css">
-    <link rel="stylesheet" href="nav-bar.css">
-    <script defer src="stock-transactions.js"></script>
+    <title>Stock Management | Pharmacy Management System</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="shortcut icon" href="images/logo.png" type="image/x-icon">
+
+    <link rel="stylesheet" href="nav-bar.css">
+    <link rel="stylesheet" href="stock-common.css">
+    <link rel="stylesheet" href="stock-transfer.css">
+    <link rel="stylesheet" href="stock-receipt.css">
+    <link rel="stylesheet" href="stock-requests.css">
+    <link rel="stylesheet" href="stock-transactions.css">
+    
+
+    <style>
+        /* Style for the tab container */
+        .tab-container {
+            width: 95%;
+            margin: 20px auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* Style for the tab buttons */
+        .tab-buttons {
+            overflow: hidden;
+            border-bottom: 1px solid #ddd;
+            background-color: #f1f1f1;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .tab-buttons button {
+            background-color: inherit;
+            float: left;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            padding: 14px 16px;
+            transition: 0.3s;
+            font-size: 17px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        /* Change background color of buttons on hover */
+        .tab-buttons button:hover {
+            background-color: #ddd;
+        }
+
+        /* Create an active/current tablink class */
+        .tab-buttons button.active {
+            background-color: #ccc;
+            color: #000;
+        }
+
+        /* Style the tab content */
+        .tab-content {
+            display: none;
+            padding: 20px;
+            border-top: none;
+        }
+        
+        /* Refresh button style */
+        .refresh-btn {
+            background-color: #007bff;
+            color: white;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            float: right;
+            margin-bottom: 15px;
+            transition: background-color 0.3s;
+        }
+
+        .refresh-btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
 </head>
 <body>
-    <!-- Navbar -->
     <nav class="nav-bar-unique">
         <div class="logo-unique">
             <img src="images/logo.png" alt="Logo">
@@ -54,79 +126,312 @@
             <button>Search</button>
         </div>
     </nav>
-    <!-- User Info -->
-   <div class="user-info-panel">
-  <img id="user-photo" src="images/default-profile.png" alt="User Photo">
-  <div>
-    <span id="user-name"></span> <br>
-    <span id="user-job-title"></span>
-  </div>
-  <button id="logout-btn">Logout</button>
-</div>
+    
+    <div class="user-info-panel">
+      <img id="user-photo" src="images/default-profile.png" alt="User Photo">
+      <div>
+        <span id="user-name"></span> <br>
+        <span id="user-job-title"></span>
+      </div>
+      <button id="logout-btn">Logout</button>
+    </div>
 
-    <div class="main-dashboard">
-        <h2>Stock Transactions</h2>
-        <!-- Quick Navigation for Stock Transactions -->
-<div class="stock-nav">
-    <a href="stock-transfer.html" class="stock-nav-link">Stock Transfer</a>
-    <a href="stock-receipt.html" class="stock-nav-link">Stock Receipt</a>
-    <a href="stock-requests.html" class="stock-nav-link">Stock Request</a>
-</div>
-        <div class="dashboard-controls">
-            <input type="text" id="filter-item" placeholder="Filter by Item Name...">
-<input type="text" id="filter-id" placeholder="Filter by STN/SRN No...">
-<input type="text" id="filter-user" placeholder="Filter by User...">
-<input type="date" id="filter-date-from">
-<input type="date" id="filter-date-to">
-<select id="filter-type">
-    <option value="">All Types</option>
-    <option value="transfer">Transfer</option>
-    <option value="receipt">Receipt</option>
-    <option value="cancelled">Cancelled</option>
-</select>
-<button id="filter-btn">Apply Filter</button>
-<button id="reset-btn">Reset</button>
-<button id="export-btn">Export to Excel</button>
-
+    <div class="tab-container">
+        <div class="tab-buttons">
+            <button class="tab-link active" onclick="openTab(event, 'transactions')">Transactions</button>
+            <button class="tab-link" onclick="openTab(event, 'requests')">Stock Requests</button>
+            <button class="tab-link" onclick="openTab(event, 'transfer')">Stock Transfer</button>
+            <button class="tab-link" onclick="openTab(event, 'receipt')">Stock Receipt</button>
+            
+            
         </div>
-        <div id="transactions-table-section">
-            <table id="transactions-table">
+
+        <div id="transfer" class="tab-content" >
+            <button class="refresh-btn" onclick="location.reload()">Refresh</button>
+            <div class="main-transfer">
+              <div class="import-request-div">
+                  <label>Import SRR (.txt):</label>
+          <input type="file" id="srr-file" accept=".txt">
+          <button id="parse-srr-btn">Parse File</button>
+          <span style="margin: 0 10px;">OR</span>
+          <label>Search SRR by ID:</label>
+          <input type="text" id="srr-id-search" placeholder="Enter SRR ID...">
+          <button id="srr-id-search-btn">Load Request</button>
+              </div>
+              <h2>Stock Transfer</h2>
+              <div class="branch-row">
+                    <label>From Branch:</label>
+                     <select id="branch-from" name="branch" required>
+                        <option value="" disabled selected>Select your branch</option>
+    <option value="ghu1">ghu1</option>
+    <option value="ghu2">ghu2</option>
+    <option value="qurom">qurom</option>
+    <option value="aziba">aziba</option>
+    <option value="mab">mab</option>
+    <option value="maw">maw</option>
+    <option value="central store">central store</option>
+    <option value="exp">exp</option>
+                    </select> 
+                    
+                    <label>To Branch:</label>
+                    <select id="branch-to" name="branch" required>
+                        <option value="" disabled selected>Select your branch</option>
+    <option value="ghu1">ghu1</option>
+    <option value="ghu2">ghu2</option>
+    <option value="qurom">qurom</option>
+    <option value="aziba">aziba</option>
+    <option value="mab">mab</option>
+    <option value="maw">maw</option>
+    <option value="central store">central store</option>
+    <option value="exp">exp</option>
+                    </select>
+                </div>
+              <div class="search-section">
+                  <input type="text" id="search-medicine" placeholder="Search medicine...">
+                  <div id="search-results"></div>
+              </div>
+              <div id="batch-list"></div>
+              <div class="transfer-table-section">
+                  <h3>Transfer List</h3>
+                  <table id="transfer-table">
+                      <thead>
+                          <tr>
+                              <th>Item Name</th>
+                              <th>Batch</th>
+                              <th>Expiry</th>
+                              <th>Quantity</th>
+                              <th>Stock</th>
+                              <th>Remove</th>
+                          </tr>
+                      </thead>
+                      <tbody></tbody>
+                  </table>
+                  <button id="submit-transfer">Confirm Transfer</button>
+              </div>
+              <div id="transfer-success" style="display:none;">
+                  <h3>Transfer Completed!</h3>
+                  <a id="stn-link" class="btn-link" href="#">Download STN PDF</a>
+                  <a id="txt-link" class="btn-link" href="#">Download Transfer File (TXT)</a>
+              </div>
+              <div id="import-srr-modal">
+                <div class="modal-content">
+                  <h3>Assign Batches to Requested Items</h3>
+                  <table id="srr-modal-table">
+                    <thead>
+                      <tr>
+                        <th>Item Name</th>
+                        <th>Requested Qty</th>
+                        <th>Batch/Expiry</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody></tbody>
+                  </table>
+                  <button class="close-btn" onclick="closeSRRModal()">Done</button>
+                </div>
+              </div>
+            </div>
+        </div>
+
+        <div id="receipt" class="tab-content">
+    <button class="refresh-btn" onclick="location.reload()">Refresh</button>
+     <div class="main-receipt">
+        <h2>Stock Receipt</h2>
+        <div class="upload-section">
+            <label for="receipt-file" class="upload-label">Upload Transfer Data File (.txt):</label>
+            <input type="file" id="receipt-file" accept=".txt">
+            <button id="parse-btn">Parse File</button>
+
+            <span style="margin: 0 12px; font-weight: bold; color: #555;">OR</span>
+
+            <label for="transfer-id-search" class="upload-label">Search by Transfer ID:</label>
+            <input type="text" id="transfer-id-search" placeholder="Enter STN ID..." style="padding: 6px 10px; border-radius: 6px; border: 1px solid #b3b3b3;">
+            <button id="load-transfer-btn">Load Transfer</button>
+        </div>
+        <div id="parsed-section" style="display:none;">
+            <h3>Transfer Preview</h3>
+            <table id="preview-table">
                 <thead>
                     <tr>
-                        <th>Type</th>
-                        <th>ID</th>
-                        <th>Items</th>
-                        <th>Quantities</th>
-                        <th>Batches</th>
-                        <th>From Branch</th>
-                        <th>To Branch</th>
-                        <th>User</th>
-                        <th>Date</th>
-                        <th>Status</th>
-                        <th>Action</th>
+                        <th>Item Name</th>
+                        <th>Batch</th>
+                        <th>Expiry</th>
+                        <th>Quantity</th>
                     </tr>
                 </thead>
                 <tbody></tbody>
             </table>
-            <div id="pagination" class="dashboard-pagination"></div>
-            <div id="no-data-msg" style="display:none;text-align:center;color:#999;padding:20px;">
-                No transactions found for selected criteria.
+            <div class="receipt-details">
+                <div><b>From Branch:</b> <span id="preview-from"></span></div>
+                <div><b>To Branch:</b> <span id="preview-to"></span></div>
+                <div><b>Transferred By:</b> <span id="preview-sender"></span></div>
+                <div><b>Date:</b> <span id="preview-date"></span></div>
+            </div>
+            <button id="confirm-receipt-btn">Confirm Receipt</button>
+        </div>
+        <div id="receipt-success" style="display:none;">
+            <h3>Receipt Processed!</h3>
+            <a id="srn-link" class="btn-link" href="#" target="_blank">Download SRN PDF</a>
+        </div>
+    </div>
+</div>
+
+        <div id="requests" class="tab-content">
+            <button class="refresh-btn" onclick="location.reload()">Refresh</button>
+            <div class="main-transfer"> <h2>Stock Request</h2>
+                <div class="branch-row">
+                    <label>From Branch:</label>
+                     <select id="from-branch" name="branch" required>
+                        <option value="" disabled selected>Select your branch</option>
+    <option value="ghu1">ghu1</option>
+    <option value="ghu2">ghu2</option>
+    <option value="qurom">qurom</option>
+    <option value="aziba">aziba</option>
+    <option value="mab">mab</option>
+    <option value="maw">maw</option>
+    <option value="central store">central store</option>
+    <option value="exp">exp</option>
+                    </select> 
+                    
+                    <label>To Branch:</label>
+                    <select id="to-branch" name="branch" required>
+                        <option value="" disabled selected>Select your branch</option>
+    <option value="ghu1">ghu1</option>
+    <option value="ghu2">ghu2</option>
+    <option value="qurom">qurom</option>
+    <option value="aziba">aziba</option>
+    <option value="mab">mab</option>
+    <option value="maw">maw</option>
+    <option value="central store">central store</option>
+    <option value="exp">exp</option>
+                    </select>
+                </div>
+                <div class="search-section">
+    <input type="text" id="search-medicine-request" placeholder="Search medicine...">
+    <div id="search-results-request"></div>
+</div>
+                <div class="transfer-table-section">
+                    <table id="request-table">
+                        <thead>
+                            <tr>
+                                <th>Item Name</th>
+                                <th>Quantity</th>
+                                <th>Remove</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <button id="submit-request">Submit Request</button>
+                <div id="download-links" style="margin-top:18px;display:none;">
+                    <a id="srr-txt-link" href="#" class="btn-link">Download SRR TXT</a>
+                    <span id="srr-id">SRR ID</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="transactions" class="tab-content" style="display: block;">
+            <button class="refresh-btn" onclick="location.reload()">Refresh</button>
+             <div class="main-dashboard">
+                <h2>Stock Transactions</h2>
+                <div class="stock-nav">
+                    <a href="#" class="stock-nav-link" onclick="openTab(event, 'requests'); return false;">Stock Request</a>
+                    <a href="#" class="stock-nav-link" onclick="openTab(event, 'transfer'); return false;">Stock Transfer</a>
+                    <a href="#" class="stock-nav-link" onclick="openTab(event, 'receipt'); return false;">Stock Receipt</a>
+                    
+                </div>
+                <div class="dashboard-controls">
+                    <input type="text" id="filter-item" placeholder="Filter by Item Name...">
+                    <input type="text" id="filter-id" placeholder="Filter by STN/SRN No...">
+                    <input type="text" id="filter-user" placeholder="Filter by User...">
+                    <input type="date" id="filter-date-from">
+                    <input type="date" id="filter-date-to">
+                    <select id="filter-type">
+                        <option value="">All Types</option>
+                        <option value="transfer">Transfer</option>
+                        <option value="receipt">Receipt</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                    <button id="filter-btn">Apply Filter</button>
+                    <button id="reset-btn">Reset</button>
+                    <button id="export-btn">Export to Excel</button>
+                </div>
+                <div id="transactions-table-section">
+                    <table id="transactions-table">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>ID</th>
+                                <th>Items</th>
+                                <th>Quantities</th>
+                                <th>Batches</th>
+                                <th>From Branch</th>
+                                <th>To Branch</th>
+                                <th>User</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                    <div id="pagination" class="dashboard-pagination"></div>
+                    <div id="no-data-msg" style="display:none;text-align:center;color:#999;padding:20px;">
+                        No transactions found for selected criteria.
+                    </div>
+                </div>
+            </div>
+            <div id="txn-modal">
+              <div class="modal-box">
+                <h3 id="txn-modal-title">Transaction Details</h3>
+                <div id="txn-modal-content"></div>
+                <button class="close-btn" onclick="closeTxnModal()">Close</button>
+              </div>
             </div>
         </div>
     </div>
-    <!-- Transaction View Modal -->
-<div id="txn-modal">
-  <div class="modal-box">
-    <h3 id="txn-modal-title">Transaction Details</h3>
-    <div id="txn-modal-content"></div>
-    <button class="close-btn" onclick="closeTxnModal()">Close</button>
-  </div>
-</div>
-    <!-- Footer -->
-
     <div class="dashboard-footer">
         © 2025 Pharmacy Management System | Designed by Pharmacist: MOHAMED HAMID |
         <a href="mailto:mhm.hamid@gmail.com">mhm.hamid@gmail.com</a> | All Rights Reserved
     </div>
+
+    <script>
+        function openTab(evt, tabName) {
+            var i, tabcontent, tablinks;
+            // Get all elements with class="tab-content" and hide them
+            tabcontent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+
+            // Get all elements with class="tab-link" and remove the class "active"
+            tablinks = document.getElementsByClassName("tab-link");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+
+            // Show the current tab, and add an "active" class to the button that opened the tab
+            document.getElementById(tabName).style.display = "block";
+            // Check if evt is not a synthetic event before accessing currentTarget
+            if (evt && evt.currentTarget) {
+                evt.currentTarget.className += " active";
+            } else {
+                // Fallback for when called without an event (e.g., from quick nav)
+                // Find the button that corresponds to the tabName
+                const buttons = document.querySelectorAll('.tab-link');
+                buttons.forEach(button => {
+                    if (button.getAttribute('onclick').includes(`'${tabName}'`)) {
+                        button.className += ' active';
+                    }
+                });
+            }
+        }
+    </script>
+    
+    <script defer src="stock-transfer.js"></script>
+    <script defer src="stock-receipt.js"></script>
+    <script defer src="stock-requests.js"></script>
+    <script defer src="stock-transactions.js"></script>
+    
 </body>
 </html>

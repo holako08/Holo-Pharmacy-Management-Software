@@ -9,7 +9,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
-  <!-- NAVBAR (matching your reports) -->
   <nav class="nav-bar-unique">
     <div class="logo-unique">
       <img src="images/logo.png" alt="Logo">
@@ -56,7 +55,6 @@
     </div>
   </nav>
 
-  <!-- Header: title & user info -->
   <div class="report-header-flex">
     <div class="title">
       <h1>Item Master</h1>
@@ -73,13 +71,11 @@
     </div>
   </div>
 
-  <!-- Dynamic Search Bar -->
   <section class="item-master-search">
     <input type="text" id="item-search-input" placeholder="Search by name, barcode, or active ingredient...">
     <div id="item-search-suggestions" class="item-search-suggestions"></div>
   </section>
 
-  <!-- Item Display Card -->
   <main>
     <section class="item-master-main">
       <div class="item-card">
@@ -89,15 +85,18 @@
           </div>
           <div class="item-main-details">
             <h2 id="item-name">Search and select an item</h2>
-<div id="item-id-label" style="font-size:1.1em; color:#B99619; margin-bottom:4px;"></div>
+            <div id="item-id-label" style="font-size:1.1em; color:#B99619; margin-bottom:4px;"></div>
             <div class="item-badge" id="active-ingredient"></div>
             <div class="item-meta">
               <span id="barcode"></span> • <span id="price"></span> • <span id="stock"></span>
+              <button id="download-item-btn" class="download-btn" style="display: none;">Download Data</button>
             </div>
           </div>
         </div>
         <div class="item-details-table">
           <table>
+            <tr><th>Arabic Name</th><td id="arabic-name"></td></tr>
+            <tr><th>Supplier</th><td id="supplier"></td></tr>
             <tr><th>Expiry Date</th><td id="expiry"></td></tr>
             <tr><th>Packet Size</th><td id="packet-size"></td></tr>
             <tr><th>Location</th><td id="location"></td></tr>
@@ -113,7 +112,6 @@
     </section>
   </main>
 
-  <!-- Footer -->
   <div class="dashboard-footer">
     © 2025 Pharmacy Management System | Designed by Pharmacist: MOHAMED HAMID | <a href="mailto:mhm.hamid@gmail.com">mhm.hamid@gmail.com</a> | All Rights Reserved
   </div>

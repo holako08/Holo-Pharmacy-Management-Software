@@ -96,32 +96,88 @@ function getSelectedBillIds() {
   return ids;
 }
 
-function reprintSelectedBills() {
+// UPDATED FUNCTION
+async function reprintSelectedBills() {
   const ids = getSelectedBillIds();
-  console.log("reprintSelectedBills: IDs obtained:", ids, "Length:", ids.length); // Debugging log
   if (ids.length === 0) {
-    console.log("reprintSelectedBills: Alerting 'No bills selected.' because length is 0."); // Debugging log
-    return alert("No bills selected to reprint."); // More specific alert
+    return alert("No bills selected to reprint.");
   }
 
-  // Fetch all selected bills, then print as one invoice
-  Promise.all(ids.map(id =>
+  // Fetch all selected bill *rows*
+  const fetchedBillsFiltered = await Promise.all(ids.map(id =>
     fetch(`/api/bill-returns/reprint/${id}`)
     .then(res => res.json())
     .then(data => data.success ? data.bill : null)
-  )).then(fetchedBillsFiltered => {
-    console.log("reprintSelectedBills: Fetched bills for reprinting (before filter):", fetchedBillsFiltered); // Debugging log
-    const validBillsForPrint = fetchedBillsFiltered.filter(b => b);
-    console.log("reprintSelectedBills: Valid bills for printing (after filter):", validBillsForPrint); // Debugging log
-    if (!validBillsForPrint.length) {
-      console.log("reprintSelectedBills: Alerting 'No valid bills to print.' because length is 0."); // Debugging log
-      return alert("No valid bills could be fetched for reprinting. They might have been deleted or an error occurred."); // More specific alert
-    }
-    printCombinedBillsPOSFormat(validBillsForPrint);
-  }).catch(error => {
-    console.error("reprintSelectedBills: Fetch error:", error);
-    alert("An error occurred during reprinting: " + error.message);
-  });
+  ));
+  
+  const validBillsForPrint = fetchedBillsFiltered.filter(b => b);
+  
+  if (!validBillsForPrint.length) {
+    return alert("No valid bills could be fetched for reprinting.");
+  }
+
+  // --- START MODIFIED LOGIC ---
+  
+  // 1. Sort to find the main invoice ID (lowest bill_id)
+  validBillsForPrint.sort((a, b) => Number(a.bill_id) - Number(b.bill_id));
+  const invoiceId = validBillsForPrint[0].bill_id;
+  
+  // 2. Get common data from the first bill row
+  const firstBill = validBillsForPrint[0];
+  
+  // 3. Create the 'items' array, fetching full details for each
+  const items = [];
+  for (const bill of validBillsForPrint) {
+      try {
+          // Fetch full medicine details to get arabic_name and packet_size
+          const res = await fetch(`/api/pos/medicines/get-by-name/${encodeURIComponent(bill.item_name)}`);
+          if (!res.ok) throw new Error(`Medicine not found: ${bill.item_name}`);
+          const medDetails = await res.json();
+          
+          // --- FIX: Calculate subtotal for each item ---
+          const packet_size = medDetails.packet_size || 1;
+          const quantity = parseFloat(bill.quantity) || 0;
+          const price = parseFloat(bill.price) || 0;
+          const subtotal = (quantity / packet_size) * price;
+          // --- END FIX ---
+
+          items.push({
+              item_name: bill.item_name,
+              arabic_name: medDetails.arabic_name || '', // From fetched details
+              quantity: quantity,
+              price: price,
+              packet_size: packet_size, // From fetched details
+              subtotal: subtotal // <-- ADDED subtotal
+          });
+      } catch (err) {
+          console.error(err);
+          // Add item even if details fail, to show *something*
+          items.push({
+              item_name: bill.item_name,
+              arabic_name: '(details fetch failed)',
+              quantity: parseFloat(bill.quantity) || 0,
+              price: parseFloat(bill.price) || 0,
+              packet_size: 1,
+              subtotal: 0 // Set 0 if fetch fails
+          });
+      }
+  }
+  
+  // 4. Create the billPayload
+  const billPayload = {
+      patient_name: firstBill.patient_name || "",
+      patient_phone: firstBill.patient_phone || "",
+      payment_method: firstBill.payment_method || "",
+      card_invoice_number: firstBill.card_invoice_number || "",
+      ecommerce_invoice_number: firstBill["E-commerce Invoice Number"] || "",
+      items: items // The new array we just built (now with subtotals)
+  };
+
+  // 5. Call the tax invoice print function (which is now in this same file)
+  // NOTE: We pass 0 for discount, as the original discount isn't stored on the bill row.
+  await printInvoiceFrontend(billPayload, 0, invoiceId); // <-- CHANGED to call the new function
+
+  // --- END MODIFIED LOGIC ---
 }
 
 // Send bill return request
@@ -153,9 +209,6 @@ function returnBills(billIds) {
   });
 }
 
-// Removed fetchPacketSizes from here, as it's now a server-side responsibility for returns.
-// If it's used by other client-side components, keep it in those components or a utility file.
-
 
 function returnSelectedBills() {
   const ids = getSelectedBillIds();
@@ -163,271 +216,130 @@ function returnSelectedBills() {
   returnBills(ids);
 }
 
-// Trigger reprint (uses backend to get bill, then window.print or POS print logic)
-function reprintBills(billIds) {
-  billIds.forEach(id => {
-    fetch(`/api/bill-returns/reprint/${id}`)
-      .then(res => res.json())
-      .then(data => {
-        if (!data.success) return alert(data.message || "Failed to fetch bill for printing.");
-        printBillPOSFormat(data.bill);
-      });
-  });
-}
 
-function printBillPOSFormat(bill) {
-  // If bill is a single-item bill (your current structure), display as a one-row bill
-  // If you support multi-item bills in future, refactor accordingly
+//
+// --- REMOVED FUNCTIONS ---
+// `getBillTotals` and `printTaxInvoice` have been removed.
+//
 
-  const items = [
-    {
-      item_name: bill.item_name,
-      quantity: bill.quantity,
-      price: bill.price,
-      subtotal: bill.subtotal
-    }
-  ];
+// --- NEW FUNCTION (Copied from pos.js) ---
+/**
+ * Generates an HTML invoice from a template and opens it in a new window for printing.
+ */
+async function printInvoiceFrontend(billPayload, discountPercent, billId) {
+    try {
+      // 1. Fetch the HTML template
+      const res = await fetch('invoice-template.html');
+      if (!res.ok) throw new Error('Could not load invoice-template.html');
+      let templateHtml = await res.text();
+  
+      // 2. Get User & Branch Info from Session
+      const userInfoString = sessionStorage.getItem('userInfo');
+      const userInfo = userInfoString ? JSON.parse(userInfoString) : {};
+      const pharmacist = userInfo.fullName || 'N/A';
+      const branch = userInfo.branch || 'Main';
+  
+      // 3. Get Bill Info from Payload
+      const { patient_name, patient_phone, payment_method, items } = billPayload;
+  
+      // 4. Get Date & Time
+      const now = new Date();
+      const printDate = now.toLocaleDateString('en-GB'); // dd/mm/yyyy
+      const printTime = now.toLocaleTimeString('en-US', { hour12: true });
+  
+      // 5. Calculate Totals (now uses item.subtotal)
+      const subtotal = items.reduce((sum, item) => sum + item.subtotal, 0);
+      const discountVal = parseFloat(discountPercent) || 0;
+      const discountAmount = (subtotal * discountVal) / 100;
+      const total = subtotal - discountAmount;
+  
+      // 6. Build Items HTML Table Rows
+      const itemsHtml = items.map(item => {
+          // Calculate unit price based on subtotal and quantity
+          const quantity = parseFloat(item.quantity) || 0;
+          const size = parseFloat(item.packet_size) || 1;
+          const units = (quantity / size);
+          const unitPrice = (units > 0) ? (item.subtotal / units) : (parseFloat(item.price) || 0);
 
-  // Get discount (if you save discount in bills table, else set to 0)
-  // You can enhance this if you add discount column in future.
-  const discount = bill.discount ? parseFloat(bill.discount) : 0;
-
-  // Calculate grand total
-  const subtotal = items.reduce((sum, i) => sum + parseFloat(i.subtotal), 0);
-  const final_total = subtotal - (subtotal * discount / 100);
-
-  // Bill fields
-  const patient_name = bill.patient_name || "";
-  const patient_phone = bill.patient_phone || "";
-  const payment_method = bill.payment_method || "";
-  const card_invoice_number = bill.card_invoice_number || "";
-  const ecommerce_invoice_number = bill["E-commerce Invoice Number"] || "";
-  const bill_date = bill.bill_date ? (new Date(bill.bill_date)).toLocaleDateString("en-GB") : "";
-  const bill_time = bill.bill_time || "";
-  const user = bill.user || "";
-
-  // Exact POS-style HTML
-  const html = `
-    <style>
-      body { font-family: Arial; padding: 30px; }
-      h2 { text-align: center; }
-      table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-      th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
-      .total { font-size: 1.2em; font-weight: bold; margin-top: 20px; text-align: right; }
-      .footer { text-align: center; margin-top: 30px; font-style: italic; }
-      .meta { margin-top: 15px; }
-      .meta p { margin: 0 0 5px 0; }
-    </style>
-    <h2>This is for the purposes of knowing the prices - NOT AN INVOICE</h2>
-    <div class="meta">
-      <p><strong>Date:</strong> ${bill_date} <strong>Time:</strong> ${bill_time}</p>
-      <p><strong>Bill ID:</strong> ${bill.bill_id}</p>
-      <p><strong>Patient Name:</strong> ${patient_name}</p>
-      <p><strong>Phone:</strong> ${patient_phone}</p>
-      <p><strong>Payment Method:</strong> ${payment_method}</p>
-      ${card_invoice_number ? `<p><strong>Card Invoice:</strong> ${card_invoice_number}</p>` : ""}
-      ${ecommerce_invoice_number ? `<p><strong>E-commerce Invoice:</strong> ${ecommerce_invoice_number}</p>` : ""}
-      <p><strong>Served by:</strong> ${user}</p>
-    </div>
-    <table>
-      <thead>
-        <tr><th>Item</th><th>Qty</th><th>Price</th><th>Subtotal</th></tr>
-      </thead>
-      <tbody>
-        ${items.map(item => `
-          <tr>
-            <td>${item.item_name}</td>
-            <td>${item.quantity}</td>
-            <td>${item.price}</td>
-            <td>${parseFloat(item.subtotal).toFixed(3)}</td>
-          </tr>
-        `).join("")}
-      </tbody>
-    </table>
-    <p class="total">Discount: ${discount}%</p>
-    <p class="total">Grand Total: ${final_total.toFixed(3)}</p>
-    <div class="footer">Thanks for shopping with us. Get well soon!</div>
-  `;
-
-  const win = window.open('', '', 'width=800,height=600');
-  win.document.write(html);
-  win.document.close();
-  win.focus();
-  win.print();
-  win.onafterprint = () => win.close();
-}
-
-function printMultipleBillsPOSFormat(bills) {
-  let html = `
-    <style>
-      body { font-family: Arial; padding: 30px; }
-      h2 { text-align: center; }
-      table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-      th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
-      .total { font-size: 1.2em; font-weight: bold; margin-top: 20px; text-align: right; }
-      .footer { text-align: center; margin-top: 30px; font-style: italic; }
-      .meta { margin-top: 15px; }
-      .meta p { margin: 0 0 5px 0; }
-      .bill-break { page-break-after: always; border-top: 2px dashed #bbb; margin: 40px 0; }
-    </style>
-  `;
-
-  bills.forEach((bill, i) => {
-    const items = [
-      {
-        item_name: bill.item_name,
-        quantity: bill.quantity,
-        price: bill.price,
-        subtotal: bill.subtotal
-      }
-    ];
-    const discount = bill.discount ? parseFloat(bill.discount) : 0;
-    const subtotal = items.reduce((sum, it) => sum + parseFloat(it.subtotal), 0);
-    const final_total = subtotal - (subtotal * discount / 100);
-
-    const patient_name = bill.patient_name || "";
-    const patient_phone = bill.patient_phone || "";
-    const payment_method = bill.payment_method || "";
-    const card_invoice_number = bill.card_invoice_number || "";
-    const ecommerce_invoice_number = bill["E-commerce Invoice Number"] || "";
-    const bill_date = bill.bill_date ? (new Date(bill.bill_date)).toLocaleDateString("en-GB") : "";
-    const bill_time = bill.bill_time || "";
-    const user = bill.user || "";
-
-    html += `
-      <h2>This is for the purposes of knowing the prices - NOT ANVOICE</h2>
-      <div class="meta">
-        <p><strong>Date:</strong> ${bill_date} <strong>Time:</strong> ${bill_time}</p>
-        <p><strong>Bill ID:</strong> ${bill.bill_id}</p>
-        <p><strong>Patient Name:</strong> ${patient_name}</p>
-        <p><strong>Phone:</strong> ${patient_phone}</p>
-        <p><strong>Payment Method:</strong> ${payment_method}</p>
-        ${card_invoice_number ? `<p><strong>Card Invoice:</strong> ${card_invoice_number}</p>` : ""}
-        ${ecommerce_invoice_number ? `<p><strong>E-commerce Invoice:</strong> ${ecommerce_invoice_number}</p>` : ""}
-        <p><strong>Served by:</strong> ${user}</p>
-      </div>
-      <table>
-        <thead>
-          <tr><th>Item</th><th>Qty</th><th>Price</th><th>Subtotal</th></tr>
-        </thead>
-        <tbody>
-          ${items.map(item => `
+          return `
             <tr>
-              <td>${item.item_name}</td>
-              <td>${item.quantity}</td>
-              <td>${item.price}</td>
-              <td>${parseFloat(item.subtotal).toFixed(3)}</td>
+              <td class="ar-font">${item.arabic_name || item.item_name} / <span class="ltr">${item.item_name}</span></td>
+              <td class="center">${item.quantity}</td>
+              <td class="ltr center">${unitPrice.toFixed(3)}</td>
+              <td class="ltr center">${item.subtotal.toFixed(3)}</td>
             </tr>
-          `).join("")}
-        </tbody>
-      </table>
-      <p class="total">Discount: ${discount}%</p>
-      <p class="total">Grand Total: ${final_total.toFixed(3)}</p>
-      <div class="footer">Thanks for shopping with us. Get well soon!</div>
-      ${i < bills.length - 1 ? '<div class="bill-break"></div>' : ''}
-    `;
-  });
-
-  const win = window.open('', '', 'width=800,height=600');
-  if (!win) {
-    alert("Unable to open print window. Please disable popup blocker and try again.");
-    return;
-  }
-  win.document.write(html);
-  win.document.close();
-  win.focus();
-  win.print();
-  win.onafterprint = () => win.close();
-}
-
-function printCombinedBillsPOSFormat(bills) {
-  if (!bills || !bills.length) return;
-
-  // Sort bills by bill_id to get the lowest as the "Invoice No"
-  bills.sort((a, b) => Number(a.bill_id) - Number(b.bill_id));
-  const invoiceNo = bills[0].bill_id;
-  const bill_date = bills[0].bill_date ? (new Date(bills[0].bill_date)).toLocaleDateString("en-GB") : "";
-  const bill_time = bills[0].bill_time || "";
-  const patient_name = bills[0].patient_name || "";
-  const patient_phone = bills[0].patient_phone || "";
-  const payment_method = bills[0].payment_method || "";
-  const card_invoice_number = bills[0].card_invoice_number || "";
-  const ecommerce_invoice_number = bills[0]["E-commerce Invoice Number"] || "";
-  const user = bills[0].user || "";
-
-  // Group by item (optional): if same item in multiple bills, sum qty and subtotal
-  const grouped = {};
-  bills.forEach(bill => {
-    const key = bill.item_name;
-    if (!grouped[key]) {
-      grouped[key] = {
-        item_name: bill.item_name,
-        quantity: 0,
-        price: bill.price,
-        subtotal: 0
+          `
+      }).join('');
+  
+      // 7. Define Pharmacy Details (You can customize these)
+      const pharmacyData = {
+          Ghubrah: {
+              en: "Al Salam Pharmacy",
+              ar: "صيدلية السلام",
+              addressEn: "Ghubrah, Muscat",
+              addressAr: "الغبرة، مسقط",
+              phone: "72699414"
+          },
+          Azaiba: {
+              en: "Al Salam Pharmacy",
+              ar: "صيدلية السلام",
+              addressEn: "Azaiba, Muscat",
+              addressAr: "العذيبة، مسقط",
+              phone: "72699414"
+          }
       };
+      
+      const currentPharmacy = pharmacyData[branch] || pharmacyData['Ghubrah']; // Default to Ghubrah
+
+      // 8. Replace all placeholders in the template
+      templateHtml = templateHtml.replace('{{logoImage}}', '<img src="/images/logo.png" alt="Logo" style="width:100%;">');
+      
+      // Pharmacy Info
+      templateHtml = templateHtml.replace(/{{pharmacyNameEn}}/g, currentPharmacy.en);
+      templateHtml = templateHtml.replace(/{{pharmacyNameAr}}/g, currentPharmacy.ar);
+      templateHtml = templateHtml.replace(/{{addressEn}}/g, currentPharmacy.addressEn);
+      templateHtml = templateHtml.replace(/{{addressAr}}/g, currentPharmacy.addressAr);
+      templateHtml = templateHtml.replace(/{{phone}}/g, currentPharmacy.phone);
+      templateHtml = templateHtml.replace(/{{branch}}/g, branch);
+      
+      // Titles
+      templateHtml = templateHtml.replace(/{{titleAr}}/g, 'فاتورة ضريبية');
+      templateHtml = templateHtml.replace(/{{titleEn}}/g, 'Tax Invoice');
+
+      // Meta Info
+      templateHtml = templateHtml.replace(/{{billId}}/g, billId);
+      templateHtml = templateHtml.replace(/{{patientName}}/g, patient_name || 'N/A');
+      templateHtml = templateHtml.replace(/{{patientPhone}}/g, patient_phone || 'N/A');
+      templateHtml = templateHtml.replace(/{{date}}/g, printDate);
+      templateHtml = templateHtml.replace(/{{time}}/g, printTime);
+      templateHtml = templateHtml.replace(/{{pharmacist}}/g, pharmacist);
+      
+      // Items
+      templateHtml = templateHtml.replace('{{itemsHtml}}', itemsHtml);
+      
+      // Totals
+      templateHtml = templateHtml.replace('{{subtotal}}', subtotal.toFixed(3));
+      templateHtml = templateHtml.replace('{{discountPercent}}', discountVal.toFixed(2));
+      templateHtml = templateHtml.replace('{{discount}}', discountAmount.toFixed(3));
+      templateHtml = templateHtml.replace('{{total}}', total.toFixed(3));
+
+      // Footer
+      templateHtml = templateHtml.replace(/{{paymentMethod}}/g, payment_method || 'N/A');
+
+      // 9. Open a new window and print
+      const printWindow = window.open('', '_blank', 'width=800,height=600');
+      printWindow.document.open();
+      printWindow.document.write(templateHtml);
+      printWindow.document.close();
+      
+      // Give the browser a moment to render the content
+      setTimeout(() => {
+          printWindow.print();
+          printWindow.onafterprint = () => printWindow.close();
+      }, 250);
+
+    } catch (err) {
+      console.error('Error during frontend print:', err);
+      alert('Failed to generate invoice for printing. ' + err.message);
     }
-    grouped[key].quantity += parseFloat(bill.quantity);
-    grouped[key].subtotal += parseFloat(bill.subtotal);
-  });
-  const items = Object.values(grouped);
-
-  // Compute grand total and discount
-  const discount = bills[0].discount ? parseFloat(bills[0].discount) : 0;
-  const subtotal = items.reduce((sum, i) => sum + parseFloat(i.subtotal), 0);
-  const final_total = subtotal - (subtotal * discount / 100);
-
-  // Bill HTML (similar to pos.js)
-  const html = `
-    <style>
-      body { font-family: Arial; padding: 30px; }
-      h2 { text-align: center; }
-      table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-      th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
-      .total { font-size: 1.2em; font-weight: bold; margin-top: 20px; text-align: right; }
-      .footer { text-align: center; margin-top: 30px; font-style: italic; }
-      .meta { margin-top: 15px; }
-      .meta p { margin: 0 0 5px 0; }
-    </style>
-    <h2>This is for the purposes of knowing the prices - NOT AN INVOICE</h2>
-    <div class="meta">
-      <p><strong>Date:</strong> ${bill_date} <strong>Time:</strong> ${bill_time}</p>
-      <p><strong>Invoice No.:</strong> ${invoiceNo}</p>
-      <p><strong>Patient Name:</strong> ${patient_name}</p>
-      <p><strong>Phone:</strong> ${patient_phone}</p>
-      <p><strong>Payment Method:</strong> ${payment_method}</p>
-      ${card_invoice_number ? `<p><strong>Card Invoice:</strong> ${card_invoice_number}</p>` : ""}
-      ${ecommerce_invoice_number ? `<p><strong>E-commerce Invoice:</strong> ${ecommerce_invoice_number}</p>` : ""}
-      <p><strong>Served by:</strong> ${user}</p>
-    </div>
-    <table>
-      <thead>
-        <tr><th>Item</th><th>Qty</th><th>Price</th><th>Subtotal</th></tr>
-      </thead>
-      <tbody>
-        ${items.map(item => `
-          <tr>
-            <td>${item.item_name}</td>
-            <td>${item.quantity}</td>
-            <td>${item.price}</td>
-            <td>${parseFloat(item.subtotal).toFixed(3)}</td>
-          </tr>
-        `).join("")}
-      </tbody>
-    </table>
-    <p class="total">Discount: ${discount}%</p>
-    <p class="total">Grand Total: ${final_total.toFixed(3)}</p>
-    <div class="footer">Thanks for shopping with us. Get well soon!</div>
-  `;
-
-  const win = window.open('', '', 'width=800,height=600');
-  if (!win) {
-    alert("Unable to open print window. Please disable popup blocker and try again.");
-    return;
-  }
-  win.document.write(html);
-  win.document.close();
-  win.focus();
-  win.print();
-  win.onafterprint = () => win.close();
 }

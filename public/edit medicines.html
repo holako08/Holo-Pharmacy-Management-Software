@@ -75,13 +75,20 @@
   </header>
 
   <main>
+    <div class="form-toggle-buttons">
+        <button id="show-add-form-btn">Add medicines </button>
+        <button id="show-edit-form-btn">Edit Medicines </button>
+    </div>
     <section class="medicine-section">
-      <div class="medicine-form">
+      <div class="medicine-form" id="add-medicine-container" style="display:none;">
         <h2>Add a New Medicine</h2>
         <form id="add-medicine-form" enctype="multipart/form-data">
           <label for="new-medicine-name">Medicine Name:</label>
           <input type="text" id="new-medicine-name" required />
 
+          <label for="new-arabic-name">Arabic Name:</label>
+          <input type="text" id="new-arabic-name" />
+          
           <label for="new-medicine-price">Price:</label>
           <input type="text" id="new-medicine-price" required />
 
@@ -102,6 +109,12 @@
 
           <label for="new-active-name-2">Active Name 2:</label>
           <input type="text" id="new-active-name-2" />
+
+          <label for="new-active-name-3">Active Name 3:</label>
+          <input type="text" id="new-active-name-3" />
+
+          <label for="new-supplier">Supplier:</label>
+          <input type="text" id="new-supplier" />
 
           <label for="new-cross-selling">Cross Selling Info:</label>
           <textarea id="new-cross-selling" rows="3"></textarea>
@@ -131,7 +144,7 @@
         </form>
       </div>
 
-      <div class="medicine-form">
+      <div class="medicine-form" id="edit-medicine-container" style="display:none;">
         <h2>Search and Edit Existing Medicine</h2>
         <input type="text" id="search-bar" placeholder="Search by name or barcode" />
 
@@ -140,6 +153,9 @@
 
           <label for="edit-medicine-name">Medicine Name:</label>
           <input type="text" id="edit-medicine-name" />
+
+          <label for="edit-arabic-name">Arabic Name:</label>
+          <input type="text" id="edit-arabic-name" />
 
           <label for="edit-medicine-price">Price:</label>
           <input type="text" id="edit-medicine-price" />
@@ -161,6 +177,12 @@
 
           <label for="edit-active-name-2">Active Name 2:</label>
           <input type="text" id="edit-active-name-2" />
+          
+          <label for="edit-active-name-3">Active Name 3:</label>
+          <input type="text" id="edit-active-name-3" />
+
+          <label for="edit-supplier">Supplier:</label>
+          <input type="text" id="edit-supplier" />
 
           <label for="edit-cross-selling">Cross Selling Info:</label>
           <textarea id="edit-cross-selling" rows="3"></textarea>
@@ -187,13 +209,40 @@
             <button type="submit" id="save-edits-btn">Save Edits</button>
             <button type="reset" id="reset-fields-btn">Reset Fields</button>
             <button type="button" id="delete-medicine-btn">Delete Medicine</button>
+            <button type="button" id="duplicate-medicine-btn">Duplicate</button>
             <button type="button" id="manage-batches-btn">Manage Batches</button>
           </div>
         </form>
       </div>
     </section>
-    <!-- Batch Management Modal -->
-<div id="batch-modal" class="modal" style="display:none;">
+    
+    <div id="duplicate-target-modal" class="modal" style="display:none;">
+      <div class="modal-content">
+        <span class="close" id="close-duplicate-modal">&times;</span>
+        <h3>Duplicate Data to Another Medicine</h3>
+        
+        <h4>1. Select Fields to Duplicate:</h4>
+        <div id="duplicate-fields-checklist">
+          <label><input type="checkbox" class="duplicate-field-cb" value="active_name_1" data-form-id="edit-active-name-1"> Active Name 1</label>
+          <label><input type="checkbox" class="duplicate-field-cb" value="active_name_2" data-form-id="edit-active-name-2"> Active Name 2</label>
+          <label><input type="checkbox" class="duplicate-field-cb" value="active_name_3" data-form-id="edit-active-name-3"> Active Name 3</label>
+          <label><input type="checkbox" class="duplicate-field-cb" value="supplier" data-form-id="edit-supplier"> Supplier</label>
+          <label><input type="checkbox" class="duplicate-field-cb" value="cross_selling" data-form-id="edit-cross-selling"> Cross Selling Info</label>
+          <label><input type="checkbox" class="duplicate-field-cb" value="significant_side_effects" data-form-id="edit-side-effects"> Side Effects</label>
+          <label><input type="checkbox" class="duplicate-field-cb" value="significant_interactions" data-form-id="edit-interactions"> Interactions</label>
+          <label><input type="checkbox" class="duplicate-field-cb" value="uses" data-form-id="edit-uses"> Uses</label>
+          <label><input type="checkbox" class="duplicate-field-cb" value="dosage" data-form-id="edit-dosage"> Dosage</label>
+          <label><input type="checkbox" class="duplicate-field-cb" value="location" data-form-id="edit-location"> Location</label>
+        </div>
+        <hr style="margin: 15px 0;">
+        <h4>2. Select Target Medicine:</h4>
+        <p>Start typing the name or barcode of the medicine you want to copy data TO.</p>
+        <input type="text" id="duplicate-target-search" placeholder="Search for target medicine..." autocomplete="off" />
+        <div id="duplicate-target-results"></div>
+      </div>
+    </div>
+    
+ <div id="batch-modal" class="modal" style="display:none;">
   <div class="modal-content">
     <span class="close" id="close-batch-modal">&times;</span>
     <h3>Manage Batches</h3>
@@ -204,6 +253,7 @@
           <th>Expiry</th>
           <th>Quantity</th>
           <th>Received</th>
+          <th>Branch</th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -217,6 +267,7 @@
       <input type="date" id="batch-expiry" placeholder="Expiry" />
       <input type="number" id="batch-qty" step="any" placeholder="Quantity" />
       <input type="date" id="batch-received" placeholder="Received Date" />
+      <input type="text" id="batch-branch" placeholder="Branch" />
       <button type="submit" id="save-batch-btn">Save Batch</button>
       <button type="button" id="reset-batch-form">Clear</button>
     </form>
@@ -235,6 +286,16 @@
     function logout() {
       window.location.href = 'index.html';
     }
+    
+    // Logic to toggle form visibility
+    document.getElementById('show-add-form-btn').addEventListener('click', () => {
+        document.getElementById('add-medicine-container').style.display = 'block';
+        document.getElementById('edit-medicine-container').style.display = 'none';
+    });
+    document.getElementById('show-edit-form-btn').addEventListener('click', () => {
+        document.getElementById('add-medicine-container').style.display = 'none';
+        document.getElementById('edit-medicine-container').style.display = 'block';
+    });
   </script>
 </body>
 </html>

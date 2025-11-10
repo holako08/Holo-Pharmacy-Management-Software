@@ -96,6 +96,16 @@ function loadUsers() {
 
                 row.insertCell().textContent = user.PhoneNumber || '';
                 row.insertCell().textContent = user.IDNumber || '';
+                row.insertCell().textContent = user.Branch || '';
+                
+                let joiningDate = user.JoiningDate || '';
+                if (joiningDate) {
+                    const date = new Date(joiningDate);
+                    joiningDate = date.toLocaleDateString('en-GB'); // Format as dd/mm/yyyy
+                }
+                row.insertCell().textContent = joiningDate;
+                
+                row.insertCell().textContent = user.Salary ? parseFloat(user.Salary).toFixed(2) : '';
                 row.insertCell().textContent = user.LicenseNumber || '';
 
                 const photoCell = row.insertCell();
@@ -201,6 +211,15 @@ function editUser(userId) {
         document.getElementById('editEmail').value = user.Email || '';
         document.getElementById('editPhoneNumber').value = user.PhoneNumber || '';
         document.getElementById('editIDNumber').value = user.IDNumber || '';
+        document.getElementById('editBranch').value = user.Branch || '';
+        document.getElementById('editSalary').value = user.Salary || '';
+
+        // Format joiningDate for input field
+        let joiningDate = user.JoiningDate || '';
+        if (joiningDate) {
+            joiningDate = new Date(joiningDate).toISOString().split('T')[0];
+        }
+        document.getElementById('editJoiningDate').value = joiningDate;
         document.getElementById('editLicenseNumber').value = user.LicenseNumber || '';
 
         // Show the edit form

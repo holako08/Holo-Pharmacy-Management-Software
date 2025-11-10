@@ -1,6 +1,48 @@
-/* expense-print.css */
+/*
+ * Enterprise Print Stylesheet (expense-print.css)
+ * Theme: Corporate Gold
+ * Updated: 2025-11-04
+ */
 
-/* Hide everything by default */
+/* * ===================================================================
+ * Tokens / Variables
+ * ===================================================================
+ */
+:root {
+  /* Colors */
+  --color-gold-brand: #D4AF37;
+  --color-gold-light: #FDFBF5; /* Very light gold/cream */
+  --color-text-primary: #1A2636;
+  --color-text-secondary: #34495E;
+  --color-text-light: #555;
+  --color-border: #DDE2E7;
+  --color-bg: #FFFFFF;
+  --color-bg-subtle: #F9FAFB;
+
+  /* Typography */
+  --font-family-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-weight-regular: 400;
+  --font-weight-medium: 600;
+  --font-weight-bold: 700;
+
+  /* Spacing */
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-xxl: 40px;
+  
+  /* Borders */
+  --border-width: 1px;
+}
+
+/* * ===================================================================
+ * Base Print Setup
+ * (Hides screen UI and shows only the print-area)
+ * ===================================================================
+ */
+
+/* Hide everything by default for printing */
 body * {
   visibility: hidden !important;
 }
@@ -14,68 +56,107 @@ body * {
   position: absolute;
   left: 0;
   top: 0;
-  width: 100vw;
+  width: 100%; /* Use 100% for better print layout vs 100vw */
   min-height: 100vh;
-  background: white;
-  color: #222;
+  background: var(--color-bg);
+  color: var(--color-text-primary);
   z-index: 9999;
-  padding: 40px 50px 40px 50px;
-  font-family: 'Segoe UI', Arial, sans-serif;
+  padding: var(--space-xxl) 50px;
+  font-family: var(--font-family-sans);
+  font-weight: var(--font-weight-regular);
 }
+
+/* * ===================================================================
+ * Layout & Components (Print Report)
+ * ===================================================================
+ */
 
 /* Letterhead & logo */
 .print-letterhead {
   display: flex;
   align-items: center;
-  margin-bottom: 30px;
-  border-bottom: 3px solid #D4AF37;
-  padding-bottom: 16px;
-}
-.print-letterhead img {
-  height: 70px;
-  margin-right: 25px;
-}
-.print-company-details {
-  font-size: 1.35em;
-  color: #34495E;
-  font-weight: 600;
-  letter-spacing: 1px;
-}
-.print-title {
-  font-size: 1.5em;
-  font-weight: 700;
-  margin: 30px 0 12px 0;
-  color: #1A2636;
-  text-align: left;
+  justify-content: space-between;
+  margin-bottom: var(--space-xl);
+  border-bottom: 2px solid var(--color-gold-brand); /* Premium gold accent */
+  padding-bottom: var(--space-md);
 }
 
+.print-letterhead img {
+  height: 60px; /* Refined logo size */
+  margin-right: var(--space-lg);
+  object-fit: contain;
+}
+
+.print-company-details {
+  font-size: 1.1em;
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0.5px;
+  text-align: right;
+}
+
+/* Report Title */
+.print-title {
+  font-size: 1.75em;
+  font-weight: var(--font-weight-bold);
+  margin: var(--space-xl) 0 var(--space-md) 0;
+  color: var(--color-text-primary);
+  text-align: left;
+  border-bottom: var(--border-width) solid var(--color-border);
+  padding-bottom: var(--space-sm);
+}
+
+/* Report Table */
 .print-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 24px;
+  margin-top: var(--space-lg);
+  font-size: 1.0em; /* Standardize table font */
 }
-.print-table th, .print-table td {
-  border: 1px solid #888;
-  padding: 8px 12px;
+
+.print-table th, 
+.print-table td {
+  border: var(--border-width) solid var(--color-border);
+  padding: 10px 12px; /* Slightly more spacing */
   text-align: left;
-  font-size: 1.07em;
+  vertical-align: top;
 }
+
 .print-table th {
-  background: #EEE8AA;
-  color: #111;
-  font-weight: 600;
+  background-color: var(--color-gold-light);
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-medium);
+  border-bottom: 2px solid var(--color-gold-brand); /* Gold accent */
 }
 
+.print-table tbody tr:nth-child(even) td {
+  background-color: var(--color-bg-subtle); /* Clean alternating rows */
+}
+
+/* Report Footer */
 .print-footer {
-  margin-top: 36px;
+  margin-top: var(--space-xl);
   text-align: right;
-  color: #888;
-  font-size: 1em;
-  border-top: 2px solid #D4AF37;
-  padding-top: 12px;
+  color: var(--color-text-light);
+  font-size: 0.9em;
+  border-top: var(--border-width) solid var(--color-border); /* Subtle footer line */
+  padding-top: var(--space-md);
 }
 
-/* Hide navigation and buttons on print */
-nav, .user-info, .dashboard-footer, .search-unique, #u_exp9x_form, #u_exp9x_fetch_button, #u_exp9x_export_excel, #u_exp9x_print, #u_exp9x_summary_chart {
+/* * ===================================================================
+ * Print-Specific Utilities
+ * (Hides non-printable screen elements)
+ * ===================================================================
+ */
+
+nav,
+.user-info,
+.dashboard-footer,
+.search-unique,
+#u_exp9x_form,
+#u_exp9x_fetch_button,
+#u_exp9x_export_excel,
+#u_exp9x_print,
+#u_exp9x_summary_chart {
   display: none !important;
 }

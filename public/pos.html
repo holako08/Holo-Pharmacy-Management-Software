@@ -1,246 +1,417 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Pharmacy POS</title>
-  <link rel="stylesheet" href="pos.css" />
-  <link rel="stylesheet" href="nav-bar.css">
-  <link rel="shortcut icon" href="images/logo.png" type="image/x-icon">
-  <style>
-    .main-content {
-      display: flex;
-      gap: 20px;
-      align-items: flex-start;
-      flex-wrap: wrap;
-    }
-    .left-column {
-      flex: 2;
-      min-width: 600px;
-    }
-    .right-column {
-      flex: 1;
-      min-width: 300px;
-    }
-    #frequent-bills, #medicine-info {
-      margin-bottom: 20px;
-    }
-    #user-photo {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  object-fit: cover;
-  object-position: center;
-}
-  </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Billing</title>
+    
+    <link rel="stylesheet" href="nav-bar.css" />
+    <link rel="stylesheet" href="pos.css" />
+    <link rel="stylesheet" href="bill-return.css" />
+    <link rel="stylesheet" href="item-wise sale report.css" />
+    <link rel="shortcut icon" href="images/logo.png" type="image/x-icon">
+
+    <style>
+        /* General Body Style */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        /* Tab System Styles */
+        .tab {
+            overflow: hidden;
+            border-bottom: 1px solid #ccc;
+            background-color: #f1f1f1;
+            padding: 0 10px;
+        }
+
+        .tab button {
+            background-color: inherit;
+            float: left;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            padding: 14px 16px;
+            transition: 0.3s;
+            font-size: 17px;
+        }
+
+        .tab button:hover {
+            background-color: #ddd;
+        }
+
+        .tab button.active {
+            background-color: #ccc;
+            border-bottom: 2px solid #0056b3;
+        }
+
+        .tabcontent {
+            display: none;
+            padding: 20px;
+            border-top: none;
+        }
+        
+        /* Styles from pos1.html for layout consistency */
+        .main-content {
+          display: flex;
+          gap: 20px;
+          align-items: flex-start;
+          flex-wrap: wrap;
+        }
+        .left-column {
+          flex: 2;
+          min-width: 600px;
+        }
+        .right-column {
+          flex: 1;
+          min-width: 300px;
+        }
+        #frequent-bills, #medicine-info {
+          margin-bottom: 20px;
+        }
+        #user-photo {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            object-position: center;
+        }
+        .tablinks {
+            font-size: 14px;
+            color: darkgoldenrod;
+        }
+    </style>
 </head>
 <body>
+    <nav class="nav-bar-unique">
+        <div class="logo-unique">
+            <img src="images/logo.png" alt="Logo">
+        </div>
+        <ul class="nav-links-unique">
+            <li><a href="dashboard.html">Home</a></li>
+            <li><a href="pos.html">POS</a></li>
+            <li><a href="PDC.html">Pediatric Dose Calculator</a></li>
+            <li><a href="cross selling.html">Cross-selling Help</a></li>
+            <li>
+                <a href="#">Reports</a>
+                <ul class="dropdown-unique">
+                    <li><a href="sales report.html">Sales Report</a></li>
+                    <li><a href="item-wise sale report.html">Item-wise Sales Report</a></li>
+                    <li><a href="near-expiry-report.html">Near Expiry Report</a></li>
+                    <li><a href="stock-report.html">Stock Report</a></li>
+                </ul>
+            </li>
+            <li>
+                <a href="#">Pharmacists’ Tools</a>
+                <ul class="dropdown-unique">
+                    <li><a href="requirements.html">Stock Requirements</a></li>
+                    <li><a href="variations.html">Stock Variations</a></li>
+                    <li><a href="testing.html">Blood Pressure and Sugar Check</a></li>
+                    <li><a href="request-center-usrZ3v.html">Requests Center</a></li>
+                </ul>
+            </li>
+            <li>
+                <a href="#">Admin Tools</a>
+                <ul class="dropdown-unique">
+                    <li><a href="edit medicines.html">Edit Medicines List</a></li>
+                    <li><a href="edit bills.html">Edit Bills</a></li>
+                    <li><a href="user management.html">Edit Users</a></li>
+                    <li><a href="admin-approvals.html">Admin Approvals</a></li>
+                </ul>
+            </li>
+        </ul>
+        <div class="search-unique">
+            <input type="text" placeholder="Search...">
+            <button>Search</button>
+        </div>
+    </nav>
 
-<nav class="nav-bar-unique">
-  <div class="logo-unique">
-    <img src="images/logo.png" alt="Logo">
-  </div>
-  <ul class="nav-links-unique">
-    <li><a href="dashboard.html">Home</a></li>
-    <li><a href="pos.html">POS</a></li>
-    <li><a href="PDC.html">Pediatric Dose Calculator</a></li>
-    <li><a href="cross selling.html">Cross-selling Help</a></li>
-    <li>
-      <a href="#">Reports</a>
-      <ul class="dropdown-unique">
-        <li><a href="sales report.html">Sales Report</a></li>
-        <li><a href="item-wise sale report.html">Item-wise Sales Report</a></li>
+    <div class="user-info">
+        <div class="user-details">
+            <span id="job-title">Pharmacist</span> <span id="pharmacist-name">MOHAMED</span> is logged-in
+        </div>
+        <div class="profile-pic">
+            <img id="user-photo" src="" alt="Profile">
+        </div>
+        <button id="logout-btn" class="logout-btn" onclick="logout()">Log-out</button>
+    </div>
 
-<li><a href="near-expiry-report.html">Near Expiry Report</a></li>
-<li><a href="stock-report.html">Stock Report</a></li>
+    <div class="tab">
+        <button class="tablinks" onclick="openTab(event, 'POS')" id="defaultOpen">POS</button>
+        <button class="tablinks" onclick="openTab(event, 'ItemWiseReport')">Bills History</button>
+        <button class="tablinks" onclick="openTab(event, 'BillReturn')">Bill Return & Reprint</button>
+    </div>
 
-      </ul>
-    </li>
-    <li>
-      <a href="#">Pharmacists’ Tools</a>
-      <ul class="dropdown-unique">
-        <li><a href="requirements.html">Stock Requirements</a></li>
-        <li><a href="variations.html">Stock Variations</a></li>
-        <li><a href="testing.html">Blood Pressure and Sugar Check</a></li>
-        <li><a href="request-center-usrZ3v.html">Requests Center</a></li>
-      </ul>
-    </li>
-    <li>
-      <a href="#">Admin Tools</a>
-      <ul class="dropdown-unique">
-        <li><a href="edit medicines.html">Edit Medicines List</a></li>
-        <li><a href="edit bills.html">Edit Bills</a></li>
-        <li><a href="user management.html">Edit Users</a></li>
-        <li><a href="admin-approvals.html">Admin Approvals</a></li>
-      </ul>
-    </li>
-  </ul>
-  <div class="search-unique">
-    <input type="text" placeholder="Search...">
-    <button>Search</button>
-  </div>
-</nav>
+    <div id="POS" class="tabcontent">
+        <section id="patient-info">
+            <label for="patient-name">Patient Name:</label>
+            <input type="text" id="patient-name" autocomplete="off" />
+            <div id="patient-name-suggestions" class="suggestion-box"></div>
+            <label for="patient-phone">Phone:</label>
+            <input type="text" id="patient-phone" autocomplete="off" />
+            <div id="patient-phone-suggestions" class="suggestion-box"></div>
+        </section>
+        <section id="medicine-search">
+            <label for="medicine-input">Search Medicine (F1):</label>
+            <input type="text" id="medicine-input" autocomplete="off" />
+            <div id="search-results" class="suggestion-box"></div>
+        </section>
+        <div class="main-content">
+            <div class="left-column">
+                <section id="cart-section">
+                    <table id="cart-table">
+                        <thead>
+                            <tr>
+                                <th>Item Name</th>
+                                <th>Price</th>
+                                <th>Quantity</th>
+                                <th>Expiry</th>
+                                <th>Stock</th>
+                                <th>Packet Size</th>
+                                <th>Subtotal</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cart-body"></tbody>
+                    </table>
+                    <div id="cart-total-section">
+                        <label for="discount">Discount %:</label>
+                        <input type="number" id="discount" step="0.001" />
+                        <span id="grand-total" class="total-bold">Total: 0.000</span>
+                        <button id="check-interactions-btn" class="btn blue">Check Interactions</button> 
+                    </div>
+                </section>
+                <section id="payment-section">
+                    <h3>Payment Method</h3>
+                    <label><input type="radio" name="payment-method" value="cash" checked /> Cash</label>
+                    <input type="number" id="cash-given" placeholder="Amount Given" step="0.001" />
+                    <span id="cash-change">Change: 0.000</span><br/>
+                    <label><input type="radio" name="payment-method" value="card" /> Card</label>
+                    <input type="text" id="card-invoice" placeholder="Card Invoice #" /><br/>
+                    <label><input type="radio" name="payment-method" value="ecommerce" /> E-commerce</label>
+                    <input type="text" id="ecommerce-invoice" placeholder="E-commerce Invoice #" /><br/>
+                    <label><input type="radio" name="payment-method" value="insurance" /> Insurance</label>
+                    <button id="insurance-details-btn">Enter Insurance Details</button>
+                </section>
+                <section id="action-buttons">
+                    <button id="save-bill" class="btn green">Save Bill (F2)</button>
+                    <button id="print-bill" class="btn blue">Print Bill</button>
+                    <button id="add-frequent" class="btn yellow">Add to Frequent Bills</button>
+                    <button id="clear-cart" class="btn red">Clear Cart (DEL)</button>
+                    <button id="export-cart-excel" class="btn blue" title="Export Cart to Excel" style="vertical-align:middle;">
+                        <img src="images/excel-icon.jpeg" alt="Excel" style="height:1em;vertical-align:middle;margin-right:5px;"> Export Cart
+                    </button>
+                </section>
+            </div>
+            <div class="right-column">
+                <aside id="frequent-bills">
+                    <h3>Frequent Bills</h3>
+                    <div id="frequent-bill-list"></div>
+                </aside>
+                <section id="medicine-info">
+                    <h3>Medicine Information</h3>
+                    <div id="info-display"></div>
+                </section>
+            </div>
+        </div>
+        <div id="print-area" style="display:none;"></div>
+    </div>
 
-<div class="user-info">
-  <div class="user-details">
-    <span id="job-title">Pharmacist</span> <span id="pharmacist-name">MOHAMED</span> is logged-in
-  </div>
-  <div class="profile-pic">
-      <img id="user-photo" src="" alt="Profile">
-  </div>
-  <button id="logout-btn" class="logout-btn" onclick="logout()">Log-out</button>
+    <div id="BillReturn" class="tabcontent">
+        <h1>Bill Return & Reprint</h1>
+        <div class="bill-return-filter">
+            <label>From: <input type="date" id="billFromDate"></label>
+            <label>To: <input type="date" id="billToDate"></label>
+            <button id="fetchBillsBtn">Fetch Bills</button>
+        </div>
+        <div class="bill-return-actions">
+            <button id="returnSelectedBtn">Return Selected</button>
+            <button id="reprintSelectedBtn">Reprint Selected</button>
+        </div>
+        <table id="billReturnTable">
+            <thead>
+                <tr>
+                    <th><input type="checkbox" id="selectAll"></th>
+                    <th>Bill ID</th>
+                    <th>Patient</th>
+                    <th>Item</th>
+                    <th>Qty</th>
+                    <th>Subtotal</th>
+                    <th>Batch</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <div id="ItemWiseReport" class="tabcontent">
+        <div class="report-header-flex">
+            <div class="title">
+                <h1>Item-wise Sales Report</h1>
+            </div>
+        </div>
+        <section class="filter-container-bills-report">
+            <div>
+                <label for="bills-report-date-start">Start Date:</label>
+                <input type="date" id="bills-report-date-start">
+                <label for="bills-report-date-end">End Date:</label>
+                <input type="date" id="bills-report-date-end">
+                <button id="bills-report-apply-date" class="btn-gold-bills-report">Apply</button>
+            </div>
+            <div class="advanced-filters-bills-report">
+                <input type="text" id="bills-report-filter-item-name" placeholder="Item Name">
+                <input type="text" id="bills-report-filter-patient-name" placeholder="Patient Name">
+                <input type="text" id="bills-report-filter-patient-phone" placeholder="Patient Phone">
+                <input type="text" id="bills-report-filter-user" placeholder="Processed By (User)">
+                <input type="text" id="bills-report-filter-payment-method" placeholder="Payment Method">
+                <input type="text" id="bills-report-filter-branch" placeholder="Branch">
+                <input type="text" id="bills-report-filter-card-invoice" placeholder="Card Invoice Number">
+                <input type="text" id="bills-report-filter-ecom-invoice" placeholder="E-commerce Invoice #">
+                <input type="number" id="bills-report-filter-price-min" placeholder="Min Price" min="0" step="0.01" style="width:100px;">
+                <input type="number" id="bills-report-filter-price-max" placeholder="Max Price" min="0" step="0.01" style="width:100px;">
+                <button id="bills-report-clear-filters" class="btn-gray-bills-report">Clear All</button>
+                <button id="bills-report-export" class="btn-gold-bills-report">Export to Excel</button>
+            </div>
+        </section>
+        <section>
+            <div class="loading-bills-report" id="bills-report-loading" style="display:none;">Loading data...</div>
+            <table class="data-table-bills-report" id="bills-report-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Item Name</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                        <th>Subtotal</th>
+                        <th>Payment Method</th>
+                        <th>Card Invoice #</th>
+                        <th>E-commerce Invoice #</th>
+                        <th>Patient Name</th>
+                        <th>Patient Phone</th>
+                        <th>User</th>
+                        <th>Branch</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+            <div class="pagination-bills-report" id="bills-report-pagination"></div>
+        </section>
+        <section class="summary-bills-report" id="bills-report-summary"></section>
+    </div>
+    <div id="print-area" style="display:none;"></div>
+    </div>
+    
+    <div id="assign-barcode-modal" class="BarcodeModal">
+        <div class="modal-content-barcode">
+            <span id="close-button11">&times;</span>
+            <h2>Assign Barcode</h2>
+            <p>This barcode is not assigned to any medicine.</p>
+            <p><strong>Barcode:</strong> <span id="unassigned-barcode-value"></span></p>
+            <hr>
+            <label for="assign-medicine-search">Search for a medicine to assign this barcode to:</label>
+            <input type="text" id="assign-medicine-search" placeholder="Type medicine name...">
+            <div id="assign-search-results11" class="suggestion-box"></div>
+            <p style="margin-top:15px;"><strong>Selected:</strong> <span id="selected-medicine-display">None</span></p>
+            <button id="confirm-assign-barcode-btn" class="btn green" disabled>Assign Barcode</button>
+        </div>
+    </div>
+    <div id="interaction-modal" class="BarcodeModal" style="display:none;">
+    <div class="modal-content-barcode">
+        <span id="close-interaction-modal">&times;</span>
+        <h2>Drug Interaction Report</h2>
+        <p><strong>Items Checked:</strong> <span id="interaction-items-list"></span></p>
+        <hr>
+        <div id="interaction-report-content" style="white-space: pre-wrap; background: #f9f9f9; border: 1px solid #eee; padding: 10px; max-height: 300px; overflow-y: auto; font-family: monospace;">
+            Loading...
+        </div>
+    </div>
+</div>
+<div id="print-modal-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index: 2000; align-items:center; justify-content:center;">
+        <div id="print-modal-content" style="background:white; padding:20px; border-radius:8px; width:80%; max-width: 900px; height: 90vh; display:flex; flex-direction:column;">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #ccc; padding-bottom:10px; margin-bottom:10px;">
+                <h2 style="margin:0;">Print Preview</h2>
+                <div>
+                    <button id="print-modal-confirm-btn" style="padding: 8px 16px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px;">Print</button>
+                    <button id="print-modal-close-btn" style="padding: 8px 16px; background-color: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">Close</button>
+                </div>
+            </div>
+            <iframe id="print-iframe" style="width:100%; height:100%; border:1px solid #ccc;"></iframe>
+        </div>
 </div>
 
-<!-- Patient Information -->
-<section id="patient-info">
-  <label for="patient-name">Patient Name:</label>
-  <input type="text" id="patient-name" autocomplete="off" />
-  <div id="patient-name-suggestions" class="suggestion-box"></div>
+    <div class="dashboard-footer">
+        © 2025 Pharmacy Management System | Designed by Pharmacist: MOHAMED HAMID |
+        <a href="mailto:mhm.hamid@gmail.com">mhm.hamid@gmail.com</a> | All Rights Reserved
+    </div>
 
-  <label for="patient-phone">Phone:</label>
-  <input type="text" id="patient-phone" autocomplete="off" />
-  <div id="patient-phone-suggestions" class="suggestion-box"></div>
-</section>
+    <script src="pos.js?v=1.3"></script>
+    <script src="bill-return.js"></script>
+    <script src="item-wise sale report.js"></script>
+    
+    <script>
+        // --- Tab Control Script ---
+        function openTab(evt, tabName) {
+            var i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tabcontent");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+            tablinks = document.getElementsByClassName("tablinks");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+        }
+        // Get the element with id="defaultOpen" and click on it
+        document.getElementById("defaultOpen").click();
 
-<!-- Medicine Search -->
-<section id="medicine-search">
-  <label for="medicine-input">Search Medicine (F1):</label>
-  <input type="text" id="medicine-input" autocomplete="off" />
-  <div id="search-results" class="suggestion-box"></div>
-</section>
+        // --- User Info and Logout Script (from pos1.html) ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const userInfoString = sessionStorage.getItem('userInfo');
+            if (!userInfoString) {
+                console.log('No userInfo found in session storage, redirecting to login page');
+                window.location.href = 'index.html';
+                return;
+            }
 
-<div class="main-content">
-  <!-- LEFT COLUMN -->
-  <div class="left-column">
+            try {
+                const userInfo = JSON.parse(userInfoString);
+                console.log('Parsed userInfo:', userInfo);
 
-    <!-- Cart Table -->
-    <section id="cart-section">
-      <table id="cart-table">
-        <thead>
-          <tr>
-            <th>Item Name</th>
-            <th>Price</th>
-            <th>Quantity</th>
-            <th>Expiry</th>
-            <th>Stock</th>
-            <th>Packet Size</th>
-            <th>Subtotal</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="cart-body">
-          <!-- Items will be appended here -->
-        </tbody>
-      </table>
-      <div id="cart-total-section">
-        <label for="discount">Discount %:</label>
-        <input type="number" id="discount" step="0.001" />
-        <span id="grand-total" class="total-bold">Total: 0.000</span>
-      </div>
-    </section>
+                // Update user profile information in the header
+                document.getElementById('pharmacist-name').textContent = userInfo.fullName || userInfo.username;
+                document.getElementById('job-title').textContent = userInfo.jobTitle || 'Staff';
+                document.getElementById('user-photo').src = '/api/user-photo/' + userInfo.userId;
+                
+                // --- FIX START ---
+                // The lines below were causing an error because 'user-name' and 'user-job-title'
+                // do not exist on the main page load. They are part of the 'ItemWiseReport' tab.
+                // const userNameReport = document.getElementById('user-name');
+                // const userJobTitleReport = document.getElementById('user-job-title');
+                // if(userNameReport) userNameReport.textContent = `${userInfo.fullName || userInfo.username} is logged-in`;
+                // if(userJobTitleReport) userJobTitleReport.textContent = userInfo.jobTitle || 'Staff';
+                // --- FIX END ---
 
-    <!-- Payment Methods -->
-    <section id="payment-section">
-      <h3>Payment Method</h3>
+            } catch (error) {
+                console.error('Error parsing user information:', error);
+                alert('There was an error loading your profile. Please log in again.');
+                window.location.href = 'index.html';
+            }
+        });
 
-      <label><input type="radio" name="payment-method" value="cash" checked /> Cash</label>
-      <input type="number" id="cash-given" placeholder="Amount Given" step="0.001" />
-      <span id="cash-change">Change: 0.000</span>
-
-      <br/>
-
-      <label><input type="radio" name="payment-method" value="card" /> Card</label>
-      <input type="text" id="card-invoice" placeholder="Card Invoice #" />
-
-      <br/>
-
-      <label><input type="radio" name="payment-method" value="ecommerce" /> E-commerce</label>
-      <input type="text" id="ecommerce-invoice" placeholder="E-commerce Invoice #" />
-
-      <br/>
-
-      <label><input type="radio" name="payment-method" value="insurance" /> Insurance</label>
-      <button id="insurance-details-btn">Enter Insurance Details</button>
-    </section>
-
-    <!-- Action Buttons -->
-    <section id="action-buttons">
-      <button id="save-bill" class="btn green">Save Bill (F2)</button>
-      <button id="print-bill" class="btn blue">Print Bill</button>
-      <button id="add-frequent" class="btn yellow">Add to Frequent Bills</button>
-      <button id="clear-cart" class="btn red">Clear Cart (DEL)</button>
-      <button id="export-cart-excel" class="btn blue" title="Export Cart to Excel" style="vertical-align:middle;">
-  <img src="images/excel-icon.jpeg" alt="Excel" style="height:1em;vertical-align:middle;margin-right:5px;"> Export Cart
-</button>
-    </section>
-
-  </div>
-
-  <!-- RIGHT COLUMN -->
-  <div class="right-column">
-
-    <!-- Frequent Bills Section -->
-    <aside id="frequent-bills">
-      <h3>Frequent Bills</h3>
-      <div id="frequent-bill-list">
-        <!-- Frequent bill buttons go here -->
-      </div>
-    </aside>
-
-    <!-- Medicine Info Section -->
-    <section id="medicine-info">
-      <h3>Medicine Information</h3>
-      <div id="info-display">
-        <!-- Dynamic content like cross selling, interactions, etc. -->
-      </div>
-    </section>
-
-  </div>
-</div>
-
-<div class="dashboard-footer">
-  © 2025 Pharmacy Management System | Designed by Pharmacist: MOHAMED HAMID |
-  <a href="mailto:mhm.hamid@gmail.com">mhm.hamid@gmail.com</a> | All Rights Reserved
-</div>
-
-<!-- Hidden Print Area -->
-<div id="print-area" style="display:none;"></div>
-
-<script src="pos.js"></script>
-<script>//user info section
-  document.addEventListener('DOMContentLoaded', () => {
-    const userInfoString = sessionStorage.getItem('userInfo');
-    if (!userInfoString) {
-      console.log('No userInfo found in session storage, redirecting to login page');
-      window.location.href = 'index.html';
-      return;
-    }
-  
-    try {
-      const userInfo = JSON.parse(userInfoString);
-      console.log('Parsed userInfo:', userInfo);
-      
-      // Update user profile information in the header
-      document.getElementById('pharmacist-name').textContent = userInfo.fullName || userInfo.username;
-      document.getElementById('job-title').textContent = userInfo.jobTitle || 'Staff';
-      document.getElementById('user-photo').src = '/api/user-photo/' + userInfo.userId;
-      
-      // Optional: You could also add the user's avatar if available
-      // const avatarContainer = document.querySelector('.profile-pic img');
-      // if (userInfo.avatar) {
-      //   avatarContainer.src = userInfo.avatar;
-      // }
-    } catch (error) {
-      console.error('Error parsing user information:', error);
-      alert('There was an error loading your profile. Please log in again.');
-      window.location.href = 'index.html';
-    }
-  });
-  
-  //logout button
-  function logout() {
-    // Redirect to the login page or perform any other log-out action
-    window.location.href = 'index.html'; // Assuming you have a login page named index.html
-  }</script>
+        function logout() {
+            // Clear session storage or any other cleanup
+            sessionStorage.removeItem('userInfo');
+            // Redirect to the login page
+            window.location.href = 'index.html';
+        }
+    </script>
 </body>
 </html>

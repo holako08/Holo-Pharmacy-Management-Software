@@ -3,6 +3,7 @@ document.getElementById('login-form').addEventListener('submit', function(e) {
     
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
+    const branch = document.getElementById('branch').value; // Get the selected branch
     const errorMessage = document.getElementById('error-message');
     const loginButton = document.querySelector('.login-button');
     
@@ -11,10 +12,10 @@ document.getElementById('login-form').addEventListener('submit', function(e) {
     loginButton.textContent = 'Logging in...';
     errorMessage.style.display = 'none';
     
-    // Basic client-side validation
-    if (!username || !password) {
+    // Basic client-side validation now includes branch
+    if (!username || !password || !branch) {
         errorMessage.style.display = 'block';
-        errorMessage.textContent = 'Please enter both username and password';
+        errorMessage.textContent = 'Please enter username, password, and select a branch';
         loginButton.disabled = false;
         loginButton.textContent = 'Login';
         return;
@@ -28,18 +29,17 @@ document.getElementById('login-form').addEventListener('submit', function(e) {
         errorMessage.textContent = 'Server not responding. Please try again.';
     }, 15000); // 15 seconds timeout
     
-    // Send login request to server
+    // Send login request to server, now with branch
     fetch('/login', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username, password, branch }), // Add branch to the request body
     })
     .then(response => {
         clearTimeout(timeoutId);
         
-        // Check if response is ok before parsing JSON
         if (!response.ok) {
             return response.json().then(data => {
                 throw new Error(data.message || `Server error: ${response.status}`);
@@ -49,13 +49,14 @@ document.getElementById('login-form').addEventListener('submit', function(e) {
     })
     .then(data => {
         if (data.success) {
-            // Store user data in session storage for access control
+            // Store user data in session storage, now including the branch
             sessionStorage.setItem('userInfo', JSON.stringify({
                 userId: data.userId,
                 username: data.username,
                 isAdmin: data.isAdmin,
                 fullName: data.fullName,
-                jobTitle: data.jobTitle
+                jobTitle: data.jobTitle,
+                branch: data.branch // Store the branch
             }));
             
             console.log('Login successful, redirecting to dashboard...');
@@ -63,19 +64,15 @@ document.getElementById('login-form').addEventListener('submit', function(e) {
             // Redirect to dashboard
             window.location.href = 'dashboard.html';
         } else {
-            // This should not happen if we're handling errors correctly in the catch block
-            // but just in case the server sends success: false
             throw new Error(data.message || 'Unknown error occurred');
         }
     })
     .catch(error => {
         console.error('Login error:', error);
         
-        // Reset button state
         loginButton.disabled = false;
         loginButton.textContent = 'Login';
         
-        // Show error message
         errorMessage.style.display = 'block';
         errorMessage.textContent = error.message || 'Connection error. Please try again.';
     });

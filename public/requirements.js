@@ -1,4 +1,5 @@
 // requirements.js
+let userBranch = 'Unknown'; // Variable to store user's branch
 
 // Fetch user info from session and update UI
 function fetchUserInfo() {
@@ -13,15 +14,17 @@ function fetchUserInfo() {
     try {
         const userInfo = JSON.parse(userInfoString);
 
+        userBranch = userInfo.branch || 'Unknown'; // <-- STORE USER BRANCH
+
         const nameSpan = document.getElementById('userName');
         const jobTitleSpan = document.getElementById('userJobTitle');
         const userPhoto = document.getElementById('user-photo');
-if (userPhoto && userInfo.userId) {
-    userPhoto.onerror = function() {
-        userPhoto.src = 'images/default-profile.png';
-    };
-    userPhoto.src = `/api/user-photo/${userInfo.userId}`;
-}
+        if (userPhoto && userInfo.userId) {
+            userPhoto.onerror = function() {
+                userPhoto.src = 'images/default-profile.png';
+            };
+            userPhoto.src = `/api/user-photo/${userInfo.userId}`;
+        }
 
 
         if (nameSpan) nameSpan.textContent = userInfo.fullName || userInfo.username || 'User';
@@ -34,8 +37,6 @@ if (userPhoto && userInfo.userId) {
         window.location.href = 'index.html';
     }
 }
-
-
 
 // Search medicines dynamically on input
 document.getElementById('searchInput').addEventListener('input', async () => {
@@ -70,13 +71,80 @@ function addToTable(item) {
     const newRow = document.createElement('tr');
 
     newRow.innerHTML = `
-        <td>${item.item_name}</td>
-        <td></td>
-        <td></td>
-        <td><input type="number" min="1" class="quantity-input" data-item-name="${item.item_name}" placeholder="Quantity" /></td>
+        <td class="item-name">${item.item_name}</td>
+        <td>
+            <select class="agent-select" onchange="checkStock(this.closest('tr'))">
+                <option value="">Select Agent</option>
+                <option value="CTPR">CTPR</option>
+                <option value="CP">CP</option>
+                <option value="AHP">AHP</option>
+            </select>
+        </td>
+        <td class="to-store">${userBranch}</td>
+        <td>
+            <input type="number" min="1" class="quantity-input" 
+                   data-item-name="${item.item_name}" 
+                   placeholder="Quantity" 
+                   oninput="checkStock(this.closest('tr'))" />
+        </td>
+        <td class="stock-cell">N/A</td>
         <td><button class="btn done-btn" onclick="deleteRow(this)">Delete</button></td>
     `;
     tableBody.appendChild(newRow);
+    return newRow; // <-- FIX 1: Return the newly created row
+}
+// NEW Function to check stock and highlight row
+async function checkStock(row) {
+    const agentSelect = row.querySelector('.agent-select');
+    const quantityInput = row.querySelector('.quantity-input');
+    const stockCell = row.querySelector('.stock-cell');
+    const itemName = row.querySelector('.item-name').textContent;
+
+    // Failsafe: If elements don't exist (e.g., static row), exit.
+    if (!agentSelect || !quantityInput) {
+        return;
+    }
+    
+    const agent = agentSelect.value;
+    const quantity = parseInt(quantityInput.value, 10);
+
+    // Clear previous state
+    stockCell.textContent = 'N/A';
+    row.classList.remove('danger-row');
+
+    if (agent && itemName) {
+        // Don't check stock for AHP as it has no DB
+        if (agent.toUpperCase() === 'AHP') {
+            stockCell.textContent = 'N/A';
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/agent-stock/${encodeURIComponent(agent)}/${encodeURIComponent(itemName)}`);
+            if (!response.ok) {
+                stockCell.textContent = 'Error';
+                return;
+            }
+
+            const data = await response.json();
+            
+            if (data.stock !== null) {
+                const stock = Number(data.stock);
+                stockCell.textContent = stock;
+
+                // Check quantity only if it's a valid number
+                if (!isNaN(quantity) && quantity > 0 && quantity > stock) {
+                    row.classList.add('danger-row');
+                }
+            } else {
+                stockCell.textContent = 'N/A';
+            }
+
+        } catch (err) {
+            console.error('Error fetching stock:', err);
+            stockCell.textContent = 'Error';
+        }
+    }
 }
 
 // Handle Save Requirements button click
@@ -85,14 +153,17 @@ document.getElementById('saveButton').addEventListener('click', async () => {
     const requirementsData = [];
 
     rows.forEach(row => {
-        const itemName = row.cells[0].textContent;
+        const itemName = row.querySelector('.item-name')?.textContent;
+        const agent = row.querySelector('.agent-select')?.value;
+        const store = row.querySelector('.to-store')?.textContent;
         const quantity = row.querySelector('.quantity-input')?.value;
-        if (itemName && quantity) {
+        
+        if (itemName && quantity && agent && store) {
             requirementsData.push({
                 item_name: itemName,
                 quantity: quantity,
-                from_agent: '',
-                to_store: '',
+                from_agent: agent,
+                to_store: store,
                 date: new Date().toISOString().split('T')[0]
             });
         }
@@ -108,7 +179,7 @@ document.getElementById('saveButton').addEventListener('click', async () => {
         const result = await response.json();
         alert(result.message);
     } else {
-        alert('No requirements to save.');
+        alert('No complete requirements to save (ensure agent, store, and quantity are set).');
     }
 });
 
@@ -128,17 +199,29 @@ document.getElementById('fetchByDateRange').addEventListener('click', async () =
         const tableBody = document.getElementById('selectedMedicinesBody');
         tableBody.innerHTML = '';
 
+        // <-- FIX 2: This entire loop is replaced
         results.forEach(item => {
-            const newRow = document.createElement('tr');
-            newRow.innerHTML = `
-                <td>${item.item_name}</td>
-                <td>${item.from_agent}</td>
-                <td>${item.to_store}</td>
-                <td>${item.quantity}</td>
-                <td><button class="btn done-btn" onclick="deleteRow(this)">Delete</button></td>
-            `;
-            tableBody.appendChild(newRow);
+            // 1. Create the row using the standard function.
+            //    The 'item' object has 'item_name', which addToTable uses.
+            const newRow = addToTable(item);
+
+            // 2. Populate the agent and quantity fields with the fetched data.
+            //    'item' also has 'from_agent' and 'quantity'.
+            const agentSelect = newRow.querySelector('.agent-select');
+            const quantityInput = newRow.querySelector('.quantity-input');
+
+            if (agentSelect) {
+                agentSelect.value = item.from_agent;
+            }
+            if (quantityInput) {
+                quantityInput.value = item.quantity;
+            }
+
+            // 3. Manually trigger the stock check for this new row.
+            checkStock(newRow);
         });
+        // <-- END OF FIX
+        
     } else {
         alert('Please select both start and end dates.');
     }
@@ -147,7 +230,7 @@ document.getElementById('fetchByDateRange').addEventListener('click', async () =
 // Function to delete a row and send delete request
 function deleteRow(button) {
     const row = button.closest('tr');
-    const itemName = row.querySelector('td').textContent;
+    const itemName = row.querySelector('.item-name')?.textContent; // Use class selector
     row.remove();
 
     if (itemName) {
@@ -167,7 +250,6 @@ document.getElementById('ignoreButton').addEventListener('click', () => {
     const rows = document.querySelectorAll('#selectedMedicinesBody tr');
     rows.forEach(row => row.remove());
 });
-
 // Excel Export with formatting
 document.getElementById('downloadButton').addEventListener('click', () => {
     const table = document.getElementById('medicinesTable');
@@ -177,10 +259,18 @@ document.getElementById('downloadButton').addEventListener('click', () => {
     const ws = wb.Sheets["Requirements"];
     const range = XLSX.utils.decode_range(ws['!ref']);
     for (let R = range.s.r + 1; R <= range.e.r; ++R) {
-        const cell_address = XLSX.utils.encode_cell({ r: R, c: 3 }); // Column 4: quantity
-        const cell = ws[cell_address];
-        if (cell && !isNaN(cell.v)) {
-            cell.t = 'n';
+        // Column 4: quantity required
+        const cell_address_qty = XLSX.utils.encode_cell({ r: R, c: 3 }); 
+        const cell_qty = ws[cell_address_qty];
+        if (cell_qty && !isNaN(cell_qty.v)) {
+            cell_qty.t = 'n';
+        }
+        
+        // Column 5: stock
+        const cell_address_stock = XLSX.utils.encode_cell({ r: R, c: 4 }); 
+        const cell_stock = ws[cell_address_stock];
+        if (cell_stock && !isNaN(cell_stock.v)) {
+            cell_stock.t = 'n';
         }
     }
 

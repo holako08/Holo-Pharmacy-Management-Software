@@ -206,23 +206,59 @@ function loadTasks() {
 // === CHECKLIST ITEM UPDATE ===
 tasksListDiv.addEventListener('change', (e) => {
   if (e.target.matches('input[type="checkbox"][data-item-id]')) {
-    const itemId = e.target.getAttribute('data-item-id');
-    const completed = e.target.checked ? 1 : 0;
+    const checkbox = e.target;
+    const itemId = checkbox.getAttribute('data-item-id');
+    const isCompleted = checkbox.checked;
+
     fetch('/tsk-update-item-q4n8', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ itemId, completed })
+      body: JSON.stringify({ itemId, completed: isCompleted ? 1 : 0 })
     })
-      .then(res => {
-        if (!res.ok) throw new Error();
-        // Re-render all tasks to update UI/progress/date
-        loadTasks();
-      })
-      .catch(() => {
-        showError('Failed to update checklist status.');
-        // Optionally revert UI:
-        e.target.checked = !completed;
-      });
+    .then(res => {
+      if (!res.ok) throw new Error('Server returned an error');
+      return res.json();
+    })
+    .then(data => {
+      if (!data.success) throw new Error('Update failed');
+
+      // ✅ NEW: Instead of reloading, we update the specific elements
+      const checklistItem = checkbox.closest('.checklist-item');
+      if (!checklistItem) return;
+
+      // 1. Update the style and date of the checklist item
+      checklistItem.classList.toggle('completed', isCompleted);
+      const itemDateSpan = checklistItem.querySelector('.item-date');
+      if (itemDateSpan) {
+        itemDateSpan.textContent = isCompleted ? humanDate(data.completed_at) : '';
+      }
+
+      // 2. Update the progress bar for this specific task
+      const taskCard = checkbox.closest('.task-card');
+      if (!taskCard) return;
+
+      const allCheckboxes = taskCard.querySelectorAll('.checklist-item input[type="checkbox"]');
+      const checkedCheckboxes = taskCard.querySelectorAll('.checklist-item input[type="checkbox"]:checked');
+      
+      const progressFraction = allCheckboxes.length > 0 ? (checkedCheckboxes.length / allCheckboxes.length) : 0;
+      const percent = Math.round(progressFraction * 100);
+
+      const progressBar = taskCard.querySelector('.task-progress-bar');
+      const progressText = taskCard.querySelector('.task-progress-bar-bg + div');
+
+      if (progressBar) {
+        progressBar.style.width = `${percent}%`;
+      }
+      if (progressText) {
+        progressText.textContent = `${percent}% complete`;
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+      showError('Failed to update checklist status.');
+      // Revert the checkbox on failure
+      checkbox.checked = !isCompleted;
+    });
   }
 });
 

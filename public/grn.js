@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('pharmacist-name').textContent = userInfo.fullName || userInfo.username;
         document.getElementById('job-title').textContent = userInfo.jobTitle || 'Staff';
         document.getElementById('user-photo').src = '/api/user-photo/' + userInfo.userId;
+        userBranch = userInfo.branch || 'Default Branch';
     } catch (error) {
         window.location.href = 'index.html';
         return;
@@ -338,6 +339,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const payload = {
                 po_id: selectedPO.po_id,
                 received_by: currentUserId, // ✅ FIXED: Use actual user ID like history.js
+                branch: userBranch,
                 remarks: grnRemarks ? grnRemarks.value : '',
                 items: poItems.map(item => ({
                     medicine_id: item.medicine_id,

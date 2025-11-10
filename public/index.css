@@ -1,116 +1,207 @@
+/*
+ * === ENTERPRISE LOGIN THEME (GOLD) ===
+ * Modernized and refactored for a premium corporate aesthetic.
+ */
+
+/* === TOKENS / VARIABLES === */
+:root {
+    /* Brand Colors (Premium Gold) */
+    --color-brand-primary: #c9a445;
+    --color-brand-primary-hover: #b8953c;
+    --color-brand-text: #ffffff;
+    --color-brand-focus-ring: rgba(201, 164, 69, 0.25);
+
+    /* Neutral Palette */
+    --color-background: #f8f9fa; /* Very light gray */
+    --color-surface: #ffffff;    /* Card background */
+    --color-border: #dee2e6;      /* Input borders */
+    --color-border-light: #e9ecef; /* Dividers */
+
+    /* Typography */
+    --color-text-primary: #212529;   /* Near black */
+    --color-text-secondary: #6c757d; /* Medium gray */
+    --font-family-base: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --font-weight-regular: 400;
+    --font-weight-medium: 500;
+    --font-weight-bold: 600; /* Slightly softer than 700 */
+
+    /* Semantic Colors */
+    --color-error-bg: #fdf2f2;
+    --color-error-text: #b91c1c;
+    --color-error-border: #fadddd;
+
+    /* Sizing & Spacing */
+    --spacing-sm: 8px;
+    --spacing-md: 12px;
+    --spacing-lg: 20px;
+    --spacing-xl: 30px;
+
+    /* Effects */
+    --border-radius-base: 6px;
+    --shadow-base: 0 8px 25px rgba(0, 0, 0, 0.07);
+    --transition-base: all 0.2s ease-in-out;
+}
+
+/* === BASE & TYPOGRAPHY === */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 body {
-    background-color: lightgray;
+    font-family: var(--font-family-base);
+    color: var(--color-text-primary);
+    background-color: var(--color-background);
+    background-image: radial-gradient(circle, #f8f9fa, #e9ecef);
+    background-size: cover;
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
-    background-image: linear-gradient(to right bottom, lightgray, gray, rgb(84, 69, 69));
-    background-size: cover;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
+/* === LAYOUT / PANEL === */
 .login-container {
-    background-color: darkgray;
-    border-radius: 10px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    background-color: var(--color-surface);
+    border-radius: var(--border-radius-base);
+    box-shadow: var(--shadow-base);
     width: 400px;
     overflow: hidden;
+    border: 1px solid var(--color-border-light);
 }
 
 .login-header {
-    background-color: lightgray;
-    color: black;
-    padding: 25px;
+    background-color: transparent;
+    color: var(--color-text-primary);
+    padding: var(--spacing-xl);
     text-align: center;
+    border-bottom: 1px solid var(--color-border-light);
 }
 
 .login-header h1 {
     font-size: 24px;
-    font-weight: 600;
-    margin-bottom: 5px;
+    font-weight: var(--font-weight-bold);
+    margin-bottom: var(--spacing-sm);
 }
 
 .login-header p {
     font-size: 14px;
-    opacity: 0.8;
+    color: var(--color-text-secondary);
 }
 
 .login-body {
-    padding: 30px;
-}
-
-.input-group {
-    margin-bottom: 20px;
-}
-
-.input-group label {
-    display: block;
-    margin-bottom: 8px;
-    font-size: 14px;
-    color: black;
-    font-weight: 500;
-}
-
-.input-group input {
-    width: 100%;
-    padding: 12px 15px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 14px;
-    transition: border-color 0.3s;
-}
-
-.input-group input:focus {
-    border-color: gold;
-    outline: none;
-}
-
-.login-button {
-    background-color: gold;
-    color: black;
-    border: none;
-    padding: 12px;
-    width: 100%;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 16px;
-    font-weight: 500;
-    transition: background-color 0.3s;
-}
-
-.login-button:hover {
-    opacity: 0.8;
+    padding: var(--spacing-xl);
 }
 
 .login-footer {
     text-align: center;
-    padding: 0 30px 20px;
-    font-size: 13px;
-    color: black;
+    padding: 0 var(--spacing-xl) var(--spacing-xl);
+    font-size: 14px;
+    color: var(--color-text-secondary);
 }
 
 .login-footer a {
-    color: darkgoldenrod;
+    color: var(--color-brand-primary);
     text-decoration: none;
+    font-weight: var(--font-weight-medium);
+    transition: var(--transition-base);
 }
 
-.error-message {
-    background-color: #ffebee;
-    color: #c62828;
-    padding: 10px;
-    border-radius: 4px;
-    margin-bottom: 20px;
+.login-footer a:hover {
+    color: var(--color-brand-primary-hover);
+    text-decoration: underline;
+}
+
+/* === COMPONENTS: FORMS === */
+.input-group {
+    margin-bottom: var(--spacing-lg);
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: var(--spacing-sm);
     font-size: 14px;
-    display: none;
+    color: var(--color-text-primary);
+    font-weight: var(--font-weight-medium);
 }
 
+/* Common styling for inputs and selects */
+.input-group input,
+.login-form select,
+#branch {
+    width: 100%;
+    padding: var(--spacing-md) 15px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-base);
+    font-size: 14px;
+    font-family: var(--font-family-base);
+    color: var(--color-text-primary);
+    background-color: var(--color-surface);
+    transition: var(--transition-base);
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+/* Style select dropdown arrow */
+.login-form select,
+#branch {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    background-size: 16px 12px;
+}
+
+/* Focus state for inputs and selects */
+.input-group input:focus,
+.login-form select:focus,
+#branch:focus {
+    border-color: var(--color-brand-primary);
+    outline: none;
+    box-shadow: 0 0 0 3px var(--color-brand-focus-ring);
+}
+
+/* === COMPONENTS: BUTTONS === */
+.login-button {
+    background-color: var(--color-brand-primary);
+    color: var(--color-brand-text);
+    border: none;
+    padding: 14px var(--spacing-lg);
+    width: 100%;
+    border-radius: var(--border-radius-base);
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: var(--font-weight-bold);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: var(--transition-base);
+}
+
+.login-button:hover {
+    background-color: var(--color-brand-primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* === COMPONENTS: UTILITIES === */
+.error-message {
+    background-color: var(--color-error-bg);
+    color: var(--color-error-text);
+    padding: var(--spacing-md);
+    border: 1px solid var(--color-error-border);
+    border-radius: var(--border-radius-base);
+    margin-bottom: var(--spacing-lg);
+    font-size: 14px;
+    display: none; /* Preserves original behavior */
+}
+
+/* Example icon styling */
 .pharmacy-icon {
-    font-size: 48px;
-    margin-bottom: 10px;
+    font-size: 32px; /* Refined size */
+    color: var(--color-brand-primary);
+    margin-bottom: var(--spacing-md);
 }

@@ -5,7 +5,7 @@ let requestingUserId = null; // For photo
 document.addEventListener('DOMContentLoaded', () => {
     fetchUserInfo(); // Fetch user info and fill all fields
 
-    var _el_search_medicine = document.getElementById('search-medicine');
+    var _el_search_medicine = document.getElementById('search-medicine-request');
     if (_el_search_medicine) _el_search_medicine.addEventListener('input', handleSearch);
 
     document.getElementById('submit-request').onclick = handleSubmitRequest;
@@ -53,14 +53,14 @@ function logout() {
 function handleSearch() {
     const query = this.value.trim();
     if (!query) {
-        document.getElementById('search-results').innerHTML = '';
-        document.getElementById('search-results').style.display = 'none';
+        document.getElementById('search-results-request').innerHTML = '';
+        document.getElementById('search-results-request').style.display = 'none';
         return;
     }
     fetch('/api/pos/medicines/search?q=' + encodeURIComponent(query))
         .then(r => r.json())
         .then(data => {
-            const results = document.getElementById('search-results');
+            const results = document.getElementById('search-results-request');
             results.innerHTML = '';
             data.forEach(med => {
                 const div = document.createElement('div');
@@ -76,12 +76,13 @@ function handleSearch() {
 function addRequestItem(item_name) {
     if (requestItems.find(it => it.item_name === item_name)) return;
     requestItems.push({ item_name, qty: 1 });
-    renderTable();
-    document.getElementById('search-results').style.display = 'none';
-    document.getElementById('search-medicine').value = '';
+    renderRequestTable(); // Corrected: Call the unique function name
+    document.getElementById('search-results-request').style.display = 'none';
+    document.getElementById('search-medicine-request').value = '';
 }
 
-function renderTable() {
+// Renamed this function to be unique
+function renderRequestTable() {
     const tbody = document.querySelector('#request-table tbody');
     tbody.innerHTML = '';
     requestItems.forEach((it, i) => {
@@ -95,8 +96,10 @@ function renderTable() {
     });
     // Attach helpers to window (so inline onchange works)
     window.updateQty = (idx, v) => { requestItems[idx].qty = parseFloat(v) || 1; };
-    window.removeItem = (idx) => { requestItems.splice(idx, 1); renderTable(); };
+    // Corrected: The remove function must also call the uniquely named table renderer
+    window.removeItem = (idx) => { requestItems.splice(idx, 1); renderRequestTable(); };
 }
+
 
 function handleSubmitRequest() {
     const from = document.getElementById('from-branch').value;
@@ -121,6 +124,7 @@ function handleSubmitRequest() {
         if (resp.success && resp.srr_id) {
             document.getElementById('download-links').style.display = '';
             document.getElementById('srr-txt-link').href = `/api/stock-mgmt-x9z/generate-srr-file/${resp.srr_id}`;
+            document.getElementById('srr-id').textContent = `SRR ID: ${resp.srr_id}`; 
         } else {
             alert(resp.message || "Failed to submit stock request");
         }

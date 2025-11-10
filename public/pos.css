@@ -1,197 +1,687 @@
+/*
+=================================================================
+==
+== ENTERPRISE POS THEME (GOLD ACCENT)
+==
+== Root (Tokens)
+== Base & Typography
+== Layout & Panels
+== Components
+==   - Forms & Inputs
+==   - Suggestion Box
+==   - Buttons
+==   - Cart Table
+==   - Totals
+==   - Modals (Barcode & Interaction)
+== Utilities & Overrides
+== Responsive Design
+== Print
+==
+=================================================================
+*/
+
+/*
+-----------------------------------------------------------------
+-- Root (Tokens)
+-----------------------------------------------------------------
+*/
+:root {
+  /* Colors */
+  --color-brand: #D4AF37; /* Premium Gold */
+  --color-brand-dark: #B89A31;
+  --color-brand-light: #fdf8e6;
+
+  --color-text: #212529;
+  --color-text-secondary: #6c757d;
+  --color-surface: #ffffff;
+  --color-background: #f8f9fa;
+  --color-border: #dee2e6;
+  --color-dark-surface: #212529;
+
+  --color-primary: #0d6efd;
+  --color-success: #198754;
+  --color-danger: #dc3545;
+  --color-warning: #ffc107;
+  --color-warning-light: #fff8e1;
+
+  /* Typography */
+  --font-family-base: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-size-base: 1rem;
+  --font-size-sm: 0.875rem;
+  --font-size-lg: 1.25rem;
+  --font-weight-normal: 400;
+  --font-weight-bold: 600;
+  --line-height-base: 1.6;
+
+  /* Spacing */
+  --spacing-xs: 0.25rem; /* 4px */
+  --spacing-sm: 0.5rem;  /* 8px */
+  --spacing-md: 1rem;    /* 16px */
+  --spacing-lg: 1.5rem;  /* 24px */
+  --spacing-xl: 2rem;    /* 32px */
+
+  /* Borders & Shadows */
+  --border-width: 1px;
+  --border-radius: 6px;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.1);
+
+  /* Transitions */
+  --transition-base: 0.2s ease-in-out;
+}
+
+/*
+-----------------------------------------------------------------
+-- Base & Typography
+-----------------------------------------------------------------
+*/
+
 /* General Reset */
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  font-family: Arial, sans-serif;
 }
 
-/* Layout Containers */
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 body {
-  background-color: #f2f2f2;
-  color: #333;
-  padding: 20px;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-normal);
+  line-height: var(--line-height-base);
+  color: var(--color-text);
+  background-color: var(--color-background);
+  padding: var(--spacing-lg);
 }
 
-section, aside {
-  margin-bottom: 25px;
+h1, h2, h3, h4, h5, h6 {
+  margin-bottom: var(--spacing-md);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.3;
 }
 
-/* Labels and Inputs */
+h3 {
+  font-size: 1.5rem;
+}
+
+hr {
+  margin: var(--spacing-lg) 0;
+  border: 0;
+  border-top: var(--border-width) solid var(--color-border);
+}
+
+/*
+-----------------------------------------------------------------
+-- Layout & Panels
+-----------------------------------------------------------------
+*/
+section,
+aside {
+  margin-bottom: var(--spacing-lg);
+}
+
+/* Base style for styled panels */
+#payment-section,
+#frequent-bills,
+#medicine-info {
+  padding: var(--spacing-lg);
+  border-left: 6px solid var(--color-brand);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
+  background-color: var(--color-surface);
+}
+
+#payment-section {
+  background-color: var(--color-surface);
+}
+
+#frequent-bills {
+  background-color: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-left: 6px solid var(--color-brand);
+}
+
+#medicine-info {
+  background-color: var(--color-brand-light);
+}
+
+#medicine-info h3 {
+  color: var(--color-dark-surface);
+  margin-bottom: var(--spacing-md);
+}
+
+#info-display {
+  line-height: var(--line-height-base);
+}
+
+#info-display .highlight {
+  font-weight: var(--font-weight-bold);
+  color: var(--color-danger);
+}
+
+/*
+-----------------------------------------------------------------
+-- Components: Forms & Inputs
+-----------------------------------------------------------------
+*/
 label {
-  margin-right: 10px;
-  font-weight: bold;
+  display: inline-block;
+  margin-bottom: var(--spacing-xs);
+  margin-right: var(--spacing-sm);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
 }
 
-input, select, button {
-  padding: 8px;
-  margin: 5px 0 10px 0;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+input,
+select {
+  padding: var(--spacing-sm) var(--spacing-md);
+  margin: var(--spacing-xs) 0 var(--spacing-md) 0;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--border-radius);
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--font-size-base);
+  transition: border-color var(--transition-base), box-shadow var(--transition-base), background-color var(--transition-base);
 }
 
-input:focus {
-  outline: 2px solid goldenrod;
-  background-color: #fffef0;
+input:focus,
+select:focus {
+  outline: none;
+  border-color: var(--color-brand);
+  background-color: var(--color-brand-light);
+  box-shadow: 0 0 0 3px var(--color-brand-light);
 }
 
-/* Suggestion Box */
+.input-highlight {
+  outline: none !important;
+  border-color: var(--color-brand) !important;
+  background: var(--color-brand-light) !important;
+  box-shadow: 0 0 0 3px var(--color-brand-light) !important;
+  transition: outline 0.2s;
+}
+
+#patient-name {
+  width: 50%;
+}
+
+#medicine-input {
+  width: 90%;
+}
+
+/*
+-----------------------------------------------------------------
+-- Components: Suggestion Box
+-----------------------------------------------------------------
+*/
 .suggestion-box {
-  background: #fff;
-  border: 1px solid #ccc;
-  max-height: 150px;
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-top: none;
+  border-radius: 0 0 var(--border-radius) var(--border-radius);
+  max-height: 200px;
   overflow-y: auto;
   position: absolute;
   z-index: 1000;
-  width: 300px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  width: 90%; /* Using override from original */
+  box-shadow: var(--shadow-md);
 }
 
 .suggestion-box div {
-  padding: 8px;
+  padding: var(--spacing-sm) var(--spacing-md);
   cursor: pointer;
+  transition: background-color var(--transition-base), color var(--transition-base);
 }
 
 .suggestion-box div:hover {
-  background-color: goldenrod;
-  color: #fff;
+  background-color: var(--color-brand);
+  color: var(--color-surface);
 }
 
-/* Cart Table */
-#cart-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
+/* Style for branch name in search dropdown */
+.branch-label {
+  font-style: italic;
+  color: var(--color-danger);
+  margin-left: var(--spacing-sm);
+  font-weight: var(--font-weight-bold);
 }
 
-#cart-table th, #cart-table td {
-  border: 1px solid #bbb;
-  padding: 10px;
-  text-align: center;
+/* Specific override from original */
+#search-results {
+  overflow: visible;
+  max-height: 3000px;
 }
 
-#cart-table thead {
-  background-color: #333;
-  color: gold;
+/*
+-----------------------------------------------------------------
+-- Components: Buttons
+-----------------------------------------------------------------
+*/
+
+/* Base button (from original input,select,button rule) */
+button {
+  padding: var(--spacing-sm) var(--spacing-md);
+  margin: var(--spacing-xs) 0 var(--spacing-md) 0;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--border-radius);
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  cursor: pointer;
+  transition: all var(--transition-base);
 }
 
-/* Totals */
-#cart-total-section {
-  margin-top: 15px;
-  font-size: 1.2em;
-}
-
-.total-bold {
-  font-size: 1.5em;
-  font-weight: bold;
-  color: goldenrod;
-  margin-left: 15px;
-}
-
-/* Payment Section */
-#payment-section {
-  background-color: #e8e8e8;
-  padding: 15px;
-  border-left: 6px solid goldenrod;
-  border-radius: 6px;
+button:hover {
+  filter: brightness(0.95);
+  opacity: 0.9; /* Retain original opacity hover for simple buttons */
 }
 
 /* Action Buttons */
 #action-buttons {
-  margin-top: 20px;
+  margin-top: var(--spacing-lg);
 }
 
 #action-buttons .btn {
-  padding: 12px 20px;
-  font-size: 1em;
-  font-weight: bold;
+  padding: var(--spacing-md) var(--spacing-lg);
+  font-size: 1rem;
+  font-weight: var(--font-weight-bold);
   border: none;
-  margin-right: 15px;
+  margin-right: var(--spacing-md);
   cursor: pointer;
   color: white;
-  border-radius: 4px;
+  border-radius: var(--border-radius);
+  letter-spacing: 0.5px;
+  transition: all var(--transition-base);
+}
+
+#action-buttons .btn:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  opacity: 1; /* Override base button hover */
 }
 
 .btn.green {
-  background-color: #28a745;
+  background-color: var(--color-success);
 }
 
 .btn.blue {
-  background-color: #007bff;
+  background-color: var(--color-primary);
 }
 
 .btn.yellow {
-  background-color: goldenrod;
+  background-color: var(--color-brand);
+  color: var(--color-dark-surface); /* Gold requires dark text */
 }
 
 .btn.red {
-  background-color: #dc3545;
+  background-color: var(--color-danger);
 }
 
-/* Frequent Bills */
-#frequent-bills {
-  background-color: #f7f7f7;
-  padding: 15px;
-  border: 1px solid #ccc;
-  border-left: 6px solid goldenrod;
+#export-cart-excel img {
+  vertical-align: middle;
+  height: 1.2em;
+  margin-right: var(--spacing-sm);
 }
 
+/* Frequent Bill Buttons */
 #frequent-bill-list button {
-  margin: 5px 5px 5px 0;
-  background-color: #555;
+  margin: var(--spacing-xs) var(--spacing-xs) var(--spacing-xs) 0;
+  background-color: var(--color-text-secondary);
   color: white;
   border: none;
-  padding: 8px 12px;
-  border-radius: 4px;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--border-radius);
   cursor: pointer;
   position: relative;
 }
 
+#frequent-bill-list button:hover {
+  background-color: var(--color-text);
+  opacity: 1;
+}
+
 #frequent-bill-list button .remove {
-  color: red;
+  color: var(--color-danger);
   font-weight: bold;
   position: absolute;
   top: -8px;
   right: -8px;
-  background: white;
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
   border-radius: 50%;
   padding: 2px 6px;
   cursor: pointer;
   font-size: 12px;
+  box-shadow: var(--shadow-sm);
 }
 
-/* Medicine Info Section */
-#medicine-info {
-  background-color: #fdf6e3;
-  padding: 15px;
-  border-left: 6px solid goldenrod;
-  border-radius: 6px;
+/*
+-----------------------------------------------------------------
+-- Components: Cart Table
+-----------------------------------------------------------------
+*/
+#cart-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: var(--spacing-md);
+  background-color: var(--color-surface);
+  border-radius: var(--border-radius);
+  overflow: hidden; /* For border-radius */
+  box-shadow: var(--shadow-sm);
 }
 
-#medicine-info h3 {
-  color: #333;
-  margin-bottom: 10px;
+#cart-table th,
+#cart-table td {
+  border: none;
+  border-bottom: var(--border-width) solid var(--color-border);
+  padding: var(--spacing-md);
+  text-align: left; /* Enterprise tables are typically left-aligned */
+  vertical-align: middle;
 }
 
-#info-display {
+#cart-table thead {
+  background-color: var(--color-dark-surface);
+  color: var(--color-brand);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+#cart-table th {
+  border-bottom: 2px solid var(--color-dark-surface);
+}
+
+#cart-table tbody tr:nth-child(even) {
+  background-color: var(--color-background);
+}
+
+#cart-table tbody tr:hover {
+  background-color: var(--color-brand-light);
+  color: var(--color-text);
+}
+
+#cart-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Style for highlighting a cross-branch item row in the cart */
+.cross-branch-warning {
+  background-color: var(--color-warning-light) !important;
+  border-left: 4px solid var(--color-warning);
+}
+
+.cross-branch-warning td {
+  color: #8a6d3b; /* Darker text for readability on yellow */
+}
+
+.cross-branch-warning strong {
+  color: var(--color-danger);
+  font-size: var(--font-size-sm);
+  margin-left: var(--spacing-xs);
+}
+
+/*
+-----------------------------------------------------------------
+-- Components: Totals
+-----------------------------------------------------------------
+*/
+#cart-total-section {
+  margin-top: var(--spacing-lg);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  text-align: right; /* Totals are usually aligned right */
+}
+
+.total-bold {
+  font-size: 1.8rem;
+  font-weight: var(--font-weight-bold);
+  color: var(--color-brand);
+  margin-left: var(--spacing-md);
+}
+
+/*
+-----------------------------------------------------------------
+-- Components: Modals (Barcode & Interaction)
+-----------------------------------------------------------------
+*/
+
+/* Base Modal Overlay */
+.BarcodeModal,
+#interaction-modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Base Modal Content */
+.modal-content-barcode {
+  background-color: var(--color-surface);
+  margin: 10% auto;
+  padding: var(--spacing-xl);
+  border: none;
+  width: 90%;
+  max-width: 600px;
+  border-radius: var(--border-radius);
+  position: relative;
+  box-shadow: var(--shadow-lg);
+  animation: slideDown 0.3s ease-out;
+}
+
+/* Barcode Modal Specifics */
+.BarcodeModal .modal-content-barcode {
+  margin: 12% auto;
+  max-width: 550px;
+}
+
+#close-button11 {
+  color: #aaa;
+  position: absolute;
+  top: var(--spacing-md);
+  right: var(--spacing-lg);
+  font-size: 2rem;
+  font-weight: var(--font-weight-normal);
+  line-height: 1;
+  transition: color var(--transition-base);
+}
+
+#close-button11:hover,
+#close-button11:focus {
+  color: var(--color-text);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* Ensure the suggestion box inside the modal behaves correctly */
+#assign-search-results11 {
+  position: relative;
+  width: 100%;
+  margin-top: calc(var(--spacing-md) * -1); /* Overlap input */
+  box-shadow: var(--shadow-sm);
+  z-index: 1002; /* Above modal content */
+}
+
+#confirm-assign-barcode-btn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+#selected-medicine-display {
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
+  margin-top: var(--spacing-md);
+  display: block;
+}
+
+/* Interaction Modal Specifics */
+#interaction-modal .modal-content-barcode {
+  padding: 0; /* Header/content will manage padding */
+  max-width: 700px;
+  border-radius: 12px; /* More pronounced radius */
+  overflow: hidden; /* Contain the header */
+}
+
+/* Modal Header */
+#interaction-modal h2 {
+  margin: 0;
+  padding: var(--spacing-lg) var(--spacing-xl);
+  background: var(--color-dark-surface);
+  color: var(--color-brand);
+  font-size: 1.5em;
+  font-weight: 600;
+  border-radius: 0; /* Handled by parent */
+  letter-spacing: 0.3px;
+}
+
+/* Close Button */
+#close-interaction-modal {
+  position: absolute;
+  top: 24px;
+  right: 28px;
+  font-size: 32px;
+  font-weight: 300;
+  color: var(--color-brand);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 1;
+  z-index: 10;
+  background: transparent;
+}
+
+#close-interaction-modal:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: rotate(90deg);
+}
+
+/* Modal Body Content */
+#interaction-modal .modal-content-barcode > p {
+  padding: var(--spacing-lg) var(--spacing-xl) 0;
+  margin: 0;
+  font-size: 1rem;
+  color: var(--color-text-secondary);
+}
+
+#interaction-modal .modal-content-barcode > p strong {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+#interaction-items-list {
+  color: var(--color-brand);
+  font-weight: 600;
+}
+
+#interaction-modal hr {
+  margin: var(--spacing-lg) var(--spacing-xl);
+}
+
+/* Report Content Area */
+#interaction-report-content {
+  margin: 0 var(--spacing-xl) var(--spacing-xl);
+  padding: var(--spacing-lg);
+  white-space: pre-wrap;
+  background: var(--color-background);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--border-radius);
+  max-height: 400px;
+  overflow-y: auto;
+  font-family: 'Courier New', Consolas, Monaco, monospace;
+  font-size: 0.9em;
   line-height: 1.6;
+  color: var(--color-text);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-#info-display .highlight {
-  font-weight: bold;
-  color: #c0392b;
+/* Custom Scrollbar for Report Content */
+#interaction-report-content::-webkit-scrollbar {
+  width: 10px;
 }
 
-/* Responsive Adjustments */
+#interaction-report-content::-webkit-scrollbar-track {
+  background: var(--color-background);
+  border-radius: var(--border-radius);
+}
+
+#interaction-report-content::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: var(--border-radius);
+}
+
+#interaction-report-content::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-secondary);
+}
+
+/* Loading State */
+#interaction-report-content:empty::before {
+  content: 'Loading interaction data...';
+  color: var(--color-text-secondary);
+  font-style: italic;
+  display: block;
+  text-align: center;
+  padding: 40px;
+}
+
+
+/*
+-----------------------------------------------------------------
+-- Responsive Design
+-----------------------------------------------------------------
+*/
 @media (max-width: 768px) {
-  #cart-table th, #cart-table td {
-    font-size: 0.9em;
-    padding: 6px;
+  body {
+    padding: var(--spacing-md);
   }
 
-  input, select, button {
+  #cart-table th,
+  #cart-table td {
+    font-size: 0.9em;
+    padding: var(--spacing-sm);
+  }
+
+  /* Make form elements full-width on mobile */
+  input,
+  select,
+  button,
+  #patient-name,
+  #medicine-input {
     width: 100%;
-    margin-bottom: 10px;
+    margin-bottom: var(--spacing-md);
   }
 
   .suggestion-box {
@@ -201,32 +691,109 @@ input:focus {
   #frequent-bill-list button {
     width: 100%;
   }
+
+  #action-buttons .btn {
+    width: 100%;
+    margin-right: 0;
+    margin-bottom: var(--spacing-sm);
+  }
+
+  /* Responsive Modals */
+  .modal-content-barcode,
+  #interaction-modal .modal-content-barcode {
+    width: 95%;
+    margin: 10% auto;
+    padding: var(--spacing-lg);
+  }
+  
+  #interaction-modal .modal-content-barcode {
+    padding: 0; /* Reset for header */
+  }
+
+  #interaction-modal h2 {
+    font-size: 1.3em;
+    padding: var(--spacing-lg);
+  }
+
+  #close-interaction-modal {
+    top: 16px;
+    right: 16px;
+    font-size: 28px;
+  }
+
+  #interaction-modal .modal-content-barcode > p,
+  #interaction-modal hr,
+  #interaction-report-content {
+    margin-left: var(--spacing-lg);
+    margin-right: var(--spacing-lg);
+  }
+  
+  #interaction-report-content {
+    margin-bottom: var(--spacing-lg);
+  }
+
+  #interaction-report-content {
+    font-size: 0.85em;
+    max-height: 300px;
+  }
 }
 
-#patient-name {
-  width: 50%;
-}
-#medicine-input {
-  width: 90%;
-}
-.suggestion-box {
-  width: 90%;
- 
-}
-#search-results {
-  overflow: visible;
-  max-height: 3000px;
-}
-button:hover {
-  opacity: 0.8;
-}
-.input-highlight {
-  outline: 2px solid #FFD700 !important;  /* Gold color */
-  background: #fffbe7 !important;
-  transition: outline 0.2s;
-}
-#export-cart-excel img {
-  vertical-align: middle;
-  height: 1em;
-  margin-right: 6px;
+/*
+-----------------------------------------------------------------
+-- Print
+-----------------------------------------------------------------
+*/
+@media print {
+  body {
+    background-color: #fff;
+    padding: 0;
+  }
+
+  section,
+  aside,
+  #action-buttons,
+  #frequent-bills {
+    display: none;
+  }
+
+  #cart-table,
+  #cart-total-section {
+    display: block;
+  }
+
+  #cart-table {
+    box-shadow: none;
+    border: var(--border-width) solid #000;
+  }
+  
+  #cart-table th, #cart-table td {
+     border-bottom: var(--border-width) solid #000;
+  }
+  
+  #cart-table thead {
+    background-color: #eee;
+    color: #000;
+  }
+
+  /* Print interaction modal content */
+  #interaction-modal {
+    position: static;
+    background: none;
+    display: block;
+  }
+
+  #interaction-modal .modal-content-barcode {
+    box-shadow: none;
+    max-width: 100%;
+    border: 1px solid #000;
+  }
+
+  #close-interaction-modal {
+    display: none;
+  }
+
+  #interaction-modal h2 {
+    background: #eee;
+    color: #000;
+  }
 }

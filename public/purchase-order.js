@@ -2,7 +2,7 @@
 
 // =========== CONFIG ===========
 // Backend endpoints
-const ENDPOINT_AGENCY_SEARCH = '/api/agencies'; // Implement this in backend (agency table)
+const ENDPOINT_AGENCY_SEARCH = '/api/pharma-agencies-xyz123'; // Implement this in backend (agency table)
 const ENDPOINT_MEDICINE_SEARCH = '/api/pos/medicines/search';
 const ENDPOINT_SAVE_PO = '/api/purchase-orders/create'; // To be created in backend
 const ENDPOINT_EXPORT_PDF = '/api/purchase-orders/export-pdf'; // To be created in backend
@@ -84,11 +84,13 @@ agencyInput.addEventListener('input', debounce(function (e) {
         agencySelected = null;
         return;
     }
-    fetch(`${ENDPOINT_AGENCY_SEARCH}?q=${encodeURIComponent(query)}`)
+    fetch(`${ENDPOINT_AGENCY_SEARCH}?search=${encodeURIComponent(query)}`)
         .then(res => res.json())
-        .then(data => {
-            agencySuggestions.innerHTML = '';
-            if (!Array.isArray(data) || data.length === 0) {
+    // .then(data => {   // <-- This is the original line
+    .then(response => { // <-- Change to this
+        const data = response.data; // <-- And ADD this line to extract the array
+        agencySuggestions.innerHTML = '';
+        if (!Array.isArray(data) || data.length === 0) {
                 agencySuggestions.classList.remove('active');
                 return;
             }

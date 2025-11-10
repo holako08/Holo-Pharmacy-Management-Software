@@ -1,139 +1,283 @@
-/* General page styling */
+/**
+ * ===================================================================
+ * Enterprise Theme: Corporate Gold
+ * ===================================================================
+ */
+
+/* 1. Tokens / Variables
+ * ===================================================================
+ * Defines the core design system (colors, typography, spacing).
+ */
+:root {
+    /* Color System: Neutrals */
+    --color-background: #F8F9FA;
+    --color-surface: #FFFFFF;
+    --color-text-primary: #212529;
+    --color-text-secondary: #6C757D;
+    --color-border: #DEE2E6;
+    --color-input-background: #FFFFFF;
+
+    /* Color System: Brand Accent (Gold) */
+    --color-brand-gold: #C0A062;
+    --color-brand-gold-hover: #AD8F55;
+    --color-brand-gold-text: #FFFFFF;
+
+    /* Color System: Actions */
+    --color-action-primary: #004A99; /* Corporate Blue */
+    --color-action-primary-hover: #003B7A;
+    --color-action-primary-text: #FFFFFF;
+    
+    --color-action-secondary: #6C757D; /* Gray */
+    --color-action-secondary-hover: #5A6268;
+    --color-action-secondary-text: #FFFFFF;
+
+    --color-action-special: #483D8B; /* Refined 'darkslateblue' */
+    --color-action-special-hover: #3A306F;
+
+    /* Typography */
+    --font-family-base: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-size-base: 1rem;
+    --line-height-base: 1.6;
+    --font-weight-base: 400;
+    --font-weight-bold: 700;
+
+    --font-size-h1: 2.25rem;
+    --font-size-h2: 1.75rem;
+
+    /* Spacing Scale */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+
+    /* Borders & Shadows */
+    --border-radius-sm: 4px;
+    --border-radius-md: 8px;
+    --shadow-md: 0 4px 10px rgba(0, 0, 0, 0.07);
+
+    /* Transitions */
+    --transition-speed: 0.2s;
+    --transition-ease: ease-in-out;
+}
+
+/* 2. Base & Typography
+ * ===================================================================
+ * Global styles for the document.
+ */
 body {
-    font-family: Arial, sans-serif;
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-base);
+    font-weight: var(--font-weight-base);
+    color: var(--color-text-primary);
+    background-color: var(--color-background);
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    background-color: lightgrey;
-    
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
-/* Main Calculator Content */
-.calculator-container {
-    padding: 30px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin: 20px auto;
-    width: auto;
-    background-color: lightgray;
-    
+*, *:before, *:after {
+    box-sizing: inherit;
 }
 
 h1 {
-    font-size: 2rem;
-    color: black;
-}
-
-.input-container {
-    display: flex;
-    gap: 20px;
-    margin-top: 20px;
-}
-
-.input-section, .result-section {
-    background-color: gold;
-    border-radius: 10px;
-    padding: 20px;
-    width: 100%; /* Ensure both sections are full width */
+    font-size: var(--font-size-h1);
+    color: var(--color-text-primary);
+    font-weight: var(--font-weight-bold);
+    margin-bottom: var(--spacing-lg);
+    text-align: center;
 }
 
 h2 {
+    font-size: var(--font-size-h2);
+    color: var(--color-text-primary);
     text-align: center;
-    color: black;
+    font-weight: 600; /* Semi-bold */
+    margin-top: 0;
+    margin-bottom: var(--spacing-md);
 }
 
 label {
     display: block;
-    margin: 10px 0 5px 0;
-    color: black;
-    font-weight: bold;
+    margin: var(--spacing-md) 0 var(--spacing-sm) 0;
+    color: var(--color-text-secondary);
+    font-weight: var(--font-weight-bold);
+    font-size: 0.9rem;
+    text-transform: uppercase;
 }
 
-input, select {
+/* 3. Layout
+ * ===================================================================
+ * Main page structure and containers.
+ */
+.calculator-container {
+    padding: var(--spacing-xl);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: var(--spacing-xl) auto;
     width: 100%;
-    padding: 8px;
-    margin-bottom: 10px;
-    border-radius: 5px;
-    border: none;
-    outline: none;
+    max-width: 960px; /* Constrains width for readability */
+    background-color: transparent;
 }
 
-.calculate-btn, .clear-btn, .adult-dose-btn {
-    background-color: #406D96;
-    color: white;
-    border: none;
-    padding: 10px;
+.input-container {
+    display: flex;
+    gap: var(--spacing-lg);
+    margin-top: var(--spacing-md);
     width: 100%;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    margin-top: 10px;
 }
 
-.calculate-btn:hover, .clear-btn:hover, .adult-dose-btn:hover {
-    background-color: #5083B0;
+/* 4. Components
+ * ===================================================================
+ * Styled components like cards, forms, and buttons.
+ */
+
+/* Cards / Sections */
+.input-section, 
+.result-section {
+    background-color: var(--color-surface);
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-lg);
+    width: 100%;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--color-border);
 }
 
+/* Result Display */
 .result-box {
-    background-color: lightgrey;
-    padding: 20px;
+    background-color: var(--color-background);
+    padding: var(--spacing-md) var(--spacing-lg);
     text-align: center;
-    border-radius: 5px;
+    border-radius: var(--border-radius-sm);
+    margin-top: var(--spacing-md);
+    border: 1px dashed var(--color-border);
+    font-size: 1.1rem;
+    font-weight: var(--font-weight-bold);
 }
 
 .adult-dose-search {
-    margin-top: 20px;
+    margin-top: var(--spacing-lg);
     text-align: center;
 }
 
-/* Responsive Design */
+/* Forms */
+input, 
+select {
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    border-radius: var(--border-radius-sm);
+    border: 1px solid var(--color-border);
+    outline: none;
+    background-color: var(--color-input-background);
+    font-size: var(--font-size-base);
+    color: var(--color-text-primary);
+    transition: border-color var(--transition-speed) var(--transition-ease), 
+                box-shadow var(--transition-speed) var(--transition-ease);
+}
+
+input:focus, 
+select:focus {
+    /* Gold accent on focus */
+    border-color: var(--color-brand-gold);
+    box-shadow: 0 0 0 3px rgba(192, 160, 98, 0.25);
+}
+
+/* Buttons */
+/* Base styles for all button types */
+.calculate-btn, 
+.clear-btn, 
+.adult-dose-btn,
+.manage-dose-btn,
+#doseManagerModal button {
+    border: none;
+    padding: var(--spacing-sm) var(--spacing-lg);
+    width: 100%;
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    transition: background-color var(--transition-speed) var(--transition-ease),
+                box-shadow var(--transition-speed) var(--transition-ease);
+    margin-top: var(--spacing-sm);
+    font-size: 1rem;
+    font-weight: var(--font-weight-bold);
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+}
+
+/* Primary Action Button (Corporate Blue) */
+.calculate-btn {
+    background-color: var(--color-action-primary);
+    color: var(--color-action-primary-text);
+}
+.calculate-btn:hover {
+    background-color: var(--color-action-primary-hover);
+    box-shadow: 0 2px 5px rgba(0, 74, 153, 0.3);
+}
+
+/* Brand Accent Button (Gold) */
+.adult-dose-btn {
+    background-color: var(--color-brand-gold);
+    color: var(--color-brand-gold-text);
+}
+.adult-dose-btn:hover {
+    background-color: var(--color-brand-gold-hover);
+    box-shadow: 0 2px 5px rgba(192, 160, 98, 0.3);
+}
+
+/* Secondary Action Button (Gray) */
+.clear-btn {
+    background-color: var(--color-action-secondary);
+    color: var(--color-action-secondary-text);
+}
+.clear-btn:hover {
+    background-color: var(--color-action-secondary-hover);
+}
+
+/* Special Action Button */
+.manage-dose-btn {
+    background-color: var(--color-action-special);
+    color: var(--color-action-primary-text);
+}
+.manage-dose-btn:hover {
+    background-color: var(--color-action-special-hover);
+}
+
+/* Modal Buttons (Styled as primary, but smaller) */
+#doseManagerModal button {
+    background-color: var(--color-action-primary);
+    color: var(--color-action-primary-text);
+    padding: var(--spacing-sm);
+    margin-top: var(--spacing-xs);
+    width: auto; /* Modal buttons are not typically full-width */
+}
+#doseManagerModal button:hover {
+    background-color: var(--color-action-primary-hover);
+}
+
+
+/* 5. Responsive Design
+ * ===================================================================
+ */
 @media (max-width: 768px) {
     .input-container {
         flex-direction: column;
     }
-    .input-section, .result-section {
+    
+    .input-section, 
+    .result-section {
         width: 100%;
     }
-}
+    
+    h1 {
+        font-size: 1.75rem; /* Adjust for mobile */
+    }
 
-.input-section {
-    background-color: gray;
-}
-
-.result-section {
-    background-color: gray;
-}
-
-input {
-    background-color: gold;
-}
-
-select {
-    background-color: gold;
-    border: 1px solid black;
-}
-.manage-dose-btn {
-    background-color: darkslateblue;
-    color: white;
-    border: none;
-    padding: 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    margin-top: 10px;
-    width: 100%;
-}
-
-.manage-dose-btn:hover {
-    background-color: slateblue;
-}
-
-#doseManagerModal button {
-    background-color: #406D96;
-    color: white;
-    padding: 6px;
-    margin-top: 4px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
+    h2 {
+        font-size: 1.4rem; /* Adjust for mobile */
+    }
 }

@@ -73,7 +73,7 @@
 
 
   <!-- Filters & Controls -->
-  <section class="filter-container-bills-report">
+ <section class="filter-container-bills-report">
     <div>
       <label for="bills-report-date-start">Start Date:</label>
       <input type="date" id="bills-report-date-start">
@@ -87,6 +87,7 @@
       <input type="text" id="bills-report-filter-patient-phone" placeholder="Patient Phone">
       <input type="text" id="bills-report-filter-user" placeholder="Processed By (User)">
       <input type="text" id="bills-report-filter-payment-method" placeholder="Payment Method">
+      <input type="text" id="bills-report-filter-branch" placeholder="Branch">
       <input type="text" id="bills-report-filter-card-invoice" placeholder="Card Invoice Number">
       <input type="text" id="bills-report-filter-ecom-invoice" placeholder="E-commerce Invoice #">
       <input type="number" id="bills-report-filter-price-min" placeholder="Min Price" min="0" step="0.01" style="width:100px;">
@@ -96,7 +97,6 @@
     </div>
   </section>
 
-  <!-- Data Table -->
   <section>
     <div class="loading-bills-report" id="bills-report-loading" style="display:none;">Loading data...</div>
     <table class="data-table-bills-report" id="bills-report-table">
@@ -114,11 +114,11 @@
           <th>Patient Name</th>
           <th>Patient Phone</th>
           <th>User</th>
+          <th>Branch</th>
         </tr>
       </thead>
       <tbody>
-        <!-- JS-generated rows -->
-      </tbody>
+        </tbody>
     </table>
     <div class="pagination-bills-report" id="bills-report-pagination"></div>
   </section>

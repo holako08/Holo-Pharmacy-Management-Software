@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Analytics Dashboard</title>
+    <link rel="icon" href="data:,">
+    <link rel="shortcut icon" href="images/logo.png" type="image/x-icon">
+    <link rel="stylesheet" href="nav-bar2.css">
+    <link rel="stylesheet" href="sales-analytics.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <nav class="nav-bar-unique">
+  <div class="logo-unique">
+    <img src="images/logo.png" alt="Logo">
+  </div>
+  <ul class="nav-links-unique">
+    <li><a href="dashboard.html">Home</a></li>
+    <li><a href="pos.html">POS</a></li>
+    <li><a href="PDC.html">Pediatric Dose Calculator</a></li>
+    <li><a href="cross selling.html">Cross-selling Help</a></li>
+    <li>
+      <a href="#">Reports</a>
+      <ul class="dropdown-unique">
+        <li><a href="sales report.html">Sales Report</a></li>
+        <li><a href="item-wise sale report.html">Item-wise Sales Report</a></li>
+
+<li><a href="near-expiry-report.html">Near Expiry Report</a></li>
+<li><a href="stock-report.html">Stock Report</a></li>
+
+      </ul>
+    </li>
+    <li>
+      <a href="#">Pharmacists’ Tools</a>
+      <ul class="dropdown-unique">
+        <li><a href="requirements.html">Stock Requirements</a></li>
+        <li><a href="variations.html">Stock Variations</a></li>
+        <li><a href="testing.html">Blood Pressure and Sugar Check</a></li>
+        <li><a href="request-center-usrZ3v.html">Requests Center</a></li>
+      </ul>
+    </li>
+    <li>
+      <a href="#">Admin Tools</a>
+      <ul class="dropdown-unique">
+        <li><a href="edit medicines.html">Edit Medicines List</a></li>
+        <li><a href="edit bills.html">Edit Bills</a></li>
+        <li><a href="user management.html">Edit Users</a></li>
+        <li><a href="admin-approvals.html">Admin Approvals</a></li>
+      </ul>
+    </li>
+  </ul>
+  <div class="search-unique">
+    <input type="text" placeholder="Search...">
+    <button>Search</button>
+  </div>
+</nav>
+    <div class="container">
+        <header>
+            <h1>Analytics Dashboard</h1>
+            <div class="user-profile-container">
+                <div class="user-details">
+                    <span id="user-name">full name is logged-in</span>
+                    <span id="user-job-title">jobTitle</span>
+                </div>
+                <div class="profile-pic">
+                    <img id="user-photo" src="images/default-profile.png" alt="Profile">
+                </div>
+                <button id="logout-btn" class="logout-btn">Log-out</button>
+            </div>
+        </header>
+
+        <div class="tabs-container">
+            <button class="tab-button active" data-tab="sales-analytics-content">Sales Analytics</button>
+            <button class="tab-button" data-tab="po-analytics-content">Purchase Order Analytics</button>
+        </div>
+
+        <main id="sales-analytics-content" class="tab-content">
+            <div class="card">
+                <h2>Analyze & Compare Items</h2>
+                <div class="search-section">
+                    <div class="search-wrapper">
+                         <input type="text" id="item-search" placeholder="Search or select items to compare...">
+                         <div id="search-suggestions" class="hidden"></div>
+                    </div>
+                    <select id="branch-filter">
+                        <option value="all">All Branches</option>
+                        <option value="ghu1">ghu1</option>
+                        <option value="ghu2">ghu2</option>
+                        <option value="qurom">qurom</option>
+                        <option value="aziba">aziba</option>
+                        <option value="mab">mab</option>
+                        <option value="maw">maw</option>
+                        <option value="central store">central store</option>
+                        <option value="exp">exp</option>
+                    </select>
+                    <button id="reset-view">Reset View</button>
+                </div>
+                <div id="comparison-tags" class="comparison-tags"></div>
+            </div>
+
+            <div id="overview-section" class="card">
+                <h2>Top Sellers Summary</h2>
+                <div id="overview-loader" class="loader">Loading summary...</div>
+                <table id="overview-table" class="hidden">
+                    <thead>
+                        <tr>
+                            <th>Period</th>
+                            <th>Top Item</th>
+                            <th>Units Sold</th>
+                            <th>Total Sales (OMR)</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <div id="single-item-section" class="hidden">
+                <div class="card">
+                    <h2 id="single-item-title">Single Item Analytics</h2>
+                    <div class="grid-2">
+                        <div class="chart-container">
+                            <canvas id="sales-trend-chart"></canvas>
+                        </div>
+                        <div id="item-info-card" class="info-card"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="comparison-section" class="hidden">
+                <div class="card">
+                    <h2>Item Comparison</h2>
+                    <div class="comparison-grid">
+                        <div class="chart-container">
+                             <canvas id="comparison-bar-chart"></canvas>
+                        </div>
+                         <div class="chart-container">
+                             <canvas id="comparison-pie-chart"></canvas>
+                        </div>
+                    </div>
+                     <div class="chart-container" style="margin-top: 20px;">
+                        <canvas id="comparison-line-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <main id="po-analytics-content" class="tab-content hidden">
+            <div class="card">
+                <h2>Purchase Order Suggestion</h2>
+                <p>Add items and select a branch to get purchase quantity suggestions based on the last 3 months of sales data.</p>
+                <div class="search-section">
+                    <div class="search-wrapper">
+                         <input type="text" id="po-item-search" placeholder="Search for items to purchase...">
+                         <div id="po-search-suggestions" class="hidden"></div>
+                    </div>
+                    <select id="po-branch-filter">
+                        <option value="">Select a Branch</option>
+                        <option value="ghu1">ghu1</option>
+                        <option value="ghu2">ghu2</option>
+                        <option value="qurom">qurom</option>
+                        <option value="aziba">aziba</option>
+                        <option value="mab">mab</option>
+                        <option value="maw">maw</option>
+                        <option value="central store">central store</option>
+                        <option value="exp">exp</option>
+                    </select>
+                    <button id="analyze-po-btn">Analyze</button>
+                </div>
+                <div id="po-comparison-tags" class="comparison-tags"></div>
+            </div>
+            
+            <div class="card">
+                <h2>Suggestions</h2>
+                <div id="po-loader" class="loader hidden">Analyzing sales data and stock levels...</div>
+                <div id="po-suggestions-container">
+                    </div>
+            </div>
+        </main>
+
+    </div>
+    <div class="dashboard-footer">
+    © 2025 Pharmacy Management System | Designed by Pharmacist: MOHAMED HAMID | <a href="mailto:mhm.hamid@gmail.com">mhm.hamid@gmail.com</a> | All Rights Reserved
+  </div>
+
+<script src="sales-analytics.js" defer></script>
+</body>
+</html>

@@ -1,196 +1,305 @@
-/* General Styles */
+/*=============================================
+  DESIGN TOKENS (VARIABLES)
+=============================================*/
+:root {
+    /* 🎨 Color System */
+    --color-brand-gold: #CCA43B;
+    --color-brand-gold-dark: #B89234;
+
+    --color-neutral-darkest: #1A1A1A;
+    --color-neutral-dark: #2D2D2D;
+    --color-neutral-medium: #555555;
+    --color-neutral-light: #999999;
+    --color-neutral-border: #E0E0E0;
+
+    --color-panel-bg: #FFFFFF;
+    --color-body-bg: #F4F6FA;
+    --color-input-bg: #FDFDFD;
+    --color-text-light: #FFFFFF;
+
+    --color-focus-ring: rgba(204, 164, 59, 0.4);
+
+    /* ✒️ Typography */
+    --font-primary: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --text-base-size: 16px;
+    --text-line-height: 1.6;
+
+    /* 📐 Spacing & Sizing */
+    --space-sm: 8px;
+    --space-md: 16px;
+    --space-lg: 20px;
+    --space-xl: 30px;
+
+    /* ✨ Appearance */
+    --border-radius-main: 8px;
+    --border-radius-small: 4px;
+    --shadow-main: 0 4px 12px rgba(0, 0, 0, 0.05);
+    --shadow-modal: 0 10px 30px rgba(0, 0, 0, 0.1);
+    --transition-main: all 0.3s ease;
+}
+
+/*=============================================
+  BASE & TYPOGRAPHY
+=============================================*/
 body {
-    font-family: Arial, sans-serif;
+    font-family: var(--font-primary);
+    font-size: var(--text-base-size);
+    line-height: var(--text-line-height);
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    background-color: #F4F6FA;
-}
-
-/* Header and Navigation */
-/* Header Styles */
-header {
-    background-color: lightgray;
-    color: white;
-    font-weight: bolder;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 20px;
-}
-
-
-/* Main Content */
-main {
-    text-align: center;
-    padding: 20px;
+    background-color: var(--color-body-bg);
+    color: var(--color-neutral-dark);
 }
 
 h1 {
-    color: black;
-    margin-bottom: 20px;
+    color: var(--color-neutral-darkest);
+    font-size: 2.25rem;
+    font-weight: 700;
+    margin-bottom: var(--space-lg);
 }
 
-/* Buttons Grid */
-.button-container {
-    margin-top: 20px;
+h2 {
+    color: var(--color-neutral-darkest);
+    font-size: 1.75rem;
+    font-weight: 600;
+    margin-top: 0;
+    margin-bottom: var(--space-md);
 }
 
-.buttons-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 15px;
-    justify-content: center;
+/*=============================================
+  LAYOUT
+=============================================*/
+/* Header */
+header {
+    background-color: var(--color-panel-bg);
+    color: var(--color-neutral-darkest);
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-md) var(--space-lg);
+    border-bottom: 1px solid var(--color-neutral-border);
+    box-shadow: var(--shadow-main);
 }
 
-/* Restructure layout */
+/* Main Content Wrapper */
+main {
+    padding: var(--space-lg);
+}
+
+/* Main 2-Column Layout */
 .main-container {
-  display: flex;
-  flex-direction: row;
-  gap: 20px;
-  padding: 20px;
+    display: flex;
+    flex-direction: row;
+    gap: var(--space-lg);
+    padding: 0; /* Padding is now on 'main' */
 }
 
-/* Sidebar and buttons */
+/* Sidebar Panel */
 .sidebar {
-  width: 300px;
-  background-color: #eeeeee;
-  padding: 10px;
-  border-radius: 8px;
-  height: 75vh;
-  overflow-y: auto;
+    width: 300px;
+    background-color: var(--color-panel-bg);
+    padding: var(--space-lg);
+    border-radius: var(--border-radius-main);
+    box-shadow: var(--shadow-main);
+    height: 80vh; /* Was 75vh, adjusted for padding */
+    overflow-y: auto;
+    flex-shrink: 0;
 }
 
+/* Right Content Panel */
+.content {
+    flex: 1;
+    background-color: var(--color-panel-bg);
+    padding: var(--space-xl);
+    border-radius: var(--border-radius-main);
+    box-shadow: var(--shadow-main);
+}
+
+/*=============================================
+  COMPONENTS
+=============================================*/
+
+/* Sidebar Navigation Buttons */
 #button-list button {
-  display: block;
-  width: 100%;
-  padding: 10px;
-  margin-bottom: 10px;
-  background-color: #444;
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  font-size: 15px;
-  cursor: pointer;
+    display: block;
+    width: 100%;
+    padding: 12px var(--space-md);
+    margin-bottom: var(--space-sm);
+    background-color: var(--color-neutral-dark);
+    color: var(--color-text-light);
+    border: none;
+    border-radius: var(--border-radius-small);
+    font-size: 1rem;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+    transition: var(--transition-main);
 }
 
 #button-list button:hover {
-  background-color: #222;
+    background-color: var(--color-neutral-darkest);
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Action buttons (Add/Edit/Delete) */
+/* Sidebar Action Buttons (Gold) */
 .btn-group {
-  margin-top: 15px;
+    margin-top: var(--space-lg);
+    border-top: 1px solid var(--color-neutral-border);
+    padding-top: var(--space-lg);
 }
 
 .btn-group button {
-  width: 100%;
-  padding: 10px;
-  margin-top: 8px;
-  background-color: #006600;
-  color: #fff;
-  border: none;
-  border-radius: 5px;
-  font-weight: bold;
-  cursor: pointer;
+    width: 100%;
+    padding: 12px var(--space-md);
+    margin-top: var(--space-sm);
+    background-color: var(--color-brand-gold);
+    color: var(--color-text-light);
+    border: none;
+    border-radius: var(--border-radius-small);
+    font-size: 1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: var(--transition-main);
 }
 
 .btn-group button:hover {
-  background-color: #004400;
+    background-color: var(--color-brand-gold-dark);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
 }
 
-/* Right output section */
-.content {
-  flex: 1;
-  background-color: #fff;
-  padding: 20px;
-  border-radius: 8px;
-}
-
+/* Main Output Display */
 .output-section {
-  border: 1px solid #ccc;
-  background-color: #fdfdfd;
-  padding: 15px;
-  margin-top: 10px;
-  white-space: pre-wrap;
-}
-
-
-/* Output Section */
-.output-section {
-    margin-top: 30px;
-    padding: 20px;
-    border: 1px solid #ccc;
-    background-color: #FFFFFF;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    margin-top: var(--space-lg);
+    padding: var(--space-xl);
+    border: 1px solid var(--color-neutral-border);
+    background-color: var(--color-input-bg);
+    box-shadow: none; /* Changed from original */
+    border-radius: var(--border-radius-main);
     text-align: left;
-    font-size: x-large;
+    font-size: 1.1rem; /* Was x-large */
+    line-height: 1.7;
     direction: ltr;
+    white-space: pre-wrap;
+    font-family: monospace; /* Better for pre-wrap content */
 }
 
+/*-------------------
+  Modal Components
+-------------------*/
 .modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0,0,0,0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+/* Show modal when 'hidden' class is removed */
+.modal:not(.hidden) {
+    opacity: 1;
+    pointer-events: auto;
 }
 
 .hidden {
-  display: none;
+    display: none;
 }
 
 .modal-content {
-  background: white;
-  padding: 20px;
-  border-radius: 10px;
-  width: 600px;
-  max-width: 90%;
-  box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    background: var(--color-panel-bg);
+    padding: var(--space-xl);
+    border-radius: var(--border-radius-main);
+    width: 600px;
+    max-width: 90%;
+    box-shadow: var(--shadow-modal);
+    transform: scale(0.95);
+    transition: transform 0.3s ease;
 }
 
-.modal-content h2 {
-  margin-top: 0;
+.modal:not(.hidden) .modal-content {
+    transform: scale(1);
 }
 
+/* Modal Form Fields */
 .modal-content input,
 .modal-content textarea {
-  width: 100%;
-  padding: 10px;
-  margin-top: 10px;
-  margin-bottom: 15px;
-  border-radius: 5px;
-  border: 1px solid #ccc;
-  font-size: 16px;
+    width: 100%;
+    padding: 12px;
+    margin-top: var(--space-sm);
+    margin-bottom: var(--space-md);
+    border-radius: var(--border-radius-small);
+    border: 1px solid var(--color-neutral-border);
+    background-color: var(--color-input-bg);
+    font-size: 1rem;
+    font-family: var(--font-primary);
+    box-sizing: border-box; /* Added for proper width calculation */
+    transition: var(--transition-main);
 }
 
+.modal-content input:focus,
+.modal-content textarea:focus {
+    outline: none;
+    border-color: var(--color-brand-gold);
+    box-shadow: 0 0 0 3px var(--color-focus-ring);
+    background-color: var(--color-panel-bg);
+}
+
+.modal-content textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+/* Modal Action Buttons */
 .modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-sm);
+    margin-top: var(--space-md);
 }
 
 .modal-actions button {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 4px;
-  font-weight: bold;
-  cursor: pointer;
+    padding: 10px 24px;
+    border: 1px solid transparent;
+    border-radius: var(--border-radius-small);
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: var(--transition-main);
 }
 
+/* Primary Modal Button (Gold) */
 #save-modal-btn {
-  background-color: #007b00;
-  color: white;
+    background-color: var(--color-brand-gold);
+    color: var(--color-text-light);
 }
 
+#save-modal-btn:hover {
+    background-color: var(--color-brand-gold-dark);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Secondary Modal Button (Ghost) */
 #cancel-modal-btn {
-  background-color: #999;
-  color: white;
+    background-color: transparent;
+    color: var(--color-neutral-medium);
+    border-color: var(--color-neutral-border);
 }
 
-  
+#cancel-modal-btn:hover {
+    background-color: var(--color-body-bg);
+    border-color: var(--color-neutral-light);
+    color: var(--color-neutral-dark);
+}

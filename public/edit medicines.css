@@ -1,17 +1,106 @@
-body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: #f4f4f4;
+/*
+================================================================
+Enterprise Theme CSS
+Vibe: Corporate, Premium, Gold Accent
+================================================================
+*/
+
+/*
+----------------------------------------
+--- 1. Tokens / CSS Custom Properties
+----------------------------------------
+*/
+:root {
+    /* Color Palette */
+    --color-text-primary: #212529;
+    --color-text-secondary: #6c757d;
+    --color-background-body: #f8f9fa;
+    --color-background-panel: #ffffff;
+    --color-border: #dee2e6;
+    --color-overlay: rgba(33, 37, 41, 0.5);
+
+    /* Brand Accent */
+    --color-brand-primary: #d4af37; /* Premium Gold */
+    --color-brand-primary-hover: #c89f2e; /* Darker Gold */
+    --color-brand-text: #ffffff;
+    --color-brand-focus-ring: rgba(212, 175, 55, 0.35);
+
+    /* Semantic Colors */
+    --color-accent-danger: #dc3545;
+    --color-accent-danger-hover: #b02a37;
+    --color-accent-success: #198754;
+    --color-accent-success-hover: #13653f;
+    --color-accent-info: #0d6efd;
+    --color-accent-info-hover: #0a58ca;
+
+    /* Typography */
+    --font-family-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-size-base: 1rem;
+    --font-weight-normal: 400;
+    --font-weight-bold: 600;
+    --line-height-base: 1.5;
+
+    /* Spacing Scale */
+    --spacing-xs: 0.25rem;  /* 4px */
+    --spacing-sm: 0.5rem;   /* 8px */
+    --spacing-md: 1rem;     /* 16px */
+    --spacing-lg: 1.5rem;   /* 24px */
+    --spacing-xl: 2rem;     /* 32px */
+
+    /* Borders & Shadows */
+    --border-width: 1px;
+    --border-radius-sm: 0.25rem;
+    --border-radius-md: 0.5rem;
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --transition-base: all 0.2s ease-in-out;
 }
 
+/*
+----------------------------------------
+--- 2. Base & Typography
+----------------------------------------
+*/
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-family-sans);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-normal);
+    line-height: var(--line-height-base);
+    color: var(--color-text-primary);
+    background-color: var(--color-background-body);
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+h2 {
+    margin-top: 0;
+    margin-bottom: var(--spacing-md);
+    font-weight: var(--font-weight-bold);
+    line-height: 1.2;
+    font-size: 1.75rem;
+}
+
+/*
+----------------------------------------
+--- 3. Layout
+----------------------------------------
+*/
 header {
-    background: #333;
-    color: white;
-    padding: 10px;
+    background: var(--color-text-primary);
+    color: var(--color-brand-text);
+    padding: var(--spacing-md) var(--spacing-lg);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border-bottom: var(--border-width) solid #343a40;
 }
 
 .user-info {
@@ -19,91 +108,294 @@ header {
     align-items: center;
 }
 
-button {
-    background: #ff5733;
-    color: white;
-    border: none;
-    padding: 8px 12px;
-    cursor: pointer;
-}
-
-button:hover {
-    background: #c0392b;
-}
-
 main {
-    padding: 20px;
+    padding: var(--spacing-lg);
 }
 
 .medicine-section {
     display: flex;
-    justify-content: space-between;
-    gap: 20px;
+    justify-content: center;
+    gap: var(--spacing-lg);
 }
+
+/*
+----------------------------------------
+--- 4. Components
+----------------------------------------
+*/
+
+/* --- 4.1 Buttons --- */
+
+/* Base Button Style */
+button {
+    display: inline-block;
+    font-family: var(--font-family-sans);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--line-height-base);
+    text-align: center;
+    vertical-align: middle;
+    cursor: pointer;
+    user-select: none;
+    background-color: transparent;
+    border: var(--border-width) solid transparent;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--border-radius-sm);
+    transition: var(--transition-base);
+}
+
+button:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--color-brand-focus-ring);
+}
+
+/* Brand Buttons (Gold) */
+.form-toggle-buttons button,
+#show-add-form-btn,
+#show-edit-form-btn {
+    background-color: var(--color-brand-primary);
+    color: var(--color-brand-text);
+    border-color: var(--color-brand-primary);
+    box-shadow: var(--shadow-sm);
+}
+
+.form-toggle-buttons button:hover,
+#show-add-form-btn:hover,
+#show-edit-form-btn:hover {
+    background-color: var(--color-brand-primary-hover);
+    border-color: var(--color-brand-primary-hover);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+}
+
+.form-toggle-buttons {
+    text-align: center;
+    margin-bottom: var(--spacing-lg);
+}
+
+.form-toggle-buttons button {
+    margin: 0 var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-lg);
+    font-size: 1.1rem;
+}
+
+/* Semantic Action Buttons */
+.form-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: var(--spacing-lg);
+}
+
+#delete-medicine-btn {
+    background-color: var(--color-accent-danger);
+    color: #ffffff;
+}
+#delete-medicine-btn:hover {
+    background-color: var(--color-accent-danger-hover);
+}
+
+#add-medicine-btn,
+#save-edits-btn {
+    background-color: var(--color-accent-success);
+    color: #ffffff;
+}
+#add-medicine-btn:hover,
+#save-edits-btn:hover {
+    background-color: var(--color-accent-success-hover);
+}
+
+#duplicate-medicine-btn {
+    background-color: var(--color-accent-info);
+    color: #ffffff;
+}
+#duplicate-medicine-btn:hover {
+    background-color: var(--color-accent-info-hover);
+}
+
+/* Header Button */
+header button {
+    background: var(--color-accent-danger);
+    color: white;
+}
+header button:hover {
+    background: var(--color-accent-danger-hover);
+}
+
+
+/* --- 4.2 Forms & Panels --- */
 
 .medicine-form {
-    background: lightgray;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    width: 48%;
-}
-
-.medicine-form h2 {
-    margin-bottom: 10px;
+    background: var(--color-background-panel);
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-md);
+    border: var(--border-width) solid var(--color-border);
+    width: 1200px;
+    max-width: 1200px;
 }
 
 label {
     display: block;
-    margin: 5px 0;
-    font-weight: bold;
+    margin-bottom: var(--spacing-sm);
+    font-weight: var(--font-weight-bold);
+    font-size: 0.9rem;
+    color: var(--color-text-secondary);
 }
 
-input, textarea {
+input,
+textarea {
     width: 100%;
-    padding: 8px;
-    margin-bottom: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
+    padding: var(--spacing-sm) var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--border-radius-sm);
+    box-sizing: border-box; /* Ensures padding doesn't affect width */
+    font-family: var(--font-family-sans);
+    font-size: var(--font-size-base);
+    background-color: var(--color-background-panel);
+    transition: var(--transition-base);
+}
+
+input:focus,
+textarea:focus {
+    outline: none;
+    border-color: var(--color-brand-primary);
+    box-shadow: 0 0 0 3px var(--color-brand-focus-ring);
 }
 
 textarea {
     resize: vertical;
+    min-height: 120px;
 }
 
-.form-buttons {
+/* --- 4.3 Duplicate Checklist --- */
+
+#duplicate-fields-checklist {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+    background: var(--color-background-body);
+    border: var(--border-width) solid var(--color-border);
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius-sm);
+}
+
+#duplicate-fields-checklist label {
     display: flex;
-    justify-content: space-between;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: 0.9rem;
+    cursor: pointer;
+    margin: 0;
+    font-weight: var(--font-weight-normal);
+    color: var(--color-text-primary);
 }
 
-#delete-medicine-btn {
-    background: red;
+#duplicate-fields-checklist input[type="checkbox"] {
+    width: 1.15em;
+    height: 1.15em;
+    margin-bottom: 0;
+    accent-color: var(--color-brand-primary);
 }
 
-#add-medicine-btn {
-    background: lightgreen;
+#duplicate-target-results div {
+    padding: var(--spacing-sm) var(--spacing-md);
+    cursor: pointer;
+    border-bottom: var(--border-width) solid var(--color-border);
+    transition: background-color 0.2s ease;
 }
 
-#save-edits-btn {
-    background: lightgreen;
+#duplicate-target-results div:last-child {
+    border-bottom: none;
 }
 
-button:hover {
-    opacity: 0.8;
+#duplicate-target-results div:hover {
+    background-color: var(--color-background-body);
 }
 
-/* Batch Modal Styles */
+/* --- 4.4 Modal --- */
 .modal {
-  display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%;
-  overflow: auto; background-color: rgba(0,0,0,0.4);
+  display: none;
+  position: fixed;
+  z-index: 1050;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: var(--color-overlay);
 }
+
 .modal-content {
-  background: #fff; margin: 5% auto; padding: 20px; border-radius: 8px; width: 90%; max-width: 600px; position: relative;
+  background: var(--color-background-panel);
+  margin: 5% auto;
+  padding: var(--spacing-lg);
+  border-radius: var(--border-radius-md);
+  width: 90%;
+  max-width: 600px;
+  position: relative;
+  box-shadow: var(--shadow-md);
 }
+
 .close {
-  color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer;
+  position: absolute;
+  top: var(--spacing-md);
+  right: var(--spacing-md);
+  color: var(--color-text-secondary);
+  font-size: 1.75rem;
+  font-weight: var(--font-weight-bold);
+  line-height: 1;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  transition: color 0.2s ease;
 }
-.close:hover, .close:focus { color: black; text-decoration: none; cursor: pointer; }
-#batch-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
-#batch-table th, #batch-table td { border: 1px solid #ccc; padding: 6px; text-align: center; }
-#batch-form input, #batch-form button { margin: 3px 2px; }
+
+.close:hover,
+.close:focus {
+  color: var(--color-text-primary);
+  text-decoration: none;
+  outline: none;
+}
+
+/* --- 4.5 Table (Batch) --- */
+#batch-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: var(--spacing-md);
+  font-size: 0.9rem;
+}
+
+#batch-table th,
+#batch-table td {
+  border: var(--border-width) solid var(--color-border);
+  padding: var(--spacing-sm) var(--spacing-md);
+  text-align: left;
+  vertical-align: top;
+}
+
+#batch-table th {
+    background-color: var(--color-background-body);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-secondary);
+}
+
+#batch-table tbody tr:nth-of-type(even) {
+    background-color: var(--color-background-body);
+}
+
+#batch-form input,
+#batch-form button {
+  margin: var(--spacing-xs) var(--spacing-sm);
+}
+
+/* Ensure modal buttons use the base style */
+#batch-form button {
+    background: var(--color-brand-primary);
+    color: var(--color-brand-text);
+}
+#batch-form button:hover {
+    background: var(--color-brand-primary-hover);
+}
