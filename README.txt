@@ -1,8 +1,8 @@
 ================================
-Pharmacy Management System - Backend
+Holo Pharmacy Management System - Full Stack
 ================================
 
-This repository contains the backend server for a comprehensive Pharmacy Management System, built with Node.js, Express, and MySQL. It provides a robust set of APIs to handle point-of-sale operations, inventory control, user management, reporting, and various internal pharmacy workflows.
+This repository contains the backend server and client side files for a comprehensive Pharmacy Management System, built with HTML, CSS, JS, Node.js, Express, and MySQL. It provides a robust set of APIs to handle point-of-sale operations, inventory control, user management, reporting, and various internal pharmacy workflows.
 
 ## Key Features
 
