@@ -48,125 +48,49 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
+// Use environment variables for your database connection
+// These MUST be set in your Render Environment settings
+const dbConfig = {
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    // This is the CRITICAL change:
+    // All pools now connect to the SAME database
+    database: process.env.DB_NAME, 
+    connectionLimit: 10,
+    waitForConnections: true,
+    queueLimit: 0
+};
+
 /*databases connection*/
-const medicinesPool = mysql2.createPool({
-    host: 'localhost',
-    user: 'root',
-    password: process.env.DB_PASSWORD,
-    database: 'medicines',
-    connectionLimit: 10
-});
+// All pools now use the exact same config
+const medicinesPool = mysql2.createPool(dbConfig);
 
-const billsPool = mysql2.createPool({
-    host: 'localhost',
-    user: 'root',
-    password: process.env.DB_PASSWORD,
-    database: 'bills',
-});
+const billsPool = mysql2.createPool(dbConfig);
 
-const connection = mysql2.createConnection({
-  host: 'localhost',
-  user: 'root',         
-  password: process.env.DB_PASSWORD,         
-  database: 'userauthdb'
-});
+const connection = mysql2.createConnection(dbConfig);
 
-const healthDBPool = mysql2.createPool({
-  host: 'localhost',
-  user: 'root',
-  password: process.env.DB_PASSWORD,
-  database: 'health_db',
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-}).promise();
+const healthDBPool = mysql2.createPool(dbConfig).promise();
 
-// Pool for medicine_requirements database
-const medicineRequirementsPool = mysql2.createPool({
-  host: 'localhost',
-  user: 'root',            // Replace with your MySQL username
-  password: process.env.DB_PASSWORD,
-  database: 'medicine_requirements_db', // Your new database
-  connectionLimit: 10
-});
+const medicineRequirementsPool = mysql2.createPool(dbConfig);
 
-//requests pool
-const requestsPool = mysql2.createPool({
-  host: 'localhost',
-  user: 'root',
-  password: process.env.DB_PASSWORD,
-  database: 'pharmacy_requests_db', // <-- THIS new database!
-  connectionLimit: 10
-});
+const requestsPool = mysql2.createPool(dbConfig);
 
-const crossSellingPool = mysql2.createPool({
-  host: 'localhost',
-  user: 'root',
-  password: process.env.DB_PASSWORD,
-  database: 'cross_selling_db',
-  waitForConnections: true,
-  connectionLimit: 10
-});
+const crossSellingPool = mysql2.createPool(dbConfig);
 
-const pdcpool = mysql2.createPool({
-  host: 'localhost',
-  user: 'root',
-  password: process.env.DB_PASSWORD,
-  database: 'PDC',
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
-});
+const pdcpool = mysql2.createPool(dbConfig);
 
-const taskspool = mysql2.createPool({
-  host: 'localhost',
-  user: 'root',
-  password: process.env.DB_PASSWORD,
-  database: 'tasks'
-});
+const taskspool = mysql2.createPool(dbConfig);
 
-const customerRequestsPool = mysql2.createPool({
-  host: 'localhost',
-  user: 'root',
-  password: process.env.DB_PASSWORD,
-  database: 'customer-requests-db',
-  connectionLimit: 10
-});
+const customerRequestsPool = mysql2.createPool(dbConfig);
 
-// CP DB Pool (Capital Pharmacy)
-const capitalPharmacyPool = mysql2.createPool({
-    host: 'localhost',
-    user: 'root',
-    password: process.env.DB_PASSWORD, // Assuming same password
-    database: 'capital-pharmacy-products',
-    connectionLimit: 10
-});
+const capitalPharmacyPool = mysql2.createPool(dbConfig);
 
-// CTPR DB Pool
-const ctprPool = mysql2.createPool({
-    host: 'localhost',
-    user: 'root',
-    password: process.env.DB_PASSWORD, // Assuming same password
-    database: 'ctpr',
-    connectionLimit: 10
-});
+const ctprPool = mysql2.createPool(dbConfig);
 
-const stockTransactionsPool = require('mysql2').createPool({
-    host: 'localhost',
-    user: 'root',
-    password: process.env.DB_PASSWORD,
-    database: 'stock_transactions',
-    connectionLimit: 10
-});
+const stockTransactionsPool = mysql2.createPool(dbConfig);
 
-const popool = mysql2.createPool({
-    host: 'localhost',
-    user: 'root',
-    password: process.env.DB_PASSWORD,
-    database: 'purchase_goods',
-    connectionLimit: 10
-});
-
+const popool = mysql2.createPool(dbConfig);
 const groq = new Groq({
     apiKey: process.env.GROQ_API_KEY
 });
@@ -7660,3 +7584,4 @@ app.get('/user-management', isAdmin, (req, res) => {
   app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
 });
+
