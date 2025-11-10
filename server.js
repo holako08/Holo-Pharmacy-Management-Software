@@ -7655,4 +7655,8 @@ app.get('/user-management', isAdmin, (req, res) => {
   res.sendFile(path.join(__dirname, 'user-management.html'));
 });
 
-module.exports = app;
+
+/*port*/
+  app.listen(port, () => {
+    console.log(`Server is running on http://localhost:${port}`);
+});
